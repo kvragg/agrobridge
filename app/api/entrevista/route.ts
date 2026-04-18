@@ -22,6 +22,8 @@ function detalharErroAnthropic(err: unknown): {
     let curta = msg
     if (status === 401) curta = 'chave da API inválida ou ausente.'
     else if (status === 404) curta = `modelo não encontrado (${HAIKU_MODEL}).`
+    else if (status === 400 && /credit balance/i.test(msg))
+      curta = 'saldo Anthropic esgotado. Contate o administrador.'
     else if (status === 429) curta = 'limite de requisições atingido. Aguarde.'
     else if (status === 529 || status === 503) curta = 'IA sobrecarregada. Tente em alguns segundos.'
     else if (status && status >= 500) curta = `erro no provedor (${status}).`

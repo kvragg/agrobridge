@@ -71,6 +71,8 @@ export async function POST(request: NextRequest) {
     let curta = 'Falha ao gerar checklist. Tente novamente em alguns segundos.'
     if (status === 401) curta = 'Chave da API inválida ou ausente no servidor.'
     else if (status === 404) curta = `Modelo não encontrado (${SONNET_MODEL}).`
+    else if (status === 400 && /credit balance/i.test(msg))
+      curta = 'Saldo Anthropic esgotado. Contate o administrador.'
     else if (status === 429) curta = 'Limite de requisições atingido. Aguarde.'
     else if (status === 529 || status === 503)
       curta = 'IA sobrecarregada. Tente em alguns segundos.'
