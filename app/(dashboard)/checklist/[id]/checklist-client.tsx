@@ -65,11 +65,18 @@ export default function ChecklistClient({
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ processo_id: processoId }),
         })
-        if (!res.ok) throw new Error('Erro ao gerar checklist')
-        const { checklist } = await res.json()
-        setChecklistMd(checklist)
-      } catch {
-        setErroChecklist('Não foi possível gerar o checklist. Tente recarregar a página.')
+        const payload = await res.json().catch(() => null)
+        if (!res.ok) {
+          console.error('[checklist] API falhou', res.status, payload)
+          throw new Error(payload?.erro ?? 'Erro ao gerar checklist')
+        }
+        setChecklistMd(payload.checklist)
+      } catch (err) {
+        setErroChecklist(
+          err instanceof Error && err.message
+            ? err.message
+            : 'Não foi possível gerar o checklist. Tente recarregar a página.'
+        )
       } finally {
         setCarregandoChecklist(false)
       }

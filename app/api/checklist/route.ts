@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { gerarChecklist } from '@/lib/anthropic/sonnet'
+import { gerarChecklist, SONNET_MODEL } from '@/lib/anthropic/sonnet'
 import type { PerfilEntrevista } from '@/types/entrevista'
 import { NextRequest } from 'next/server'
 
@@ -8,6 +8,9 @@ export const runtime = 'nodejs'
 export const maxDuration = 60
 
 export async function POST(request: NextRequest) {
+  console.log(
+    `[api/checklist] POST iniciado — modelo=${SONNET_MODEL}, key_presente=${!!process.env.ANTHROPIC_API_KEY}`
+  )
   const supabase = await createClient()
   const {
     data: { user },
@@ -54,11 +57,24 @@ export async function POST(request: NextRequest) {
       processo.perfil_json as unknown as PerfilEntrevista
     )
   } catch (err) {
-    console.error('[api/checklist] erro ao gerar com Sonnet:', err)
-    return Response.json(
-      { erro: 'Falha ao gerar checklist. Tente novamente em alguns segundos.' },
-      { status: 502 }
+    const e = err as {
+      status?: number
+      message?: string
+      error?: { type?: string; message?: string }
+    }
+    const status = e.status
+    const msg = e.error?.message ?? e.message ?? String(err)
+    console.error(
+      `[api/checklist] erro Sonnet status=${status} msg=${msg}`,
+      err
     )
+    let curta = 'Falha ao gerar checklist. Tente novamente em alguns segundos.'
+    if (status === 401) curta = 'Chave da API inválida ou ausente no servidor.'
+    else if (status === 404) curta = `Modelo não encontrado (${SONNET_MODEL}).`
+    else if (status === 429) curta = 'Limite de requisições atingido. Aguarde.'
+    else if (status === 529 || status === 503)
+      curta = 'IA sobrecarregada. Tente em alguns segundos.'
+    return Response.json({ erro: curta }, { status: 502 })
   }
 
   // Salvar markdown no perfil_json para cache (evita regerar)

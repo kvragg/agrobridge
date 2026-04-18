@@ -9,14 +9,19 @@ const SYSTEM_PROMPT = fs.readFileSync(
   'utf-8'
 )
 
-export const HAIKU_MODEL = 'claude-haiku-4-5' as const
+// ID canônico (dated) — aliases não-datados podem não resolver em todas as regiões
+export const HAIKU_MODEL = 'claude-haiku-4-5-20251001' as const
 
 // Cliente reutilizável — instanciado uma vez por worker
 let _client: Anthropic | null = null
 
 function getClient(): Anthropic {
   if (!_client) {
-    _client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+    const apiKey = process.env.ANTHROPIC_API_KEY
+    if (!apiKey) {
+      throw new Error('ANTHROPIC_API_KEY não configurada no ambiente do servidor.')
+    }
+    _client = new Anthropic({ apiKey })
   }
   return _client
 }

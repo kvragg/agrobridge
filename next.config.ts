@@ -35,6 +35,12 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // Garante que os prompts lidos via fs.readFileSync sejam empacotados no
+  // bundle das funções serverless do Vercel.
+  outputFileTracingIncludes: {
+    'app/api/entrevista/route': ['./prompts/**/*'],
+    'app/api/checklist/route': ['./prompts/**/*'],
+  },
   headers: async () => [
     { source: '/(.*)', headers: securityHeaders },
   ],

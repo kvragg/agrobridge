@@ -1,7 +1,39 @@
 import { createClient } from '@/lib/supabase/server'
-import { criarStreamEntrevista } from '@/lib/anthropic/haiku'
+import { criarStreamEntrevista, HAIKU_MODEL } from '@/lib/anthropic/haiku'
 import type { MensagemChat } from '@/lib/anthropic/haiku'
 import { NextRequest } from 'next/server'
+
+function detalharErroAnthropic(err: unknown): {
+  status?: number
+  tipo?: string
+  mensagemCurta: string
+  mensagemCompleta: string
+} {
+  if (err && typeof err === 'object') {
+    const e = err as {
+      status?: number
+      message?: string
+      error?: { type?: string; message?: string }
+      name?: string
+    }
+    const status = e.status
+    const tipo = e.error?.type ?? e.name
+    const msg = e.error?.message ?? e.message ?? String(err)
+    let curta = msg
+    if (status === 401) curta = 'chave da API inválida ou ausente.'
+    else if (status === 404) curta = `modelo não encontrado (${HAIKU_MODEL}).`
+    else if (status === 429) curta = 'limite de requisições atingido. Aguarde.'
+    else if (status === 529 || status === 503) curta = 'IA sobrecarregada. Tente em alguns segundos.'
+    else if (status && status >= 500) curta = `erro no provedor (${status}).`
+    return {
+      status,
+      tipo,
+      mensagemCurta: curta.slice(0, 200),
+      mensagemCompleta: `${status ?? '?'} ${tipo ?? ''} — ${msg}`,
+    }
+  }
+  return { mensagemCurta: String(err).slice(0, 200), mensagemCompleta: String(err) }
+}
 
 // Vercel: streaming do Haiku pode levar 20–60s; default Hobby é 10s.
 export const runtime = 'nodejs'
@@ -12,6 +44,9 @@ const JSON_FENCE_START = '```json'
 const JSON_FENCE_END = '```'
 
 export async function POST(request: NextRequest) {
+  console.log(
+    `[api/entrevista] POST iniciado — modelo=${HAIKU_MODEL}, key_presente=${!!process.env.ANTHROPIC_API_KEY}`
+  )
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -77,10 +112,11 @@ export async function POST(request: NextRequest) {
           }
         }
       } catch (err) {
-        console.error('[api/entrevista] erro no stream Anthropic:', err)
+        const detalhes = detalharErroAnthropic(err)
+        console.error('[api/entrevista] erro no stream Anthropic:', detalhes, err)
         controller.enqueue(
           encoder.encode(
-            `data: ${JSON.stringify({ erro: 'Falha na IA. Tente novamente em alguns segundos.' })}\n\n`
+            `data: ${JSON.stringify({ erro: `Falha na IA: ${detalhes.mensagemCurta}` })}\n\n`
           )
         )
         controller.close()
@@ -134,8 +170,10 @@ export async function POST(request: NextRequest) {
   return new Response(stream, {
     headers: {
       'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache',
+      'Cache-Control': 'no-cache, no-transform',
       Connection: 'keep-alive',
+      // Desabilita buffering em proxies (Vercel / Nginx) — essencial para SSE
+      'X-Accel-Buffering': 'no',
     },
   })
 }
