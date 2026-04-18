@@ -5,20 +5,21 @@ import { NextRequest } from 'next/server'
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
   if (!user) {
     return Response.json({ erro: 'Não autorizado' }, { status: 401 })
   }
 
-  const body = await request.json() as { processo_id: string }
+  const body = (await request.json()) as { processo_id: string }
   const { processo_id } = body
 
   if (!processo_id) {
     return Response.json({ erro: 'processo_id obrigatório' }, { status: 400 })
   }
 
-  // Buscar processo com perfil_json
   const { data: processo } = await supabase
     .from('processos')
     .select('id, perfil_json, status')
@@ -36,17 +37,24 @@ export async function POST(request: NextRequest) {
     )
   }
 
+  // Se já tem checklist gerado, retornar do cache
+  const perfilJson = processo.perfil_json as Record<string, unknown>
+  if (perfilJson._checklist_md && typeof perfilJson._checklist_md === 'string') {
+    return Response.json({ checklist: perfilJson._checklist_md })
+  }
+
   // Gerar checklist com Sonnet
   const checklistMarkdown = await gerarChecklist(
     processo.perfil_json as unknown as PerfilEntrevista
   )
 
-  // TODO (próxima fase): parsear o markdown e salvar itens em checklist_itens
-  // Por ora retornamos o markdown completo para renderização no cliente
-
+  // Salvar markdown no perfil_json para cache (evita regerar)
   await supabase
     .from('processos')
-    .update({ status: 'checklist' })
+    .update({
+      status: 'documentos',
+      perfil_json: { ...perfilJson, _checklist_md: checklistMarkdown },
+    })
     .eq('id', processo_id)
 
   return Response.json({ checklist: checklistMarkdown })

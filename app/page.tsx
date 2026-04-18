@@ -14,59 +14,54 @@ import {
   Leaf,
   ArrowRight,
   CheckCircle,
+  Sprout,
+  TrendingUp,
+  Clock,
+  Star,
+  Zap,
 } from "lucide-react"
-import { Card } from "@/components/ui/card"
 import FadeIn from "@/components/ui/fade-in"
 
-// ─── Types ───────────────────────────────────────────────────────────────────
-
-interface Step {
-  icon: React.ComponentType<{ className?: string }>
-  title: string
-  subtitle: string
-  description: string
-}
-
-interface Benefit {
-  icon: React.ComponentType<{ className?: string }>
-  title: string
-  description: string
-}
-
-// ─── Data ────────────────────────────────────────────────────────────────────
-
-const STEPS: Step[] = [
+const STEPS = [
   {
     icon: MessageSquare,
+    emoji: "💬",
     title: "Entrevista IA",
-    subtitle: "Conte seu projeto em minutos",
+    subtitle: "Conte seu projeto em 5 minutos",
     description:
       "Responda 8 perguntas inteligentes. A IA mapeia seu perfil: tipo de produtor, finalidade do crédito e banco preferido.",
+    color: "bg-blue-50 text-blue-600",
   },
   {
     icon: ClipboardList,
+    emoji: "📋",
     title: "Checklist personalizado",
     subtitle: "Saiba exatamente o que buscar",
     description:
       "Receba a lista precisa de documentos exigidos — sem nada a mais, sem nada faltando. Ajustado ao seu banco e linha de crédito.",
+    color: "bg-green-50 text-[#166534]",
   },
   {
     icon: Upload,
+    emoji: "📤",
     title: "Upload e validação",
     subtitle: "A IA confere tudo por você",
     description:
       "Envie os documentos e aguarde a verificação automática de prazo, legibilidade e consistência com o MCR.",
+    color: "bg-amber-50 text-amber-600",
   },
   {
     icon: FileText,
+    emoji: "📑",
     title: "Dossiê completo",
     subtitle: "Entregue pronto ao banco",
     description:
       "PDF organizado com capa, índice, documentos validados e carta de defesa de crédito redigida pela IA.",
+    color: "bg-purple-50 text-purple-600",
   },
 ]
 
-const BENEFITS: Benefit[] = [
+const BENEFITS = [
   {
     icon: Bot,
     title: "Entrevista inteligente",
@@ -107,21 +102,18 @@ const BENEFITS: Benefit[] = [
 
 const BANKS = [
   "Banco do Brasil",
+  "Sicredi",
+  "Sicoob",
   "Caixa Econômica",
+  "BNB",
   "Bradesco",
   "Santander",
   "Safra",
-  "BRB",
-  "BTG Pactual",
-  "XP Investimentos",
-  "BNB",
 ]
 
 const COOPERATIVAS = ["Sicredi", "Sicoob", "Cresol", "Unicred"]
 
 const YEAR = new Date().getFullYear()
-
-// ─── Page ────────────────────────────────────────────────────────────────────
 
 export default function Home() {
   return (
@@ -129,7 +121,7 @@ export default function Home() {
       <Navbar />
       <main>
         <Hero />
-        <Institutions />
+        <Logos />
         <HowItWorks />
         <Benefits />
         <SocialProof />
@@ -140,34 +132,32 @@ export default function Home() {
   )
 }
 
-// ─── Sections ────────────────────────────────────────────────────────────────
-
 function Navbar() {
   return (
-    <header className="sticky top-0 z-50 border-b border-gray-100 bg-white/90 backdrop-blur-md">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+    <header className="sticky top-0 z-50 border-b border-gray-100 bg-white/95 backdrop-blur-md">
+      <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3.5">
         <Logo />
-        <nav className="hidden items-center gap-8 text-sm font-medium text-gray-500 sm:flex">
+        <nav className="hidden items-center gap-7 text-sm font-medium text-gray-500 sm:flex">
           <a href="#como-funciona" className="transition-colors hover:text-gray-900">
             Como funciona
           </a>
           <a href="#beneficios" className="transition-colors hover:text-gray-900">
             Benefícios
           </a>
-          <a href="#instituicoes" className="transition-colors hover:text-gray-900">
+          <a href="#bancos" className="transition-colors hover:text-gray-900">
             Bancos
           </a>
         </nav>
         <div className="flex items-center gap-3">
           <Link
             href="/login"
-            className="text-sm font-medium text-gray-500 transition-colors hover:text-gray-900"
+            className="text-sm font-medium text-gray-600 transition-colors hover:text-gray-900"
           >
             Entrar
           </Link>
           <Link
             href="/cadastro"
-            className="rounded-lg bg-[#166534] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#14532d]"
+            className="rounded-lg bg-[#166534] px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-[#14532d] hover:shadow-md"
           >
             Começar grátis
           </Link>
@@ -179,98 +169,128 @@ function Navbar() {
 
 function Hero() {
   return (
-    <section className="mx-auto max-w-6xl px-6 pb-28 pt-24 text-center">
-      <div className="mx-auto max-w-3xl">
-        <span className="inline-block rounded-full border border-green-200 bg-green-50 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-[#166534]">
-          Criado por ex-bancários do sistema
-        </span>
+    <section className="relative overflow-hidden bg-gradient-to-b from-[#f0fdf4] to-white px-6 pb-28 pt-20">
+      {/* Background decoration */}
+      <div
+        aria-hidden
+        className="absolute right-0 top-0 -z-10 h-[600px] w-[600px] -translate-y-1/4 translate-x-1/4 rounded-full bg-gradient-to-br from-green-100/60 to-emerald-50/40 blur-3xl"
+      />
+      <div
+        aria-hidden
+        className="absolute bottom-0 left-0 -z-10 h-[400px] w-[400px] -translate-x-1/4 translate-y-1/4 rounded-full bg-gradient-to-tr from-green-50/50 to-transparent blur-3xl"
+      />
 
-        <h1 className="mt-7 text-5xl font-black leading-[1.08] tracking-tight text-gray-950 sm:text-6xl lg:text-7xl">
-          Crédito rural sem
-          <br />
-          <span className="text-[#16a34a]">burocracia perdida</span>
-        </h1>
+      <div className="mx-auto max-w-5xl text-center">
+        <FadeIn>
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-green-200 bg-white px-4 py-2 text-xs font-semibold text-[#166534] shadow-sm">
+            <Zap className="h-3.5 w-3.5 text-[#16a34a]" />
+            Criado por quem viveu o crédito rural por dentro
+          </div>
 
-        <p className="mx-auto mt-7 max-w-xl text-lg leading-relaxed text-gray-500">
-          IA que entrevista, gera checklist, valida documentos e monta
-          o dossiê completo com defesa de crédito — pronto para entregar ao banco.
-        </p>
+          <h1 className="text-5xl font-black leading-[1.06] tracking-tight text-gray-950 sm:text-6xl lg:text-[72px]">
+            Crédito rural sem
+            <br />
+            <span className="relative inline-block">
+              <span className="relative z-10 text-[#16a34a]">perder tempo</span>
+              <span
+                aria-hidden
+                className="absolute -bottom-1 left-0 right-0 h-3 rounded-full bg-green-200/60"
+              />
+            </span>
+          </h1>
 
-        <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
-          <Link
-            href="/cadastro"
-            className="group inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#166534] px-8 py-4 text-base font-bold text-white transition-colors hover:bg-[#14532d] sm:w-auto"
-          >
-            Começar agora
-            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-          </Link>
-          <a
-            href="#como-funciona"
-            className="inline-flex w-full items-center justify-center rounded-xl border border-gray-200 px-8 py-4 text-base font-semibold text-gray-700 transition-colors hover:border-gray-300 hover:bg-gray-50 sm:w-auto"
-          >
-            Ver como funciona
-          </a>
-        </div>
+          <p className="mx-auto mt-7 max-w-xl text-lg leading-relaxed text-gray-500">
+            IA que entrevista, gera checklist, valida documentos e monta o
+            dossiê com defesa de crédito — pronto para entregar ao banco.
+          </p>
 
-        <div className="mt-14 flex items-center justify-center gap-2 text-sm text-gray-400">
-          <ShieldCheck className="h-4 w-4 text-[#16a34a]" />
-          <span>Seguro, privado e em conformidade com a LGPD</span>
-        </div>
+          <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
+            <Link
+              href="/cadastro"
+              className="group inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#166534] px-8 py-4 text-base font-bold text-white shadow-lg shadow-green-900/20 transition-all hover:bg-[#14532d] hover:shadow-xl hover:shadow-green-900/25 sm:w-auto"
+            >
+              Começar agora — é grátis
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+            </Link>
+            <a
+              href="#como-funciona"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 px-8 py-4 text-base font-semibold text-gray-700 transition-colors hover:bg-gray-50 sm:w-auto"
+            >
+              Ver como funciona
+            </a>
+          </div>
+        </FadeIn>
+
+        <FadeIn delay={200} className="mt-12 flex items-center justify-center gap-8 text-sm text-gray-400">
+          {[
+            { icon: ShieldCheck, label: "LGPD compliant" },
+            { icon: Clock, label: "5 min para o checklist" },
+            { icon: Star, label: "Baseado no MCR" },
+          ].map(({ icon: Icon, label }) => (
+            <span key={label} className="flex items-center gap-1.5">
+              <Icon className="h-4 w-4 text-[#16a34a]" />
+              {label}
+            </span>
+          ))}
+        </FadeIn>
       </div>
     </section>
   )
 }
 
-function Institutions() {
+function Logos() {
   return (
-    <section id="instituicoes" className="border-t border-gray-100 bg-[#f9fafb] px-6 py-20">
-      <div className="mx-auto max-w-6xl">
-        <FadeIn>
-          <h2 className="text-center text-2xl font-bold tracking-tight text-gray-900">
-            Compatível com as principais instituições
-          </h2>
-          <p className="mx-auto mt-3 max-w-lg text-center text-gray-500">
-            Checklists e dossiês personalizados conforme as exigências de cada banco e cooperativa.
+    <section id="bancos" className="border-y border-gray-100 bg-white px-6 py-16">
+      <div className="mx-auto max-w-5xl">
+        <FadeIn className="mb-10 text-center">
+          <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">
+            Compatível com as principais instituições do agro
           </p>
         </FadeIn>
 
-        <FadeIn delay={100} className="mt-12">
-          <div className="flex items-center gap-3 mb-5">
-            <Building2 className="h-4 w-4 text-gray-400" aria-hidden />
-            <span className="text-xs font-semibold uppercase tracking-widest text-gray-400">
-              Bancos
-            </span>
-            <div className="h-px flex-1 bg-gray-200" />
-          </div>
-          <div className="flex flex-wrap gap-3">
-            {BANKS.map((bank) => (
-              <div
-                key={bank}
-                className="rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:border-[#166534]/30 hover:text-[#166534]"
-              >
-                {bank}
+        <FadeIn delay={100}>
+          <div className="flex items-start gap-8 flex-col sm:flex-row">
+            {/* Banks */}
+            <div className="flex-1">
+              <div className="mb-3 flex items-center gap-2">
+                <Building2 className="h-3.5 w-3.5 text-gray-400" />
+                <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
+                  Bancos
+                </span>
               </div>
-            ))}
-          </div>
-        </FadeIn>
+              <div className="flex flex-wrap gap-2">
+                {BANKS.map((bank) => (
+                  <span
+                    key={bank}
+                    className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-sm font-medium text-gray-600"
+                  >
+                    {bank}
+                  </span>
+                ))}
+              </div>
+            </div>
 
-        <FadeIn delay={200} className="mt-8">
-          <div className="flex items-center gap-3 mb-5">
-            <Leaf className="h-4 w-4 text-[#16a34a]" aria-hidden />
-            <span className="text-xs font-semibold uppercase tracking-widest text-[#16a34a]">
-              Cooperativas
-            </span>
-            <div className="h-px flex-1 bg-green-100" />
-          </div>
-          <div className="flex flex-wrap gap-3">
-            {COOPERATIVAS.map((coop) => (
-              <div
-                key={coop}
-                className="rounded-lg border border-green-100 bg-green-50 px-4 py-2.5 text-sm font-medium text-[#166534] transition-colors hover:border-green-300"
-              >
-                {coop}
+            <div className="h-px w-full bg-gray-100 sm:h-auto sm:w-px sm:self-stretch" />
+
+            {/* Cooperativas */}
+            <div>
+              <div className="mb-3 flex items-center gap-2">
+                <Leaf className="h-3.5 w-3.5 text-[#16a34a]" />
+                <span className="text-[10px] font-bold uppercase tracking-widest text-[#16a34a]">
+                  Cooperativas
+                </span>
               </div>
-            ))}
+              <div className="flex flex-wrap gap-2">
+                {COOPERATIVAS.map((coop) => (
+                  <span
+                    key={coop}
+                    className="rounded-lg border border-green-200 bg-green-50 px-3 py-1.5 text-sm font-medium text-[#166534]"
+                  >
+                    {coop}
+                  </span>
+                ))}
+              </div>
+            </div>
           </div>
         </FadeIn>
       </div>
@@ -281,40 +301,57 @@ function Institutions() {
 function HowItWorks() {
   return (
     <section id="como-funciona" className="px-6 py-24">
-      <div className="mx-auto max-w-6xl">
+      <div className="mx-auto max-w-5xl">
         <FadeIn className="text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-            Como funciona
+          <span className="text-xs font-bold uppercase tracking-widest text-[#16a34a]">
+            Passo a passo
+          </span>
+          <h2 className="mt-3 text-3xl font-black tracking-tight text-gray-900 sm:text-4xl">
+            Do primeiro acesso ao dossiê
           </h2>
-          <p className="mx-auto mt-4 max-w-lg text-gray-500">
-            Do primeiro acesso ao dossiê em mãos — quatro etapas simples e guiadas.
+          <p className="mx-auto mt-4 max-w-md text-gray-500">
+            Quatro etapas simples e guiadas, sem precisar de contador ou despachante externo.
           </p>
         </FadeIn>
 
-        <div className="relative mt-16">
-          {/* Connector line — desktop only */}
-          <div
-            aria-hidden
-            className="absolute left-[12.5%] right-[12.5%] top-[23px] hidden h-px bg-gradient-to-r from-transparent via-green-200 to-transparent lg:block"
-          />
-
-          <div className="grid grid-cols-1 gap-12 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
-            {STEPS.map((step, i) => (
-              <FadeIn key={step.title} delay={i * 100}>
-                <div className="flex flex-col items-center text-center">
-                  <div className="relative z-10 mb-5 flex h-12 w-12 items-center justify-center rounded-full bg-[#166534] text-base font-bold text-white ring-8 ring-white">
-                    {i + 1}
+        <div className="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {STEPS.map((step, i) => (
+            <FadeIn key={step.title} delay={i * 80}>
+              <div className="relative rounded-2xl border border-gray-100 bg-white p-6 shadow-sm transition-shadow hover:shadow-md">
+                {/* Step number */}
+                <div className="mb-4 flex items-center justify-between">
+                  <div
+                    className={`flex h-10 w-10 items-center justify-center rounded-xl text-lg font-black ${step.color}`}
+                  >
+                    {step.emoji}
                   </div>
-                  <step.icon className="mb-3 h-6 w-6 text-[#16a34a]" />
-                  <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-gray-400">
-                    {step.title}
-                  </p>
-                  <h3 className="mb-2 text-base font-bold text-gray-900">{step.subtitle}</h3>
-                  <p className="text-sm leading-relaxed text-gray-500">{step.description}</p>
+                  <span className="text-3xl font-black text-gray-100">
+                    {i + 1}
+                  </span>
                 </div>
-              </FadeIn>
-            ))}
-          </div>
+
+                <p className="mb-1 text-[11px] font-bold uppercase tracking-wider text-gray-400">
+                  {step.title}
+                </p>
+                <h3 className="mb-2 text-base font-bold text-gray-900">
+                  {step.subtitle}
+                </h3>
+                <p className="text-sm leading-relaxed text-gray-500">
+                  {step.description}
+                </p>
+
+                {/* Connector arrow */}
+                {i < STEPS.length - 1 && (
+                  <div
+                    aria-hidden
+                    className="absolute -right-3 top-1/2 z-10 hidden -translate-y-1/2 lg:block"
+                  >
+                    <ArrowRight className="h-5 w-5 text-gray-200" />
+                  </div>
+                )}
+              </div>
+            </FadeIn>
+          ))}
         </div>
       </div>
     </section>
@@ -323,27 +360,34 @@ function HowItWorks() {
 
 function Benefits() {
   return (
-    <section id="beneficios" className="border-t border-gray-100 bg-[#f9fafb] px-6 py-24">
-      <div className="mx-auto max-w-6xl">
+    <section id="beneficios" className="bg-[#f8fafc] px-6 py-24">
+      <div className="mx-auto max-w-5xl">
         <FadeIn className="text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+          <span className="text-xs font-bold uppercase tracking-widest text-[#16a34a]">
+            Funcionalidades
+          </span>
+          <h2 className="mt-3 text-3xl font-black tracking-tight text-gray-900 sm:text-4xl">
             Por que usar o AgroBridge?
           </h2>
-          <p className="mx-auto mt-4 max-w-lg text-gray-500">
-            Cada funcionalidade foi desenhada com o olhar de quem já analisou centenas de dossiês de crédito rural.
+          <p className="mx-auto mt-4 max-w-md text-gray-500">
+            Cada funcionalidade foi desenhada com o olhar de quem analisou centenas de dossiês.
           </p>
         </FadeIn>
 
-        <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {BENEFITS.map((benefit, i) => (
-            <FadeIn key={benefit.title} delay={Math.floor(i / 3) * 100 + (i % 3) * 60}>
-              <Card className="flex flex-col gap-3 p-6">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-50">
+            <FadeIn key={benefit.title} delay={i * 60}>
+              <div className="rounded-2xl border border-white bg-white p-6 shadow-sm transition-shadow hover:shadow-md">
+                <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-green-50">
                   <benefit.icon className="h-5 w-5 text-[#166534]" />
                 </div>
-                <h3 className="text-sm font-bold text-gray-900">{benefit.title}</h3>
-                <p className="text-sm leading-relaxed text-gray-500">{benefit.description}</p>
-              </Card>
+                <h3 className="mb-2 text-sm font-bold text-gray-900">
+                  {benefit.title}
+                </h3>
+                <p className="text-sm leading-relaxed text-gray-500">
+                  {benefit.description}
+                </p>
+              </div>
             </FadeIn>
           ))}
         </div>
@@ -354,26 +398,34 @@ function Benefits() {
 
 function SocialProof() {
   return (
-    <section className="bg-[#14532d] px-6 py-28 text-white">
-      <FadeIn className="mx-auto max-w-3xl text-center">
-        <span className="inline-block rounded-full border border-green-700 bg-green-900/50 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-green-300">
+    <section className="relative overflow-hidden bg-[#14532d] px-6 py-28 text-white">
+      <div
+        aria-hidden
+        className="absolute right-0 top-0 h-[500px] w-[500px] translate-x-1/3 -translate-y-1/3 rounded-full bg-[#16a34a]/10 blur-3xl"
+      />
+      <FadeIn className="relative mx-auto max-w-3xl text-center">
+        <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-green-700/50 bg-green-900/30 px-4 py-2 text-xs font-semibold text-green-300">
+          <TrendingUp className="h-3.5 w-3.5" />
           Conhecimento bancário + Inteligência Artificial
-        </span>
-        <h2 className="mt-8 text-4xl font-black leading-tight tracking-tight sm:text-5xl">
+        </div>
+        <h2 className="text-4xl font-black leading-tight tracking-tight sm:text-5xl">
           Criado por quem conhece
-          <br />o banco por dentro
+          <br />
+          <span className="text-[#86efac]">o banco por dentro</span>
         </h2>
-        <p className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-green-200">
+        <p className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-green-100/80">
           Desenvolvido com base no MCR e na experiência real de análise de crédito rural.
           Cada etapa foi desenhada para eliminar os motivos mais comuns de reprovação documental.
         </p>
         <div className="mt-10 flex flex-wrap items-center justify-center gap-6 text-sm text-green-300">
-          {["Baseado no MCR", "Testado com bancários", "LGPD compliant"].map((item) => (
-            <span key={item} className="flex items-center gap-2">
-              <CheckCircle className="h-4 w-4 text-[#16a34a]" />
-              {item}
-            </span>
-          ))}
+          {["Baseado no MCR do Bacen", "Testado com bancários do agro", "LGPD compliant"].map(
+            (item) => (
+              <span key={item} className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4 text-[#86efac]" />
+                {item}
+              </span>
+            )
+          )}
         </div>
       </FadeIn>
     </section>
@@ -382,24 +434,29 @@ function SocialProof() {
 
 function FinalCTA() {
   return (
-    <section className="bg-[#166534] px-6 py-28 text-white">
+    <section className="px-6 py-28">
       <FadeIn className="mx-auto max-w-2xl text-center">
-        <h2 className="text-4xl font-black leading-tight tracking-tight sm:text-5xl">
+        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-green-100">
+          <Sprout className="h-8 w-8 text-[#166534]" />
+        </div>
+        <h2 className="text-4xl font-black leading-tight tracking-tight text-gray-900 sm:text-5xl">
           Seu dossiê aprovado
-          <br />começa aqui
+          <br />
+          começa aqui
         </h2>
-        <p className="mx-auto mt-5 max-w-md text-lg leading-relaxed text-green-100">
-          Independente do resultado, você terá o processo mais
-          organizado que um banco já recebeu.
+        <p className="mx-auto mt-5 max-w-md text-lg leading-relaxed text-gray-500">
+          Independente do resultado, você terá o processo mais organizado que um banco já recebeu.
         </p>
         <Link
           href="/cadastro"
-          className="group mt-10 inline-flex items-center gap-2 rounded-xl bg-white px-8 py-4 text-base font-bold text-[#166534] transition-colors hover:bg-green-50"
+          className="group mt-10 inline-flex items-center gap-2 rounded-xl bg-[#166534] px-8 py-4 text-base font-bold text-white shadow-lg shadow-green-900/20 transition-all hover:bg-[#14532d] hover:shadow-xl"
         >
-          Começar agora
+          Criar conta grátis
           <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
         </Link>
-        <p className="mt-5 text-sm text-green-300">Gratuito para começar. Sem cartão de crédito.</p>
+        <p className="mt-4 text-sm text-gray-400">
+          Sem cartão de crédito. Sem compromisso.
+        </p>
       </FadeIn>
     </section>
   )
@@ -408,7 +465,7 @@ function FinalCTA() {
 function Footer() {
   return (
     <footer className="border-t border-gray-100 bg-white px-6 py-10">
-      <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 sm:flex-row">
+      <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-4 sm:flex-row">
         <Logo />
         <p className="text-xs text-gray-400">
           AgroBridge © {YEAR} — Crédito rural simplificado
@@ -426,13 +483,16 @@ function Footer() {
   )
 }
 
-// ─── Shared ──────────────────────────────────────────────────────────────────
-
 function Logo() {
   return (
-    <Link href="/" className="text-lg font-black tracking-tight">
-      <span className="text-[#166534]">Agro</span>
-      <span className="text-gray-900">Bridge</span>
+    <Link href="/" className="flex items-center gap-2 text-lg font-black tracking-tight">
+      <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#166534]">
+        <Sprout className="h-4 w-4 text-white" />
+      </div>
+      <span>
+        <span className="text-[#166534]">Agro</span>
+        <span className="text-gray-900">Bridge</span>
+      </span>
     </Link>
   )
 }

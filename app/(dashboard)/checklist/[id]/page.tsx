@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
+import ChecklistClient from './checklist-client'
 
 export default async function ChecklistPage({
   params,
@@ -9,19 +10,25 @@ export default async function ChecklistPage({
   const { id } = await params
   const supabase = await createClient()
 
-  const { data: itens } = await supabase
-    .from('checklist_itens')
-    .select('id, nome, urgencia, status, dados_json')
-    .eq('processo_id', id)
-    .order('urgencia')
+  const { data: processo } = await supabase
+    .from('processos')
+    .select('id, status, banco, valor, perfil_json, created_at')
+    .eq('id', id)
+    .single()
 
-  if (!itens) notFound()
+  if (!processo) notFound()
+
+  const perfilJson = (processo.perfil_json as Record<string, unknown> | null) ?? {}
+  const checklistMd =
+    typeof perfilJson._checklist_md === 'string' ? perfilJson._checklist_md : null
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-bold">Checklist de documentos</h1>
-      <p className="text-muted-foreground">{itens.length} documento(s) encontrado(s)</p>
-      {/* BlocoChecklist — em construção */}
-    </div>
+    <ChecklistClient
+      processoId={id}
+      banco={processo.banco}
+      valor={processo.valor}
+      checklistMdInicial={checklistMd}
+      perfilDisponivel={!!processo.perfil_json && !!(perfilJson as Record<string, unknown>).perfil}
+    />
   )
 }

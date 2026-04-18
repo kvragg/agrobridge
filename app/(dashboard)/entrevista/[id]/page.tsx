@@ -1,15 +1,27 @@
+import { redirect } from 'next/navigation'
+import { createClient } from '@/lib/supabase/server'
+
 export default async function EntrevistaPage({
   params,
 }: {
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
+  const supabase = await createClient()
 
-  return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-bold">Entrevista</h1>
-      <p className="text-muted-foreground">Processo: {id}</p>
-      <p className="text-muted-foreground">Chat em construção</p>
-    </div>
-  )
+  const { data: processo } = await supabase
+    .from('processos')
+    .select('id, status')
+    .eq('id', id)
+    .single()
+
+  if (!processo) redirect('/dashboard')
+
+  // Se já passou da entrevista, ir para o checklist
+  if (processo.status !== 'entrevista') {
+    redirect(`/checklist/${id}`)
+  }
+
+  // Redirecionar para nova entrevista
+  redirect('/entrevista/nova')
 }
