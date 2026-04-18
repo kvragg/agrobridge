@@ -3,6 +3,10 @@ import { criarStreamEntrevista } from '@/lib/anthropic/haiku'
 import type { MensagemChat } from '@/lib/anthropic/haiku'
 import { NextRequest } from 'next/server'
 
+// Vercel: streaming do Haiku pode levar 20–60s; default Hobby é 10s.
+export const runtime = 'nodejs'
+export const maxDuration = 60
+
 // JSON de saída da entrevista: detectar quando o Haiku encerra e retornar o perfil
 const JSON_FENCE_START = '```json'
 const JSON_FENCE_END = '```'
@@ -59,17 +63,28 @@ export async function POST(request: NextRequest) {
 
   const stream = new ReadableStream({
     async start(controller) {
-      const haikuStream = criarStreamEntrevista(messages)
+      try {
+        const haikuStream = criarStreamEntrevista(messages)
 
-      for await (const chunk of haikuStream) {
-        if (
-          chunk.type === 'content_block_delta' &&
-          chunk.delta.type === 'text_delta'
-        ) {
-          const text = chunk.delta.text
-          fullText += text
-          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text })}\n\n`))
+        for await (const chunk of haikuStream) {
+          if (
+            chunk.type === 'content_block_delta' &&
+            chunk.delta.type === 'text_delta'
+          ) {
+            const text = chunk.delta.text
+            fullText += text
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text })}\n\n`))
+          }
         }
+      } catch (err) {
+        console.error('[api/entrevista] erro no stream Anthropic:', err)
+        controller.enqueue(
+          encoder.encode(
+            `data: ${JSON.stringify({ erro: 'Falha na IA. Tente novamente em alguns segundos.' })}\n\n`
+          )
+        )
+        controller.close()
+        return
       }
 
       // Detectar se a resposta contém o JSON de encerramento
@@ -100,8 +115,8 @@ export async function POST(request: NextRequest) {
               `data: ${JSON.stringify({ done: true, perfil_extraido: true })}\n\n`
             )
           )
-        } catch {
-          // JSON malformado — não bloqueia o stream
+        } catch (err) {
+          console.error('[api/entrevista] JSON do perfil malformado:', err)
           controller.enqueue(
             encoder.encode(`data: ${JSON.stringify({ done: true })}\n\n`)
           )

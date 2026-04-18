@@ -74,6 +74,16 @@ export function sanitizarNomeArquivo(nome: string): string {
     .slice(0, 150)
 }
 
+export function slugDocumento(nome: string): string {
+  return nome
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 60)
+}
+
 export function extrairIp(req: Request): string {
   const xff = req.headers.get('x-forwarded-for')
   if (xff) return xff.split(',')[0].trim()

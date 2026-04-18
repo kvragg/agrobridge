@@ -45,16 +45,26 @@ export default function NovaEntrevistaPage() {
       try {
         // 1. Criar processo
         const res = await fetch('/api/processos', { method: 'POST' })
-        if (!res.ok) throw new Error('Falha ao criar processo')
+        if (!res.ok) {
+          if (res.status === 401) {
+            throw new Error('Sessão expirada. Faça login novamente.')
+          }
+          throw new Error('Não foi possível iniciar o processo. Tente novamente.')
+        }
         const { id } = await res.json()
         setProcessoId(id)
         setEstado('iniciando')
 
         // 2. Iniciar conversa com uma mensagem de gatilho
         await enviarMensagem(id, [], 'Olá, quero iniciar meu processo de crédito rural.')
-      } catch {
+      } catch (err) {
+        console.error('[entrevista] erro ao iniciar:', err)
         setEstado('erro')
-        setErroMsg('Não foi possível iniciar a entrevista. Tente novamente.')
+        setErroMsg(
+          err instanceof Error
+            ? err.message
+            : 'Não foi possível iniciar a entrevista. Tente novamente.'
+        )
       }
     }
     iniciar()
@@ -81,13 +91,18 @@ export default function NovaEntrevistaPage() {
           }),
         })
 
-        if (!res.ok) throw new Error('Erro na API')
-        if (!res.body) throw new Error('Sem stream')
+        if (!res.ok) {
+          const texto = await res.text().catch(() => '')
+          console.error('[entrevista] API retornou', res.status, texto)
+          throw new Error(mensagemErroPorStatus(res.status))
+        }
+        if (!res.body) throw new Error('O servidor não retornou uma resposta de streaming.')
 
         const reader = res.body.getReader()
         const decoder = new TextDecoder()
         let fullText = ''
         let perfilExtraido = false
+        let erroStream: string | null = null
 
         while (true) {
           const { done, value } = await reader.read()
@@ -104,6 +119,9 @@ export default function NovaEntrevistaPage() {
                 fullText += data.text
                 setStreamingText(fullText)
               }
+              if (data.erro) {
+                erroStream = data.erro
+              }
               if (data.done) {
                 if (data.perfil_extraido) perfilExtraido = true
               }
@@ -111,6 +129,10 @@ export default function NovaEntrevistaPage() {
               // linha incompleta, ignorar
             }
           }
+        }
+
+        if (erroStream) {
+          throw new Error(erroStream)
         }
 
         // Limpar o texto que estava aparecendo como "streaming" do JSON
@@ -131,9 +153,14 @@ export default function NovaEntrevistaPage() {
         } else {
           setEstado('em_andamento')
         }
-      } catch {
+      } catch (err) {
+        console.error('[entrevista] falha ao enviar mensagem:', err)
         setEstado('erro')
-        setErroMsg('Erro de conexão. Verifique sua internet e tente novamente.')
+        setErroMsg(
+          err instanceof Error && err.message
+            ? err.message
+            : 'Erro de conexão. Verifique sua internet e tente novamente.'
+        )
       }
     },
     []
@@ -146,11 +173,23 @@ export default function NovaEntrevistaPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ processo_id: pid }),
       })
-      if (!res.ok) throw new Error('Erro ao gerar checklist')
-    } catch {
+      if (!res.ok) {
+        const texto = await res.text().catch(() => '')
+        console.error('[checklist] API retornou', res.status, texto)
+      }
+    } catch (err) {
       // Mesmo com erro, redireciona — a página de checklist tentará gerar de novo
+      console.error('[checklist] falha ao chamar API:', err)
     }
     router.push(`/checklist/${pid}`)
+  }
+
+  function mensagemErroPorStatus(status: number): string {
+    if (status === 401) return 'Sessão expirada. Faça login novamente.'
+    if (status === 413) return 'Conversa muito longa. Reinicie a entrevista.'
+    if (status === 429) return 'Muitas requisições. Aguarde 1 minuto e tente novamente.'
+    if (status >= 500) return 'Erro no servidor de IA. Tente novamente em alguns minutos.'
+    return 'Não foi possível processar sua mensagem. Tente novamente.'
   }
 
   async function handleEnviar(e: React.FormEvent) {

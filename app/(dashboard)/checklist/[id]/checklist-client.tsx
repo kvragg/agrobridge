@@ -8,14 +8,14 @@ import {
   AlertTriangle,
   FileText,
   X,
-  CheckCircle2,
   Paperclip,
   ChevronDown,
   ChevronUp,
   ExternalLink,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
-import { sanitizarNomeArquivo } from '@/lib/validation'
+import { sanitizarNomeArquivo, slugDocumento } from '@/lib/validation'
+import UploadDocumento from '@/components/checklist/UploadDocumento'
 
 interface Arquivo {
   nome: string
@@ -46,7 +46,7 @@ export default function ChecklistClient({
   const [carregandoArquivos, setCarregandoArquivos] = useState(true)
   const [enviandoArquivo, setEnviandoArquivo] = useState(false)
   const [erroUpload, setErroUpload] = useState('')
-  const [secaoUploadAberta, setSecaoUploadAberta] = useState(true)
+  const [secaoUploadAberta, setSecaoUploadAberta] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const supabase = createClient()
@@ -78,22 +78,24 @@ export default function ChecklistClient({
     gerarChecklist()
   }, [checklistMd, perfilDisponivel, processoId])
 
-  // Carregar arquivos já enviados
+  // Carregar arquivos "outros" (não associados a um documento específico)
   useEffect(() => {
     async function carregarArquivos() {
       const { data: user } = await supabase.auth.getUser()
-      if (!user.user) return
+      if (!user.user) {
+        setCarregandoArquivos(false)
+        return
+      }
 
-      const { data } = await supabase.storage
-        .from('documentos')
-        .list(`${user.user.id}/${processoId}`)
+      const prefixo = `${user.user.id}/${processoId}/outros`
+      const { data } = await supabase.storage.from('documentos').list(prefixo)
 
-      if (data) {
+      if (data && data.length > 0) {
         const arqComUrl = await Promise.all(
           data.map(async (f) => {
             const { data: urlData } = await supabase.storage
               .from('documentos')
-              .createSignedUrl(`${user.user!.id}/${processoId}/${f.name}`, 3600)
+              .createSignedUrl(`${prefixo}/${f.name}`, 3600)
             return {
               nome: f.name,
               tamanho: f.metadata?.size ?? 0,
@@ -137,7 +139,8 @@ export default function ChecklistClient({
     }
 
     const nomeSanitizado = sanitizarNomeArquivo(file.name)
-    const path = `${user.user.id}/${processoId}/${Date.now()}_${nomeSanitizado}`
+    const storedName = `${Date.now()}_${nomeSanitizado}`
+    const path = `${user.user.id}/${processoId}/outros/${storedName}`
 
     const { error } = await supabase.storage
       .from('documentos')
@@ -156,14 +159,13 @@ export default function ChecklistClient({
     setArquivos((prev) => [
       ...prev,
       {
-        nome: file.name,
+        nome: storedName,
         tamanho: file.size,
         url: urlData?.signedUrl,
       },
     ])
     setEnviandoArquivo(false)
 
-    // Reset input
     if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
@@ -171,7 +173,7 @@ export default function ChecklistClient({
     const { data: user } = await supabase.auth.getUser()
     if (!user.user) return
 
-    const path = `${user.user.id}/${processoId}/${nome}`
+    const path = `${user.user.id}/${processoId}/outros/${nome}`
     await supabase.storage.from('documentos').remove([path])
     setArquivos((prev) => prev.filter((a) => a.nome !== nome))
   }
@@ -196,13 +198,10 @@ export default function ChecklistClient({
               R$ {valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
             </span>
           )}
-          {arquivos.length > 0 && (
-            <span className="flex items-center gap-1 text-[#166534]">
-              <CheckCircle2 className="h-3.5 w-3.5" />
-              {arquivos.length} documento{arquivos.length !== 1 ? 's' : ''} enviado{arquivos.length !== 1 ? 's' : ''}
-            </span>
-          )}
         </div>
+        <p className="mt-1 text-xs text-gray-400">
+          Envie cada documento clicando no botão correspondente no card.
+        </p>
       </div>
 
       {/* Checklist Section */}
@@ -213,7 +212,7 @@ export default function ChecklistClient({
             <h2 className="font-bold text-gray-900">Documentos necessários</h2>
           </div>
           <p className="mt-0.5 text-xs text-gray-400">
-            Lista personalizada com passo a passo de como obter cada documento
+            Lista personalizada com passo a passo e upload individual de cada documento
           </p>
         </div>
 
@@ -224,7 +223,7 @@ export default function ChecklistClient({
               <p className="text-sm text-gray-500">
                 A IA está gerando seu checklist personalizado...
               </p>
-              <p className="text-xs text-gray-400">Isso pode levar até 30 segundos</p>
+              <p className="text-xs text-gray-400">Isso pode levar até 60 segundos</p>
             </div>
           )}
 
@@ -257,12 +256,12 @@ export default function ChecklistClient({
           )}
 
           {checklistMd && (
-            <ChecklistMarkdown markdown={checklistMd} />
+            <ChecklistMarkdown markdown={checklistMd} processoId={processoId} />
           )}
         </div>
       </div>
 
-      {/* Upload Section */}
+      {/* Outros documentos (upload não associado) */}
       <div className="rounded-2xl border border-gray-200 bg-white">
         <button
           onClick={() => setSecaoUploadAberta(!secaoUploadAberta)}
@@ -270,7 +269,7 @@ export default function ChecklistClient({
         >
           <div className="flex items-center gap-2">
             <Upload className="h-5 w-5 text-[#166534]" />
-            <h2 className="font-bold text-gray-900">Enviar documentos</h2>
+            <h2 className="font-bold text-gray-900">Outros documentos</h2>
             {arquivos.length > 0 && (
               <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-semibold text-[#166534]">
                 {arquivos.length}
@@ -286,7 +285,10 @@ export default function ChecklistClient({
 
         {secaoUploadAberta && (
           <div className="p-6">
-            {/* Drop zone */}
+            <p className="mb-4 text-xs text-gray-500">
+              Envie aqui arquivos adicionais que não correspondem a um documento específico da lista acima.
+            </p>
+
             <div
               onClick={() => fileInputRef.current?.click()}
               className="flex cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-gray-200 bg-gray-50 px-6 py-10 transition-colors hover:border-[#166534]/40 hover:bg-green-50"
@@ -296,7 +298,7 @@ export default function ChecklistClient({
               </div>
               <div className="text-center">
                 <p className="text-sm font-semibold text-gray-700">
-                  Clique para enviar um documento
+                  Clique para enviar um arquivo
                 </p>
                 <p className="mt-0.5 text-xs text-gray-400">
                   PDF, JPG ou PNG — máximo 10MB por arquivo
@@ -326,7 +328,6 @@ export default function ChecklistClient({
               </p>
             )}
 
-            {/* Lista de arquivos */}
             {carregandoArquivos && (
               <div className="mt-4 flex justify-center">
                 <Loader2 className="h-5 w-5 animate-spin text-gray-300" />
@@ -336,7 +337,7 @@ export default function ChecklistClient({
             {!carregandoArquivos && arquivos.length > 0 && (
               <div className="mt-4 space-y-2">
                 <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
-                  Documentos enviados
+                  Arquivos enviados
                 </p>
                 {arquivos.map((arq) => (
                   <div
@@ -346,7 +347,7 @@ export default function ChecklistClient({
                     <FileCheck className="h-5 w-5 flex-shrink-0 text-[#16a34a]" />
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium text-gray-800">
-                        {arq.nome}
+                        {arq.nome.replace(/^\d+_/, '')}
                       </p>
                       <p className="text-xs text-gray-400">
                         {formatarTamanho(arq.tamanho)}
@@ -377,7 +378,7 @@ export default function ChecklistClient({
 
             {!carregandoArquivos && arquivos.length === 0 && (
               <p className="mt-4 text-center text-sm text-gray-400">
-                Nenhum documento enviado ainda.
+                Nenhum arquivo extra enviado.
               </p>
             )}
           </div>
@@ -389,13 +390,19 @@ export default function ChecklistClient({
 
 // ── Markdown Renderer ─────────────────────────────────────────────
 
-function ChecklistMarkdown({ markdown }: { markdown: string }) {
+function ChecklistMarkdown({
+  markdown,
+  processoId,
+}: {
+  markdown: string
+  processoId: string
+}) {
   const sections = parseChecklist(markdown)
 
   return (
     <div className="space-y-6">
       {sections.map((section, i) => (
-        <ChecklistSection key={i} section={section} />
+        <ChecklistSection key={i} section={section} processoId={processoId} />
       ))}
     </div>
   )
@@ -435,7 +442,13 @@ function parseChecklist(markdown: string): Section[] {
   return sections
 }
 
-function ChecklistSection({ section }: { section: Section }) {
+function ChecklistSection({
+  section,
+  processoId,
+}: {
+  section: Section
+  processoId: string
+}) {
   const [aberta, setAberta] = useState(true)
   const isBlocker = section.titulo.toUpperCase().includes('REGULARIZAR')
 
@@ -465,14 +478,20 @@ function ChecklistSection({ section }: { section: Section }) {
 
       {aberta && (
         <div className="px-5 py-4">
-          <MarkdownContent lines={section.conteudo} />
+          <MarkdownContent lines={section.conteudo} processoId={processoId} />
         </div>
       )}
     </div>
   )
 }
 
-function MarkdownContent({ lines }: { lines: string[] }) {
+function MarkdownContent({
+  lines,
+  processoId,
+}: {
+  lines: string[]
+  processoId: string
+}) {
   const elementos: React.ReactNode[] = []
   let i = 0
 
@@ -488,7 +507,14 @@ function MarkdownContent({ lines }: { lines: string[] }) {
         bloco.push(lines[i])
         i++
       }
-      elementos.push(<DocumentoItem key={i} nome={nome} detalhes={bloco.slice(1)} />)
+      elementos.push(
+        <DocumentoItem
+          key={i}
+          nome={nome}
+          detalhes={bloco.slice(1)}
+          processoId={processoId}
+        />
+      )
       continue
     }
 
@@ -524,9 +550,18 @@ function MarkdownContent({ lines }: { lines: string[] }) {
   return <div className="space-y-4">{elementos}</div>
 }
 
-function DocumentoItem({ nome, detalhes }: { nome: string; detalhes: string[] }) {
+function DocumentoItem({
+  nome,
+  detalhes,
+  processoId,
+}: {
+  nome: string
+  detalhes: string[]
+  processoId: string
+}) {
   const [expandido, setExpandido] = useState(false)
   const temDetalhes = detalhes.length > 0
+  const docSlug = slugDocumento(nome)
 
   return (
     <div className="rounded-lg border border-gray-100 bg-gray-50/50 overflow-hidden">
@@ -555,6 +590,12 @@ function DocumentoItem({ nome, detalhes }: { nome: string; detalhes: string[] })
           ))}
         </div>
       )}
+
+      <UploadDocumento
+        processoId={processoId}
+        docSlug={docSlug}
+        nomeDocumento={nome}
+      />
     </div>
   )
 }
