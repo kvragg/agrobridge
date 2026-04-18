@@ -1,7 +1,8 @@
 import { createClient } from '@supabase/supabase-js'
 
-// Admin client com service_role — NUNCA usar no client-side
-// Apenas em Server Actions e Route Handlers
+// Server-only — nunca importar de client components.
+// Usa SUPABASE_SERVICE_ROLE_KEY: exposição ao browser permite bypass total do RLS.
+// Apenas em Server Actions e Route Handlers.
 export function createAdminClient() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

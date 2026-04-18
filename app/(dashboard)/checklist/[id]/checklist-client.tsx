@@ -15,6 +15,7 @@ import {
   ExternalLink,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { sanitizarNomeArquivo } from '@/lib/validation'
 
 interface Arquivo {
   nome: string
@@ -114,19 +115,15 @@ export default function ChecklistClient({
     if (!file) return
     setErroUpload('')
 
-    const MAX_MB = 20
+    const MAX_MB = 10
     if (file.size > MAX_MB * 1024 * 1024) {
       setErroUpload(`Arquivo muito grande. Máximo: ${MAX_MB}MB.`)
       return
     }
 
-    const TIPOS_ACEITOS = [
-      'application/pdf',
-      'image/jpeg',
-      'image/png',
-      'image/webp',
-    ]
-    if (!TIPOS_ACEITOS.includes(file.type)) {
+    const TIPOS_ACEITOS = ['application/pdf', 'image/jpeg', 'image/png']
+    const EXT_ACEITAS = /\.(pdf|jpe?g|png)$/i
+    if (!TIPOS_ACEITOS.includes(file.type) || !EXT_ACEITAS.test(file.name)) {
       setErroUpload('Tipo de arquivo não suportado. Use PDF, JPG ou PNG.')
       return
     }
@@ -139,7 +136,8 @@ export default function ChecklistClient({
       return
     }
 
-    const path = `${user.user.id}/${processoId}/${Date.now()}_${file.name}`
+    const nomeSanitizado = sanitizarNomeArquivo(file.name)
+    const path = `${user.user.id}/${processoId}/${Date.now()}_${nomeSanitizado}`
 
     const { error } = await supabase.storage
       .from('documentos')
@@ -301,7 +299,7 @@ export default function ChecklistClient({
                   Clique para enviar um documento
                 </p>
                 <p className="mt-0.5 text-xs text-gray-400">
-                  PDF, JPG ou PNG — máximo 20MB por arquivo
+                  PDF, JPG ou PNG — máximo 10MB por arquivo
                 </p>
               </div>
               {enviandoArquivo && (
@@ -315,7 +313,7 @@ export default function ChecklistClient({
             <input
               ref={fileInputRef}
               type="file"
-              accept=".pdf,.jpg,.jpeg,.png,.webp"
+              accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
               onChange={handleUpload}
               disabled={enviandoArquivo}
               className="hidden"

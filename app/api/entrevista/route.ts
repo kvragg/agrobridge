@@ -26,6 +26,22 @@ export async function POST(request: NextRequest) {
     return new Response('Payload inválido', { status: 400 })
   }
 
+  const MAX_MSGS = 50
+  const MAX_CHARS_POR_MSG = 10_000
+  if (messages.length > MAX_MSGS) {
+    return new Response('Conversa excedeu o limite de mensagens.', { status: 413 })
+  }
+  for (const m of messages) {
+    if (
+      !m ||
+      (m.role !== 'user' && m.role !== 'assistant') ||
+      typeof m.content !== 'string' ||
+      m.content.length > MAX_CHARS_POR_MSG
+    ) {
+      return new Response('Mensagem inválida.', { status: 400 })
+    }
+  }
+
   // Verificar que o processo pertence ao usuário (RLS também garante, mas defence-in-depth)
   const { data: processo } = await supabase
     .from('processos')

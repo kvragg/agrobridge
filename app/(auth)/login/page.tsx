@@ -5,6 +5,7 @@ import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { Eye, EyeOff, ArrowRight, Sprout } from "lucide-react"
+import { Alert } from "@/components/ui/alert"
 
 export default function LoginPage() {
   return (
@@ -22,8 +23,11 @@ function LoginInner() {
   const [email, setEmail] = useState("")
   const [senha, setSenha] = useState("")
   const [erro, setErro] = useState("")
+  const [sucesso, setSucesso] = useState("")
   const [carregando, setCarregando] = useState(false)
   const [mostrarSenha, setMostrarSenha] = useState(false)
+
+  const destino = searchParams.get("next") || "/dashboard"
 
   useEffect(() => {
     if (searchParams.get("erro") === "confirmacao") {
@@ -36,53 +40,74 @@ function LoginInner() {
   const [recuperando, setRecuperando] = useState(false)
   const [emailRecuperacao, setEmailRecuperacao] = useState("")
   const [mensagemRecuperacao, setMensagemRecuperacao] = useState("")
+  const [recuperacaoSucesso, setRecuperacaoSucesso] = useState(false)
   const [enviandoRecuperacao, setEnviandoRecuperacao] = useState(false)
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
     setErro("")
+    setSucesso("")
     setCarregando(true)
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password: senha,
-    })
-    setCarregando(false)
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, senha }),
+      })
+      const data = await res.json().catch(() => ({}))
 
-    if (error) {
-      if (error.message.toLowerCase().includes("email not confirmed")) {
-        setErro(
-          "Confirme seu email antes de entrar. Verifique sua caixa de entrada e spam."
-        )
-      } else {
-        setErro("E-mail ou senha incorretos. Verifique e tente novamente.")
+      if (!res.ok) {
+        if (res.status === 429) {
+          setErro(data?.erro ?? "Muitas tentativas. Tente novamente mais tarde.")
+        } else if (data?.codigo === "email_nao_confirmado") {
+          setErro(data.erro)
+        } else {
+          setErro(data?.erro ?? "E-mail ou senha incorretos.")
+        }
+        return
       }
-      return
-    }
 
-    router.push("/dashboard")
-    router.refresh()
+      // Sincronizar client-side session (server já setou cookies)
+      await supabase.auth.getUser()
+      setSucesso("Login realizado! Redirecionando...")
+      router.push(destino)
+      router.refresh()
+    } catch {
+      setErro("Não foi possível conectar ao servidor. Verifique sua conexão.")
+    } finally {
+      setCarregando(false)
+    }
   }
 
   async function handleRecuperarSenha(e: React.FormEvent) {
     e.preventDefault()
     setMensagemRecuperacao("")
+    setRecuperacaoSucesso(false)
     setEnviandoRecuperacao(true)
 
+    const origin =
+      typeof window !== "undefined"
+        ? window.location.origin
+        : process.env.NEXT_PUBLIC_APP_URL
     const { error } = await supabase.auth.resetPasswordForEmail(
       emailRecuperacao,
       {
-        redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/nova-senha`,
+        redirectTo: `${origin}/auth/callback?next=/resetar-senha`,
       }
     )
     setEnviandoRecuperacao(false)
 
     if (error) {
-      setMensagemRecuperacao("Não foi possível enviar o e-mail. Verifique o endereço.")
+      setMensagemRecuperacao(
+        "Não foi possível enviar o e-mail. Verifique o endereço."
+      )
+      setRecuperacaoSucesso(false)
     } else {
       setMensagemRecuperacao(
-        "E-mail de recuperação enviado! Verifique sua caixa de entrada."
+        "E-mail de recuperação enviado! Verifique sua caixa de entrada e spam."
       )
+      setRecuperacaoSucesso(true)
     }
   }
 
@@ -121,15 +146,9 @@ function LoginInner() {
               </div>
 
               {mensagemRecuperacao && (
-                <p
-                  className={`rounded-lg px-3.5 py-2.5 text-sm ${
-                    mensagemRecuperacao.includes("enviado")
-                      ? "bg-green-50 text-green-700"
-                      : "bg-red-50 text-red-600"
-                  }`}
-                >
+                <Alert variante={recuperacaoSucesso ? "sucesso" : "erro"}>
                   {mensagemRecuperacao}
-                </p>
+                </Alert>
               )}
 
               <button
@@ -149,6 +168,7 @@ function LoginInner() {
               onClick={() => {
                 setRecuperando(false)
                 setMensagemRecuperacao("")
+                setRecuperacaoSucesso(false)
               }}
               className="font-medium text-[#166534] hover:underline"
             >
@@ -173,9 +193,9 @@ function LoginInner() {
             <Sprout className="h-7 w-7 text-[#86efac]" />
           </div>
           <blockquote className="text-xl font-bold leading-snug text-white">
-            "Dossiê completo,
+            &ldquo;Dossiê completo,
             <br />
-            crédito aprovado."
+            crédito aprovado.&rdquo;
           </blockquote>
           <p className="mt-3 text-sm text-green-300">
             Entrevista, checklist e documentação — tudo em um lugar.
@@ -188,7 +208,10 @@ function LoginInner() {
             "IA treinada no MCR do Bacen",
             "LGPD compliant",
           ].map((item) => (
-            <div key={item} className="flex items-center gap-2 text-sm text-green-200">
+            <div
+              key={item}
+              className="flex items-center gap-2 text-sm text-green-200"
+            >
               <div className="h-1.5 w-1.5 rounded-full bg-[#86efac]" />
               {item}
             </div>
@@ -213,7 +236,7 @@ function LoginInner() {
             Acesse sua conta para continuar
           </p>
 
-          <form onSubmit={handleLogin} className="space-y-4">
+          <form onSubmit={handleLogin} className="space-y-4" noValidate>
             <div>
               <label className="mb-1.5 block text-sm font-medium text-gray-700">
                 E-mail
@@ -254,6 +277,7 @@ function LoginInner() {
                 />
                 <button
                   type="button"
+                  aria-label={mostrarSenha ? "Ocultar senha" : "Mostrar senha"}
                   onClick={() => setMostrarSenha(!mostrarSenha)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                 >
@@ -266,11 +290,8 @@ function LoginInner() {
               </div>
             </div>
 
-            {erro && (
-              <p className="rounded-lg bg-red-50 px-3.5 py-2.5 text-sm text-red-600">
-                {erro}
-              </p>
-            )}
+            {erro && <Alert variante="erro">{erro}</Alert>}
+            {sucesso && <Alert variante="sucesso">{sucesso}</Alert>}
 
             <button
               type="submit"
@@ -279,9 +300,24 @@ function LoginInner() {
             >
               {carregando ? (
                 <>
-                  <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  <svg
+                    className="h-4 w-4 animate-spin"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                    />
                   </svg>
                   Entrando...
                 </>

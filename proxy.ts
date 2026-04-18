@@ -28,7 +28,9 @@ export async function proxy(request: NextRequest) {
   )
 
   // Refresh de sessão — obrigatório para SSR com Supabase
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
   const pathname = request.nextUrl.pathname
   const rotaProtegida = ROTAS_PROTEGIDAS.some((rota) =>
@@ -38,7 +40,13 @@ export async function proxy(request: NextRequest) {
   if (rotaProtegida && !user) {
     const loginUrl = request.nextUrl.clone()
     loginUrl.pathname = '/login'
+    loginUrl.searchParams.set('next', pathname + request.nextUrl.search)
     return NextResponse.redirect(loginUrl)
+  }
+
+  // Evita cache de conteúdo autenticado em proxies/CDN
+  if (rotaProtegida) {
+    supabaseResponse.headers.set('Cache-Control', 'no-store, max-age=0')
   }
 
   return supabaseResponse
