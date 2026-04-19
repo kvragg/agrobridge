@@ -17,7 +17,12 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "AgroBridge — Crédito rural aprovado",
   description:
-    "Despachante técnico digital de crédito rural. Entrevista com IA, checklist personalizado e dossiê no padrão que o banco aprova.",
+    "Consultoria especializada em crédito rural. Entrevista com IA, checklist personalizado e laudo técnico no padrão que o banco aprova.",
+};
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({

@@ -138,7 +138,7 @@ export default function CadastroPage() {
           </div>
           <Link
             href="/login"
-            className="inline-flex w-full items-center justify-center rounded-xl bg-[#166534] px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-[#14532d]"
+            className="inline-flex min-h-[48px] w-full items-center justify-center rounded-xl bg-[#166534] px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-[#14532d]"
           >
             Ir para o login
           </Link>
@@ -179,7 +179,7 @@ export default function CadastroPage() {
                   required
                   autoComplete="name"
                   placeholder="João da Silva"
-                  className="w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none transition focus:border-[#166534] focus:ring-2 focus:ring-[#166534]/20"
+                  className="min-h-[44px] w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-base text-gray-900 placeholder-gray-400 outline-none transition focus:border-[#166534] focus:ring-2 focus:ring-[#166534]/20 sm:text-sm"
                 />
               </div>
 
@@ -194,7 +194,7 @@ export default function CadastroPage() {
                   required
                   autoComplete="tel"
                   placeholder="(67) 99999-9999"
-                  className="w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none transition focus:border-[#166534] focus:ring-2 focus:ring-[#166534]/20"
+                  className="min-h-[44px] w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-base text-gray-900 placeholder-gray-400 outline-none transition focus:border-[#166534] focus:ring-2 focus:ring-[#166534]/20 sm:text-sm"
                 />
               </div>
 
@@ -212,7 +212,7 @@ export default function CadastroPage() {
                   required
                   autoComplete="email"
                   placeholder="joao@exemplo.com"
-                  className="w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none transition focus:border-[#166534] focus:ring-2 focus:ring-[#166534]/20"
+                  className="min-h-[44px] w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-base text-gray-900 placeholder-gray-400 outline-none transition focus:border-[#166534] focus:ring-2 focus:ring-[#166534]/20 sm:text-sm"
                 />
               </div>
             </div>
@@ -230,13 +230,13 @@ export default function CadastroPage() {
                   minLength={8}
                   autoComplete="new-password"
                   placeholder="8+ caracteres, 1 número, 1 maiúscula"
-                  className="w-full rounded-lg border border-gray-300 px-3.5 py-2.5 pr-10 text-sm text-gray-900 placeholder-gray-400 outline-none transition focus:border-[#166534] focus:ring-2 focus:ring-[#166534]/20"
+                  className="min-h-[44px] w-full rounded-lg border border-gray-300 px-3.5 py-2.5 pr-12 text-base text-gray-900 placeholder-gray-400 outline-none transition focus:border-[#166534] focus:ring-2 focus:ring-[#166534]/20 sm:text-sm"
                 />
                 <button
                   type="button"
                   aria-label={mostrarSenha ? "Ocultar senha" : "Mostrar senha"}
                   onClick={() => setMostrarSenha(!mostrarSenha)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-1 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center text-gray-400 hover:text-gray-600"
                 >
                   {mostrarSenha ? (
                     <EyeOff className="h-4 w-4" />
@@ -261,7 +261,7 @@ export default function CadastroPage() {
                 required
                 autoComplete="new-password"
                 placeholder="Repita a senha"
-                className={`w-full rounded-lg border px-3.5 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none transition focus:ring-2 ${
+                className={`min-h-[44px] w-full rounded-lg border px-3.5 py-2.5 text-base text-gray-900 placeholder-gray-400 outline-none transition focus:ring-2 sm:text-sm ${
                   confirmarSenha && confirmarSenha !== senha
                     ? "border-red-300 focus:border-red-400 focus:ring-red-200"
                     : "border-gray-300 focus:border-[#166534] focus:ring-[#166534]/20"
@@ -351,7 +351,7 @@ export default function CadastroPage() {
             <button
               type="submit"
               disabled={carregando || !aceitouTermos}
-              className="mt-2 w-full rounded-xl bg-[#166534] px-4 py-3 text-sm font-bold text-white transition-colors hover:bg-[#14532d] disabled:cursor-not-allowed disabled:opacity-60"
+              className="mt-2 min-h-[48px] w-full rounded-xl bg-[#166534] px-4 py-3 text-sm font-bold text-white transition-colors hover:bg-[#14532d] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {carregando ? (
                 <span className="flex items-center justify-center gap-2">

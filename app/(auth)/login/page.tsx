@@ -141,7 +141,7 @@ function LoginInner() {
                   onChange={(e) => setEmailRecuperacao(e.target.value)}
                   required
                   placeholder="seu@email.com"
-                  className="w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none transition focus:border-[#166534] focus:ring-2 focus:ring-[#166534]/20"
+                  className="min-h-[44px] w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-base text-gray-900 placeholder-gray-400 outline-none transition focus:border-[#166534] focus:ring-2 focus:ring-[#166534]/20 sm:text-sm"
                 />
               </div>
 
@@ -154,7 +154,7 @@ function LoginInner() {
               <button
                 type="submit"
                 disabled={enviandoRecuperacao}
-                className="w-full rounded-xl bg-[#166534] px-4 py-3 text-sm font-bold text-white transition-colors hover:bg-[#14532d] disabled:opacity-60"
+                className="min-h-[48px] w-full rounded-xl bg-[#166534] px-4 py-3 text-sm font-bold text-white transition-colors hover:bg-[#14532d] disabled:opacity-60"
               >
                 {enviandoRecuperacao
                   ? "Enviando..."
@@ -248,7 +248,7 @@ function LoginInner() {
                 required
                 placeholder="seu@email.com"
                 autoComplete="email"
-                className="w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none transition focus:border-[#166534] focus:ring-2 focus:ring-[#166534]/20"
+                className="min-h-[44px] w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-base text-gray-900 placeholder-gray-400 outline-none transition focus:border-[#166534] focus:ring-2 focus:ring-[#166534]/20 sm:text-sm"
               />
             </div>
 
@@ -273,13 +273,13 @@ function LoginInner() {
                   required
                   placeholder="Sua senha"
                   autoComplete="current-password"
-                  className="w-full rounded-lg border border-gray-300 px-3.5 py-2.5 pr-10 text-sm text-gray-900 placeholder-gray-400 outline-none transition focus:border-[#166534] focus:ring-2 focus:ring-[#166534]/20"
+                  className="min-h-[44px] w-full rounded-lg border border-gray-300 px-3.5 py-2.5 pr-10 text-base text-gray-900 placeholder-gray-400 outline-none transition focus:border-[#166534] focus:ring-2 focus:ring-[#166534]/20 sm:text-sm"
                 />
                 <button
                   type="button"
                   aria-label={mostrarSenha ? "Ocultar senha" : "Mostrar senha"}
                   onClick={() => setMostrarSenha(!mostrarSenha)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-1 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center text-gray-400 hover:text-gray-600"
                 >
                   {mostrarSenha ? (
                     <EyeOff className="h-4 w-4" />
@@ -296,7 +296,7 @@ function LoginInner() {
             <button
               type="submit"
               disabled={carregando}
-              className="group mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-[#166534] px-4 py-3 text-sm font-bold text-white transition-colors hover:bg-[#14532d] disabled:opacity-60"
+              className="group mt-2 flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-[#166534] px-4 py-3 text-sm font-bold text-white transition-colors hover:bg-[#14532d] disabled:opacity-60"
             >
               {carregando ? (
                 <>

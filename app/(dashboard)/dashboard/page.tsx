@@ -150,14 +150,14 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
+      <div className="flex w-full flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0 flex-1">
           <p className="text-sm text-gray-400">Bem-vindo de volta</p>
           <h1 className="text-2xl font-black text-gray-900">Olá, {nome}!</h1>
         </div>
         <Link
           href="/entrevista/nova"
-          className="inline-flex items-center gap-2 rounded-xl bg-[#166534] px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-[#14532d]"
+          className="inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-[#166534] px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-[#14532d] sm:w-auto"
         >
           <Plus className="h-4 w-4" />
           Nova entrevista
@@ -166,7 +166,7 @@ export default async function DashboardPage() {
 
       {/* Stats */}
       {total > 0 && (
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
           {[
             { label: 'Total de processos', value: total, color: 'text-gray-900' },
             { label: 'Em andamento', value: emAndamento, color: 'text-amber-600' },
@@ -228,7 +228,7 @@ export default async function DashboardPage() {
                         </p>
 
                         {/* Barra de progresso */}
-                        <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
+                        <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-gray-100">
                           <div
                             className="h-full rounded-full bg-[#166534] transition-all"
                             style={{ width: `${prog.pct}%` }}

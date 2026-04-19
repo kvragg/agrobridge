@@ -7,12 +7,12 @@ export function ChatBubble({ role, content }: ChatBubbleProps) {
   const isAssistant = role === 'assistant'
 
   return (
-    <div className={`flex ${isAssistant ? 'justify-start' : 'justify-end'}`}>
+    <div className={`flex w-full ${isAssistant ? 'justify-start' : 'justify-end'}`}>
       <div
-        className={`max-w-[80%] rounded-lg px-4 py-2 text-sm ${
+        className={`min-w-0 max-w-[85%] whitespace-pre-wrap break-words rounded-2xl p-3 text-sm md:max-w-[70%] md:p-4 md:text-base ${
           isAssistant
-            ? 'bg-muted text-foreground'
-            : 'bg-primary text-primary-foreground'
+            ? 'rounded-tl-sm bg-muted text-foreground'
+            : 'rounded-tr-sm bg-primary text-primary-foreground'
         }`}
       >
         {content}

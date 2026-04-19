@@ -90,7 +90,7 @@ export default function ResetarSenhaPage() {
             </p>
             <Link
               href="/login"
-              className="inline-flex w-full items-center justify-center rounded-xl bg-[#166534] px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-[#14532d]"
+              className="inline-flex min-h-[48px] w-full items-center justify-center rounded-xl bg-[#166534] px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-[#14532d]"
             >
               Voltar ao login
             </Link>
@@ -130,13 +130,13 @@ export default function ResetarSenhaPage() {
                   minLength={8}
                   autoComplete="new-password"
                   placeholder="8+ caracteres, 1 número, 1 maiúscula"
-                  className="w-full rounded-lg border border-gray-300 px-3.5 py-2.5 pr-10 text-sm text-gray-900 placeholder-gray-400 outline-none transition focus:border-[#166534] focus:ring-2 focus:ring-[#166534]/20"
+                  className="min-h-[44px] w-full rounded-lg border border-gray-300 px-3.5 py-2.5 pr-12 text-base text-gray-900 placeholder-gray-400 outline-none transition focus:border-[#166534] focus:ring-2 focus:ring-[#166534]/20 sm:text-sm"
                 />
                 <button
                   type="button"
                   aria-label={mostrarSenha ? "Ocultar senha" : "Mostrar senha"}
                   onClick={() => setMostrarSenha(!mostrarSenha)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-1 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center text-gray-400 hover:text-gray-600"
                 >
                   {mostrarSenha ? (
                     <EyeOff className="h-4 w-4" />
@@ -161,7 +161,7 @@ export default function ResetarSenhaPage() {
                 required
                 autoComplete="new-password"
                 placeholder="Repita a nova senha"
-                className={`w-full rounded-lg border px-3.5 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none transition focus:ring-2 ${
+                className={`min-h-[44px] w-full rounded-lg border px-3.5 py-2.5 text-base text-gray-900 placeholder-gray-400 outline-none transition focus:ring-2 sm:text-sm ${
                   confirmarSenha && confirmarSenha !== senha
                     ? "border-red-300 focus:border-red-400 focus:ring-red-200"
                     : "border-gray-300 focus:border-[#166534] focus:ring-[#166534]/20"
@@ -175,7 +175,7 @@ export default function ResetarSenhaPage() {
             <button
               type="submit"
               disabled={enviando || Boolean(sucesso)}
-              className="mt-2 w-full rounded-xl bg-[#166534] px-4 py-3 text-sm font-bold text-white transition-colors hover:bg-[#14532d] disabled:cursor-not-allowed disabled:opacity-60"
+              className="mt-2 min-h-[48px] w-full rounded-xl bg-[#166534] px-4 py-3 text-sm font-bold text-white transition-colors hover:bg-[#14532d] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {enviando ? "Atualizando..." : "Atualizar senha"}
             </button>

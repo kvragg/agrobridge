@@ -189,10 +189,10 @@ export default function ChecklistClient({
   // ── Render ───────────────────────────────────────────────────────
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6">
+    <div className="mx-auto w-full max-w-4xl space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-black text-gray-900">
+        <h1 className="text-xl font-black text-gray-900 sm:text-2xl">
           Checklist de Documentos
         </h1>
         <div className="flex flex-wrap items-center gap-3 text-sm text-gray-500">
@@ -214,7 +214,7 @@ export default function ChecklistClient({
 
       {/* Checklist Section */}
       <div className="rounded-2xl border border-gray-200 bg-white">
-        <div className="border-b border-gray-100 px-6 py-4">
+        <div className="border-b border-gray-100 px-4 py-4 sm:px-6">
           <div className="flex items-center gap-2">
             <FileText className="h-5 w-5 text-[#166534]" />
             <h2 className="font-bold text-gray-900">Documentos necessários</h2>
@@ -224,7 +224,7 @@ export default function ChecklistClient({
           </p>
         </div>
 
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           {carregandoChecklist && (
             <div className="flex flex-col items-center gap-3 py-12">
               <Loader2 className="h-8 w-8 animate-spin text-[#166534]" />
@@ -280,7 +280,7 @@ export default function ChecklistClient({
       <div className="rounded-2xl border border-gray-200 bg-white">
         <button
           onClick={() => setSecaoUploadAberta(!secaoUploadAberta)}
-          className="flex w-full items-center justify-between border-b border-gray-100 px-6 py-4"
+          className="flex min-h-[48px] w-full items-center justify-between border-b border-gray-100 px-4 py-4 sm:px-6"
         >
           <div className="flex items-center gap-2">
             <Upload className="h-5 w-5 text-[#166534]" />
@@ -299,7 +299,7 @@ export default function ChecklistClient({
         </button>
 
         {secaoUploadAberta && (
-          <div className="p-6">
+          <div className="p-4 sm:p-6">
             <p className="mb-4 text-xs text-gray-500">
               Envie aqui arquivos adicionais que não correspondem a um documento específico da lista acima.
             </p>
@@ -374,14 +374,16 @@ export default function ChecklistClient({
                           href={arq.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-200 hover:text-gray-600"
+                          aria-label="Abrir documento"
+                          className="flex h-10 w-10 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-200 hover:text-gray-600"
                         >
                           <ExternalLink className="h-4 w-4" />
                         </a>
                       )}
                       <button
                         onClick={() => handleRemover(arq.nome)}
-                        className="rounded-lg p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-500"
+                        aria-label="Remover arquivo"
+                        className="flex h-10 w-10 items-center justify-center rounded-lg text-gray-400 hover:bg-red-50 hover:text-red-500"
                       >
                         <X className="h-4 w-4" />
                       </button>
@@ -476,7 +478,7 @@ function ChecklistSection({
     <div className={`rounded-xl border ${bgColor} overflow-hidden`}>
       <button
         onClick={() => setAberta(!aberta)}
-        className={`flex w-full items-center justify-between px-5 py-4 ${isBlocker ? 'bg-red-50' : 'bg-gray-50/50'}`}
+        className={`flex min-h-[48px] w-full items-center justify-between px-4 py-4 sm:px-5 ${isBlocker ? 'bg-red-50' : 'bg-gray-50/50'}`}
       >
         <div className="flex items-center gap-2.5">
           <span className="text-xl">{section.emoji}</span>
@@ -492,7 +494,7 @@ function ChecklistSection({
       </button>
 
       {aberta && (
-        <div className="px-5 py-4">
+        <div className="px-4 py-4 sm:px-5">
           <MarkdownContent lines={section.conteudo} processoId={processoId} />
         </div>
       )}
@@ -583,7 +585,7 @@ function DocumentoItem({
       <button
         onClick={() => setExpandido(!expandido)}
         disabled={!temDetalhes}
-        className="flex w-full items-start gap-3 px-4 py-3 text-left"
+        className="flex min-h-[48px] w-full items-start gap-3 px-4 py-3 text-left"
       >
         <Paperclip className="mt-0.5 h-4 w-4 flex-shrink-0 text-[#166534]" />
         <span className="flex-1 text-sm font-semibold text-gray-800">{nome}</span>

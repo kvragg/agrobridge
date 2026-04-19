@@ -17,6 +17,15 @@ export type Database = {
           id: string
           user_id: string
           status: 'entrevista' | 'checklist' | 'documentos' | 'concluido'
+          fase: 'qualificacao' | 'pagamento' | 'coleta' | 'checklist' | 'concluido'
+          pagamento_confirmado: boolean
+          dados_qualificacao: Json | null
+          dados_completos: Json | null
+          historico_qualificacao: Json
+          historico_completo: Json
+          atividade: string | null
+          municipio: string | null
+          valor_solicitado: number | null
           perfil_json: Json | null
           banco: string | null
           valor: number | null
@@ -27,6 +36,15 @@ export type Database = {
           id?: string
           user_id: string
           status?: 'entrevista' | 'checklist' | 'documentos' | 'concluido'
+          fase?: 'qualificacao' | 'pagamento' | 'coleta' | 'checklist' | 'concluido'
+          pagamento_confirmado?: boolean
+          dados_qualificacao?: Json | null
+          dados_completos?: Json | null
+          historico_qualificacao?: Json
+          historico_completo?: Json
+          atividade?: string | null
+          municipio?: string | null
+          valor_solicitado?: number | null
           perfil_json?: Json | null
           banco?: string | null
           valor?: number | null
@@ -35,9 +53,51 @@ export type Database = {
         }
         Update: {
           status?: 'entrevista' | 'checklist' | 'documentos' | 'concluido'
+          fase?: 'qualificacao' | 'pagamento' | 'coleta' | 'checklist' | 'concluido'
+          pagamento_confirmado?: boolean
+          dados_qualificacao?: Json | null
+          dados_completos?: Json | null
+          historico_qualificacao?: Json
+          historico_completo?: Json
+          atividade?: string | null
+          municipio?: string | null
+          valor_solicitado?: number | null
           perfil_json?: Json | null
           banco?: string | null
           valor?: number | null
+          updated_at?: string
+        }
+      }
+      checklist_docs: {
+        Row: {
+          id: string
+          processo_id: string
+          slug: string
+          nome: string
+          grupo: 1 | 2 | 3
+          obrigatorio: boolean
+          storage_path: string | null
+          status: 'pendente' | 'enviado'
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          processo_id: string
+          slug: string
+          nome: string
+          grupo: 1 | 2 | 3
+          obrigatorio?: boolean
+          storage_path?: string | null
+          status?: 'pendente' | 'enviado'
+          updated_at?: string
+        }
+        Update: {
+          slug?: string
+          nome?: string
+          grupo?: 1 | 2 | 3
+          obrigatorio?: boolean
+          storage_path?: string | null
+          status?: 'pendente' | 'enviado'
           updated_at?: string
         }
       }

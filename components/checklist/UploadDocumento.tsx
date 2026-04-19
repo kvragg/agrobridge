@@ -250,7 +250,7 @@ export default function UploadDocumento({
           type="button"
           onClick={() => inputRef.current?.click()}
           disabled={enviando}
-          className="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-gray-300 bg-gray-50 px-3 py-2.5 text-sm font-medium text-gray-600 transition-colors hover:border-[#166534]/40 hover:bg-green-50 hover:text-[#166534] disabled:opacity-60"
+          className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-lg border border-dashed border-gray-300 bg-gray-50 px-3 py-3 text-sm font-medium text-gray-600 transition-colors hover:border-[#166534]/40 hover:bg-green-50 hover:text-[#166534] disabled:opacity-60"
         >
           {enviando ? (
             <>
@@ -288,19 +288,19 @@ export default function UploadDocumento({
                     href={arq.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="rounded p-1 text-gray-500 hover:bg-white hover:text-[#166534]"
+                    className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded text-gray-500 hover:bg-white hover:text-[#166534]"
                     title="Abrir"
                   >
-                    <ExternalLink className="h-3.5 w-3.5" />
+                    <ExternalLink className="h-4 w-4" />
                   </a>
                 )}
                 <button
                   type="button"
                   onClick={() => handleRemover(arq)}
-                  className="rounded p-1 text-gray-500 hover:bg-white hover:text-red-500"
+                  className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded text-gray-500 hover:bg-white hover:text-red-500"
                   title="Remover"
                 >
-                  <X className="h-3.5 w-3.5" />
+                  <X className="h-4 w-4" />
                 </button>
               </div>
 

@@ -55,7 +55,7 @@ function wrap(content: string): string {
         ${content}
       </div>
       <p style="margin-top: 24px; font-size: 11px; color: #9ca3af; text-align: center;">
-        AgroBridge · despachante técnico digital de crédito rural
+        AgroBridge · consultoria especializada em crédito rural
       </p>
     </div>
   `.trim()

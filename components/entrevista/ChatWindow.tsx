@@ -23,8 +23,8 @@ export function ChatWindow({ mensagens, onEnviar, carregando }: ChatWindowProps)
   }, [mensagens])
 
   return (
-    <div className="flex h-full flex-col gap-4">
-      <div className="flex-1 space-y-3 overflow-y-auto rounded border p-4">
+    <div className="flex h-full w-full flex-col gap-4">
+      <div className="flex-1 space-y-3 overflow-y-auto rounded border px-3 py-4 md:px-4">
         {mensagens.map((m, i) => (
           <ChatBubble key={i} role={m.role} content={m.content} />
         ))}

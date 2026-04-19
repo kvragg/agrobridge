@@ -204,7 +204,7 @@ export default function NovaEntrevistaPage() {
 
   if (estado === 'criando_processo' || estado === 'iniciando') {
     return (
-      <div className="flex h-[calc(100vh-4rem)] items-center justify-center">
+      <div className="flex h-[calc(100dvh-7rem)] items-center justify-center md:h-[calc(100dvh-4rem)]">
         <div className="text-center">
           <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-green-100">
             <Loader2 className="h-7 w-7 animate-spin text-[#166534]" />
@@ -218,7 +218,7 @@ export default function NovaEntrevistaPage() {
 
   if (estado === 'erro') {
     return (
-      <div className="flex h-[calc(100vh-4rem)] items-center justify-center">
+      <div className="flex h-[calc(100dvh-7rem)] items-center justify-center md:h-[calc(100dvh-4rem)]">
         <div className="max-w-sm text-center">
           <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-red-100">
             <AlertCircle className="h-7 w-7 text-red-500" />
@@ -237,7 +237,7 @@ export default function NovaEntrevistaPage() {
 
   if (estado === 'concluindo') {
     return (
-      <div className="flex h-[calc(100vh-4rem)] items-center justify-center">
+      <div className="flex h-[calc(100dvh-7rem)] items-center justify-center md:h-[calc(100dvh-4rem)]">
         <div className="text-center">
           <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-green-100">
             <CheckCircle2 className="h-7 w-7 text-[#16a34a]" />
@@ -255,26 +255,26 @@ export default function NovaEntrevistaPage() {
   // ── Chat UI ──────────────────────────────────────────────────────
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] flex-col">
+    <div className="flex h-[calc(100dvh-7rem)] w-full flex-col md:h-[calc(100dvh-4rem)]">
       {/* Header */}
-      <div className="mb-4 flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-100">
+      <div className="mb-4 flex flex-wrap items-center gap-3">
+        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-green-100">
           <Bot className="h-5 w-5 text-[#166534]" />
         </div>
-        <div>
+        <div className="min-w-0 flex-1">
           <h1 className="text-lg font-bold text-gray-900">Entrevista de Crédito</h1>
           <p className="text-xs text-gray-400">
             Responda as perguntas para gerar seu checklist personalizado
           </p>
         </div>
-        <div className="ml-auto flex items-center gap-1.5 rounded-full bg-green-50 px-3 py-1">
+        <div className="flex items-center gap-1.5 rounded-full bg-green-50 px-3 py-1">
           <span className="h-2 w-2 animate-pulse rounded-full bg-[#16a34a]" />
           <span className="text-xs font-medium text-[#166534]">Em andamento</span>
         </div>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto rounded-2xl border border-gray-200 bg-white p-4">
+      <div className="flex-1 overflow-y-auto rounded-2xl border border-gray-200 bg-white px-3 py-4 md:p-4">
         <div className="space-y-4">
           {mensagens.map((m, i) => (
             <MensagemBubble key={i} mensagem={m} />
@@ -304,7 +304,10 @@ export default function NovaEntrevistaPage() {
       </div>
 
       {/* Input */}
-      <form onSubmit={handleEnviar} className="mt-3 flex gap-2">
+      <form
+        onSubmit={handleEnviar}
+        className="sticky bottom-0 mt-3 flex gap-2 bg-[#f8fafc]/95 pb-[max(env(safe-area-inset-bottom),0.5rem)] pt-2 backdrop-blur-sm"
+      >
         <input
           ref={inputRef}
           type="text"
@@ -312,12 +315,13 @@ export default function NovaEntrevistaPage() {
           onChange={(e) => setTexto(e.target.value)}
           placeholder="Digite sua resposta..."
           disabled={estado !== 'em_andamento'}
-          className="flex-1 rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 placeholder-gray-400 outline-none transition focus:border-[#166534] focus:ring-2 focus:ring-[#166534]/20 disabled:opacity-50"
+          className="min-h-[44px] flex-1 rounded-xl border border-gray-300 bg-white px-4 py-3 text-base text-gray-900 placeholder-gray-400 outline-none transition focus:border-[#166534] focus:ring-2 focus:ring-[#166534]/20 disabled:opacity-50 sm:text-sm"
         />
         <button
           type="submit"
+          aria-label="Enviar mensagem"
           disabled={!texto.trim() || estado !== 'em_andamento'}
-          className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#166534] text-white transition-colors hover:bg-[#14532d] disabled:opacity-40"
+          className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-[#166534] text-white transition-colors hover:bg-[#14532d] disabled:opacity-40 sm:h-12 sm:w-12"
         >
           <Send className="h-4 w-4" />
         </button>
@@ -336,14 +340,14 @@ function MensagemBubble({
   const isAssistant = mensagem.role === 'assistant'
 
   return (
-    <div className={`flex gap-3 ${isAssistant ? 'justify-start' : 'justify-end'}`}>
+    <div className={`flex w-full gap-2 md:gap-3 ${isAssistant ? 'justify-start' : 'justify-end'}`}>
       {isAssistant && (
         <div className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-[#14532d]">
           <Bot className="h-4 w-4 text-[#86efac]" />
         </div>
       )}
       <div
-        className={`max-w-[78%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
+        className={`min-w-0 max-w-[85%] whitespace-pre-wrap break-words rounded-2xl p-3 text-sm leading-relaxed md:max-w-[70%] md:p-4 ${
           isAssistant
             ? 'rounded-tl-sm bg-gray-100 text-gray-800'
             : 'rounded-tr-sm bg-[#166534] text-white'

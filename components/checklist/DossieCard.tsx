@@ -38,6 +38,9 @@ export default function DossieCard({
   const [gerandoDossie, setGerandoDossie] = useState(false)
   const [urlDossie, setUrlDossie] = useState<string | null>(null)
   const [erro, setErro] = useState('')
+  const [pendentes, setPendentes] = useState<
+    { categoria: string; nome: string }[] | null
+  >(null)
   const [copiado, setCopiado] = useState(false)
 
   const pronto = perfilDisponivel && checklistGerado
@@ -95,6 +98,7 @@ export default function DossieCard({
 
   async function gerarDossie() {
     setErro('')
+    setPendentes(null)
     setGerandoDossie(true)
     try {
       const res = await fetch('/api/dossie', {
@@ -103,6 +107,11 @@ export default function DossieCard({
         body: JSON.stringify({ processo_id: processoId }),
       })
       const data = await res.json().catch(() => ({}))
+      if (res.status === 409 && Array.isArray(data?.pendentes)) {
+        setPendentes(data.pendentes as { categoria: string; nome: string }[])
+        setErro(data.erro ?? 'Dossiê bloqueado: há documentos pendentes.')
+        return
+      }
       if (!res.ok) {
         throw new Error(data?.erro ?? 'Falha ao gerar dossiê')
       }
@@ -130,7 +139,7 @@ export default function DossieCard({
 
   return (
     <div className="rounded-2xl border border-gray-200 bg-white">
-      <div className="border-b border-gray-100 px-6 py-4">
+      <div className="border-b border-gray-100 px-4 py-4 sm:px-6">
         <div className="flex items-center gap-2">
           <FileText className="h-5 w-5 text-[#166534]" />
           <h2 className="font-bold text-gray-900">Dossiê final de crédito</h2>
@@ -140,7 +149,7 @@ export default function DossieCard({
         </p>
       </div>
 
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         {!pronto && (
           <div className="flex items-start gap-3 rounded-xl bg-yellow-50 p-4">
             <AlertTriangle className="h-5 w-5 flex-shrink-0 text-yellow-600" />
@@ -176,7 +185,7 @@ export default function DossieCard({
               <button
                 onClick={gerarDossie}
                 disabled={gerandoDossie}
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#166534] px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#14532d] disabled:opacity-60"
+                className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-[#166534] px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#14532d] disabled:opacity-60"
               >
                 {gerandoDossie ? (
                   <>
@@ -197,7 +206,7 @@ export default function DossieCard({
                 href={urlDossie}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#166534] px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#14532d]"
+                className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-[#166534] px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#14532d]"
               >
                 <Download className="h-4 w-4" />
                 Baixar dossiê.pdf
@@ -242,15 +251,15 @@ export default function DossieCard({
                 <label className="text-xs font-semibold uppercase tracking-wider text-gray-400">
                   PIX Copia e Cola
                 </label>
-                <div className="mt-1 flex items-stretch gap-2">
-                  <code className="flex-1 overflow-x-auto rounded-lg bg-white px-3 py-2 text-xs text-gray-700">
+                <div className="mt-1 flex flex-col items-stretch gap-2 sm:flex-row">
+                  <code className="min-w-0 flex-1 overflow-x-auto whitespace-nowrap rounded-lg bg-white px-3 py-2 text-xs text-gray-700">
                     {pagamento.qr_code}
                   </code>
                   <button
                     onClick={copiarPix}
-                    className="flex items-center gap-1.5 rounded-lg bg-[#166534] px-3 text-xs font-semibold text-white hover:bg-[#14532d]"
+                    className="flex min-h-[44px] items-center justify-center gap-1.5 rounded-lg bg-[#166534] px-4 text-sm font-semibold text-white hover:bg-[#14532d] sm:text-xs"
                   >
-                    <Copy className="h-3.5 w-3.5" />
+                    <Copy className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
                     {copiado ? 'Copiado!' : 'Copiar'}
                   </button>
                 </div>
@@ -301,16 +310,16 @@ export default function DossieCard({
             <button
               onClick={criarCobranca}
               disabled={criandoCobranca}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#166534] px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#14532d] disabled:opacity-60"
+              className="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-[#166534] px-4 py-4 text-base font-semibold text-white shadow-sm transition-colors hover:bg-[#14532d] disabled:opacity-60"
             >
               {criandoCobranca ? (
                 <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <Loader2 className="h-5 w-5 animate-spin" />
                   Gerando PIX...
                 </>
               ) : (
                 <>
-                  <QrCode className="h-4 w-4" />
+                  <QrCode className="h-5 w-5" />
                   Pagar R$ 297 via PIX
                 </>
               )}
@@ -325,7 +334,22 @@ export default function DossieCard({
         {erro && (
           <div className="mt-4 flex items-start gap-2 rounded-lg bg-red-50 p-3 text-sm text-red-700">
             <AlertTriangle className="h-4 w-4 flex-shrink-0" />
-            {erro}
+            <div className="flex-1">
+              <p>{erro}</p>
+              {pendentes && pendentes.length > 0 && (
+                <div className="mt-2">
+                  <p className="font-semibold">Documentos faltantes:</p>
+                  <ul className="mt-1 list-disc space-y-0.5 pl-5 text-xs">
+                    {pendentes.map((p, i) => (
+                      <li key={i}>
+                        <span className="text-red-600/70">{p.categoria}:</span>{' '}
+                        {p.nome}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>

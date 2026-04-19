@@ -82,9 +82,9 @@ export function Solution() {
                 textWrap: "balance",
               }}
             >
-              Um despachante
+              Um consultor especializado
               <br />
-              técnico digital.
+              em crédito rural.
             </h2>
           </div>
           <div>

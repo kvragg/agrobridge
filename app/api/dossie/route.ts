@@ -1,16 +1,18 @@
 import { createClient } from '@/lib/supabase/server'
-import { gerarDefesa } from '@/lib/anthropic/defesa'
+import { gerarLaudo } from '@/lib/anthropic/defesa'
 import { montarDossiePDF } from '@/lib/dossie/pdf'
+import { calcularCompletude } from '@/lib/dossie/status'
 import { enviarDossiePronto } from '@/lib/email/resend'
 import type { PerfilEntrevista } from '@/types/entrevista'
 import { NextRequest } from 'next/server'
 
 export const runtime = 'nodejs'
-export const maxDuration = 60
+export const maxDuration = 90
 
 /**
  * Gera (ou regenera) o dossiê em PDF do processo:
- *  1. Chama Sonnet para redigir a defesa técnica (cacheada em perfil_json._defesa_md)
+ *  0. Verifica se TODOS os documentos do checklist estão anexados — bloqueia caso contrário
+ *  1. Chama Sonnet para redigir o LAUDO DE AVALIAÇÃO DE CRÉDITO (cacheado em perfil_json._laudo_md)
  *  2. Monta o PDF com pdfkit
  *  3. Faz upload ao bucket "documentos" em {user_id}/{processo_id}/dossie.pdf
  *  4. Retorna URL assinada por 1h
@@ -59,61 +61,65 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  // 1. Defesa técnica (cacheada)
-  let defesaMd =
-    typeof perfilJson._defesa_md === 'string' ? perfilJson._defesa_md : ''
-  if (!defesaMd || forcar) {
+  // 0. Gate de completude — só libera dossiê com 100% anexado
+  const completude = await calcularCompletude({
+    supabase,
+    userId: user.id,
+    processoId,
+    checklistMd,
+    perfilJson,
+  })
+
+  if (completude.total > 0 && completude.pendentes.length > 0) {
+    return Response.json(
+      {
+        erro: 'Dossiê bloqueado: ainda há documentos pendentes.',
+        pendentes: completude.pendentes.map((p) => ({
+          categoria: p.categoria,
+          nome: p.nome_esperado,
+        })),
+        total: completude.total,
+        anexados: completude.anexados,
+      },
+      { status: 409 }
+    )
+  }
+
+  // 1. Laudo completo via Sonnet (cacheado). Se já tinha _defesa_md antigo, ignora.
+  let laudoMd =
+    typeof perfilJson._laudo_md === 'string' ? perfilJson._laudo_md : ''
+  if (!laudoMd || forcar) {
     try {
-      defesaMd = await gerarDefesa(perfil)
+      laudoMd = await gerarLaudo({
+        perfil,
+        checklistMd,
+        documentos: completude.documentos,
+      })
     } catch (err) {
-      const e = err as { status?: number; message?: string }
-      console.error('[api/dossie] erro Sonnet defesa', e.status, e.message)
-      return Response.json(
-        { erro: 'Falha ao gerar defesa técnica. Tente novamente.' },
-        { status: 502 }
-      )
+      const e = err as {
+        status?: number
+        message?: string
+        error?: { type?: string; message?: string }
+      }
+      const status = e.status
+      const msg = e.error?.message ?? e.message ?? String(err)
+      console.error('[api/dossie] erro Sonnet laudo', status, msg, err)
+      let curta = 'Falha ao gerar laudo. Tente novamente em alguns segundos.'
+      if (status === 401) curta = 'Chave da API inválida ou ausente no servidor.'
+      else if (status === 400 && /credit balance/i.test(msg))
+        curta = 'Saldo Anthropic esgotado. Contate o administrador.'
+      else if (status === 429) curta = 'Limite de requisições atingido. Aguarde.'
+      else if (status === 529 || status === 503)
+        curta = 'IA sobrecarregada. Tente em alguns segundos.'
+      return Response.json({ erro: curta }, { status: 502 })
     }
     await supabase
       .from('processos')
-      .update({ perfil_json: { ...perfilJson, _defesa_md: defesaMd } })
+      .update({ perfil_json: { ...perfilJson, _laudo_md: laudoMd } })
       .eq('id', processoId)
   }
 
-  // 2. Listar documentos enviados para anexar ao PDF
-  const documentos: { nome: string; tamanho: number; enviado: boolean }[] = []
-  const prefixoUser = `${user.id}/${processoId}`
-  const { data: arquivosRaiz } = await supabase.storage
-    .from('documentos')
-    .list(prefixoUser, { limit: 200 })
-  if (arquivosRaiz) {
-    for (const f of arquivosRaiz) {
-      // f pode ser pasta (sem metadata.size) — pular
-      if (!f.metadata || !f.metadata.size) continue
-      if (f.name === 'dossie.pdf') continue
-      documentos.push({
-        nome: f.name.replace(/^\d+_/, ''),
-        tamanho: f.metadata.size as number,
-        enviado: true,
-      })
-    }
-  }
-  // Subpastas por slug
-  const subpastas = (arquivosRaiz ?? []).filter((f) => !f.metadata)
-  for (const pasta of subpastas) {
-    const { data: arquivosSub } = await supabase.storage
-      .from('documentos')
-      .list(`${prefixoUser}/${pasta.name}`, { limit: 50 })
-    for (const f of arquivosSub ?? []) {
-      if (!f.metadata || !f.metadata.size) continue
-      documentos.push({
-        nome: `${pasta.name} · ${f.name.replace(/^\d+_/, '')}`,
-        tamanho: f.metadata.size as number,
-        enviado: true,
-      })
-    }
-  }
-
-  // 3. Montar PDF
+  // 2. Montar PDF (capa + laudo em markdown)
   let pdfBuffer: Buffer
   try {
     pdfBuffer = await montarDossiePDF({
@@ -126,20 +132,18 @@ export async function POST(request: NextRequest) {
       banco: processo.banco as string | null,
       valor: processo.valor as number | null,
       perfil,
-      defesaMd,
-      checklistMd,
-      documentos,
+      laudoMd,
     })
   } catch (err) {
     console.error('[api/dossie] falha ao montar PDF', err)
     return Response.json({ erro: 'Erro ao montar PDF do dossiê' }, { status: 500 })
   }
 
-  // 4. Upload no storage (upsert para permitir regeração)
-  const path = `${user.id}/${processoId}/dossie.pdf`
+  // 3. Upload no storage (upsert para permitir regeração)
+  const pdfPath = `${user.id}/${processoId}/dossie.pdf`
   const { error: uploadErr } = await supabase.storage
     .from('documentos')
-    .upload(path, pdfBuffer, {
+    .upload(pdfPath, pdfBuffer, {
       contentType: 'application/pdf',
       upsert: true,
     })
@@ -155,7 +159,7 @@ export async function POST(request: NextRequest) {
       status: 'concluido',
       perfil_json: {
         ...perfilJson,
-        _defesa_md: defesaMd,
+        _laudo_md: laudoMd,
         _dossie_gerado_em: new Date().toISOString(),
       },
     })
@@ -163,9 +167,9 @@ export async function POST(request: NextRequest) {
 
   const { data: signed } = await supabase.storage
     .from('documentos')
-    .createSignedUrl(path, 60 * 60)
+    .createSignedUrl(pdfPath, 60 * 60)
 
-  // Envia email "dossiê pronto" só na primeira geração (não em regerações forçadas)
+  // Envia email "dossiê pronto" só na primeira geração
   const jaNotificado = typeof perfilJson._dossie_gerado_em === 'string'
   if (!jaNotificado && user.email) {
     const perfilBloco = (perfilJson.perfil ?? {}) as { nome?: string }
