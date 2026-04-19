@@ -16,6 +16,7 @@ import {
 import { createClient } from '@/lib/supabase/client'
 import { sanitizarNomeArquivo, slugDocumento } from '@/lib/validation'
 import UploadDocumento from '@/components/checklist/UploadDocumento'
+import DossieCard from '@/components/checklist/DossieCard'
 
 interface Arquivo {
   nome: string
@@ -267,6 +268,13 @@ export default function ChecklistClient({
           )}
         </div>
       </div>
+
+      {/* Dossiê / Cobrança */}
+      <DossieCard
+        processoId={processoId}
+        perfilDisponivel={perfilDisponivel}
+        checklistGerado={!!checklistMd}
+      />
 
       {/* Outros documentos (upload não associado) */}
       <div className="rounded-2xl border border-gray-200 bg-white">
