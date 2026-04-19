@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { sanitizarNomeArquivo, slugDocumento } from '@/lib/validation'
+import { linkOficialPara } from '@/lib/checklist/links-oficiais'
 import UploadDocumento from '@/components/checklist/UploadDocumento'
 import DossieCard from '@/components/checklist/DossieCard'
 
@@ -579,6 +580,7 @@ function DocumentoItem({
   const [expandido, setExpandido] = useState(false)
   const temDetalhes = detalhes.length > 0
   const docSlug = slugDocumento(nome)
+  const linkOficial = linkOficialPara(nome)
 
   return (
     <div className="rounded-lg border border-gray-100 bg-gray-50/50 overflow-hidden">
@@ -597,6 +599,23 @@ function DocumentoItem({
           )
         )}
       </button>
+
+      {linkOficial && (
+        <div className="border-t border-gray-100 bg-white px-4 py-2">
+          <a
+            href={linkOficial.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex min-h-[40px] items-center gap-1.5 rounded-lg bg-[#166534]/10 px-3 py-2 text-xs font-semibold text-[#166534] hover:bg-[#166534]/15"
+          >
+            {linkOficial.label}
+            <ExternalLink className="h-3.5 w-3.5" />
+          </a>
+          {linkOficial.aviso && (
+            <p className="mt-1.5 text-[11px] text-gray-500">{linkOficial.aviso}</p>
+          )}
+        </div>
+      )}
 
       {expandido && detalhes.length > 0 && (
         <div className="border-t border-gray-100 px-4 py-3 space-y-1.5">
