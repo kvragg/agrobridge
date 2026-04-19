@@ -10,7 +10,10 @@ import {
   Copy,
   QrCode,
   Clock,
+  ExternalLink,
 } from 'lucide-react'
+
+const CAKTO_URL = process.env.NEXT_PUBLIC_CAKTO_URL
 
 interface DossieCardProps {
   processoId: string
@@ -307,27 +310,35 @@ export default function DossieCard({
               </ul>
             </div>
 
-            <button
-              onClick={criarCobranca}
-              disabled={criandoCobranca}
-              className="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-[#166534] px-4 py-4 text-base font-semibold text-white shadow-sm transition-colors hover:bg-[#14532d] disabled:opacity-60"
-            >
-              {criandoCobranca ? (
-                <>
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                  Gerando PIX...
-                </>
-              ) : (
-                <>
-                  <QrCode className="h-5 w-5" />
-                  Pagar R$ 297 via PIX
-                </>
-              )}
-            </button>
+            {CAKTO_URL ? (
+              <a
+                href={`${CAKTO_URL}${CAKTO_URL.includes('?') ? '&' : '?'}ref=${processoId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-[#166534] px-4 py-4 text-base font-semibold text-white shadow-sm transition-colors hover:bg-[#14532d]"
+              >
+                <QrCode className="h-5 w-5" />
+                Pagar R$ 297
+                <ExternalLink className="h-4 w-4 opacity-70" />
+              </a>
+            ) : (
+              <button
+                disabled
+                className="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-gray-200 px-4 py-4 text-base font-semibold text-gray-500"
+              >
+                Checkout não configurado
+              </button>
+            )}
 
             <p className="text-center text-xs text-gray-400">
-              Cobrança única. O pagamento é independente da aprovação bancária.
+              PIX ou cartão em até 12x. Cobrança única — independente da aprovação bancária.<br />
+              Após pagar, o dossiê é liberado por email em até algumas horas.
             </p>
+
+            {/* evita warning de variável não usada até migrarmos 100% pro Cakto */}
+            {false && (
+              <button onClick={criarCobranca} disabled={criandoCobranca} hidden />
+            )}
           </div>
         )}
 
