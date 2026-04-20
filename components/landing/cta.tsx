@@ -109,25 +109,13 @@ export function CTA() {
               letterSpacing: "-0.005em",
             }}
           >
-            Comece agora. Análise inicial gratuita. Se a gente não ver chance real de aprovação, a
-            gente te fala — e não cobra nada.
+            A janela da safra 25/26 não volta. Cada semana sem dossiê aprovado é insumo mais caro e
+            margem menor. Começa o diagnóstico agora e entra na fila com o pedido pronto.
           </p>
 
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 48 }}>
             <Button size="lg" variant="onDark" href="/cadastro">
-              Iniciar análise gratuita {Icon.arrow(15)}
-            </Button>
-            <Button
-              size="lg"
-              variant="ghost"
-              style={{
-                borderColor: "rgba(255,255,255,0.18)",
-                color: "#fff",
-                background: "rgba(255,255,255,0.03)",
-              }}
-              href="#faq"
-            >
-              Falar com especialista
+              Criar minha conta e iniciar diagnóstico {Icon.arrow(15)}
             </Button>
           </div>
 
@@ -143,7 +131,7 @@ export function CTA() {
             }}
           >
             <CTAStat icon={Icon.lock(15)} k="Segurança" v="Dados criptografados · LGPD" />
-            <CTAStat icon={Icon.check(15)} k="Compromisso" v="Sem mensalidade ou fidelidade" />
+            <CTAStat icon={Icon.check(15)} k="Cobrança" v="Pagamento único · sem fidelidade" />
             <CTAStat icon={Icon.bank(15)} k="Padrão" v="Linguagem de comitê de crédito" />
           </div>
         </div>

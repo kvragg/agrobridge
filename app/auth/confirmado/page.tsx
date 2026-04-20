@@ -14,7 +14,7 @@ export default function ConfirmadoPage() {
     }, 1000)
 
     const timer = setTimeout(() => {
-      router.push('/dashboard')
+      router.push('/planos')
       router.refresh()
     }, 3000)
 
@@ -34,21 +34,21 @@ export default function ConfirmadoPage() {
         </div>
 
         <h1 className="mb-3 text-2xl font-black text-gray-900">
-          Email confirmado!
+          Conta ativa!
         </h1>
         <p className="mb-8 text-base text-gray-600">
-          Bem-vindo ao AgroBridge.
+          Agora escolha como você quer aprovar seu crédito.
         </p>
 
         <div className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm text-gray-500 shadow-sm ring-1 ring-gray-200">
           <Loader2 className="h-4 w-4 animate-spin text-[#166534]" />
-          Redirecionando para o painel em {segundos}s...
+          Abrindo planos em {segundos}s...
         </div>
 
         <p className="mt-6 text-xs text-gray-400">
           Se não for redirecionado automaticamente,{' '}
           <button
-            onClick={() => router.push('/dashboard')}
+            onClick={() => router.push('/planos')}
             className="font-semibold text-[#166534] hover:underline"
           >
             clique aqui

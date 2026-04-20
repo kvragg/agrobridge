@@ -74,7 +74,7 @@ export default function CadastroPage() {
       if (data.temSessao) {
         // Confirmação desabilitada → recarregar para pegar cookies
         await supabase.auth.getUser()
-        router.push("/dashboard")
+        router.push("/planos")
         router.refresh()
         return
       }

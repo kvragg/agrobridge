@@ -6,7 +6,7 @@ import { Container, SectionLabel, Button, Icon } from "./primitives"
 const faqs = [
   {
     q: "E se meu crédito for negado pelo banco?",
-    a: "A gente te entrega um laudo técnico com o motivo exato da negativa, o que o banco apontou, e um plano de ajuste. Em muitos casos, a negativa é corrigível — documento reenviado, garantia reforçada, linha reenquadrada. E se o ajuste fizer sentido, você reapresenta sem pagar nada a mais.",
+    a: "Você recebe um laudo técnico com o motivo exato da negativa, o que o comitê apontou e um plano de ajuste. Em muitos casos a negativa é corrigível — documento reenviado, garantia reforçada, linha reenquadrada. O dossiê é vitalício: você reapresenta quantas vezes for necessário.",
   },
   {
     q: "Funciona para área arrendada?",
@@ -18,7 +18,7 @@ const faqs = [
   },
   {
     q: "Quanto custa?",
-    a: "A análise inicial é gratuita. Você só paga quando o dossiê estiver pronto para o banco — e o valor é conhecido antes, sem surpresa. Não existe mensalidade nem fidelidade.",
+    a: "Três opções de pagamento único, sem mensalidade: Diagnóstico Rápido (R$ 29,99), Dossiê Bancário Completo (R$ 297) e Acesso à Mesa de Crédito com mentoria do fundador (R$ 699). Você cria a conta primeiro e escolhe o que faz mais sentido no seu momento.",
   },
   {
     q: "Quais linhas de crédito vocês atendem?",

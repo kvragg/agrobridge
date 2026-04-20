@@ -329,7 +329,7 @@ export function Hero() {
             marginBottom: 48,
           }}
         >
-          <Eyebrow>Crédito rural · Safra 25/26</Eyebrow>
+          <Eyebrow>Safra 25/26 · janela fechando</Eyebrow>
           <div style={{ flex: 1 }} />
           <span
             className="mono"
@@ -340,7 +340,7 @@ export function Hero() {
               textTransform: "uppercase",
             }}
           >
-            Brasil · v1.0 · abril 2026
+            Inteligência bancária · por dentro
           </span>
         </div>
 
@@ -356,22 +356,20 @@ export function Hero() {
           <div>
             <h1
               style={{
-                fontSize: "clamp(48px, 7vw, 92px)",
-                lineHeight: 0.94,
+                fontSize: "clamp(44px, 6.6vw, 84px)",
+                lineHeight: 0.96,
                 letterSpacing: "-0.045em",
                 fontWeight: 500,
                 margin: "0 0 28px",
                 textWrap: "balance",
               }}
             >
-              Crédito rural
-              <br />
-              aprovado.
+              O banco tem o dinheiro.
               <br />
               <span style={{ color: "var(--muted)", fontWeight: 400 }}>
-                Sem papel perdido,
+                O seu dossiê é que
                 <br />
-                sem idas na agência.
+                bloqueia o crédito.
               </span>
             </h1>
             <p
@@ -379,22 +377,20 @@ export function Hero() {
                 fontSize: 19,
                 lineHeight: 1.5,
                 color: "var(--ink-2)",
-                maxWidth: 500,
+                maxWidth: 520,
                 margin: 0,
                 fontWeight: 400,
                 letterSpacing: "-0.005em",
               }}
             >
-              A AgroBridge faz a entrevista, monta o checklist e entrega um dossiê que o banco
-              aprova. Feito por quem passou dez anos decidindo crédito rural por dentro.
+              Aprove sua safra com a inteligência de quem decide crédito rural por dentro do banco.
+              Entrevista técnica, checklist exato e defesa em linguagem de comitê — pronto para
+              chegar ao gerente.
             </p>
 
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 40 }}>
               <Button size="lg" variant="primary" href="/cadastro">
-                Iniciar análise gratuita {Icon.arrow(15)}
-              </Button>
-              <Button size="lg" variant="ghost" href="#fluxo">
-                Ver como funciona
+                Criar minha conta e iniciar diagnóstico {Icon.arrow(15)}
               </Button>
             </div>
 
@@ -409,9 +405,9 @@ export function Hero() {
                 gap: 24,
               }}
             >
-              <TrustStat k="MCR" v="Domínio completo" />
-              <TrustStat k="Resposta" v="Em 24 horas" />
-              <TrustStat k="Custo" v="Zero até aprovar" />
+              <TrustStat k="Autoridade" v="10 anos na mesa" />
+              <TrustStat k="Padrão" v="Linguagem de comitê" />
+              <TrustStat k="Entrega" v="100% digital" />
             </div>
           </div>
 

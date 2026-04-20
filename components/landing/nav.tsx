@@ -84,7 +84,7 @@ export function Nav() {
               Entrar
             </a>
             <Button size="sm" variant="primary" href="/cadastro">
-              Análise gratuita {Icon.arrow(13)}
+              Criar conta {Icon.arrow(13)}
             </Button>
           </div>
         </div>

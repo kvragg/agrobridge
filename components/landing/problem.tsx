@@ -3,23 +3,23 @@ import { Container, SectionLabel } from "./primitives"
 const pains = [
   {
     tag: "01",
-    title: "O banco recusa e você não sabe o motivo exato.",
-    body: 'O gerente diz que "faltou documento" ou que "a proposta não atende ao MCR". Você volta pra casa sem saber o que corrigir.',
+    title: "O gerente diz \"faltou documento\" e não diz qual.",
+    body: "Você volta pra casa no escuro, tentando adivinhar. Cada ida à agência é um dia perdido — e o banco não te dá o roteiro.",
   },
   {
     tag: "02",
-    title: "A documentação trava tudo.",
-    body: "CAR, CCIR, declarações de área, contratos de arrendamento, DAP, ITR. Um papel errado e o pedido volta pro início da fila.",
+    title: "A burocracia derruba antes do comitê olhar.",
+    body: "CAR, CCIR, ITR, contratos, declarações. Um papel fora do padrão e o pedido volta pro fim da fila. Ninguém te avisa em tempo.",
   },
   {
     tag: "03",
-    title: "A demora queima a janela da safra.",
-    body: "O plantio não espera. Quando o crédito sai — se sai — o insumo já subiu de preço ou a janela já fechou.",
+    title: "A janela da safra fecha enquanto você espera.",
+    body: "Insumo sobe, prazo encurta, margem evapora. Quando o crédito sai — se sai — você já pagou caro pra começar atrasado.",
   },
   {
     tag: "04",
-    title: "Ninguém te explica o que o banco realmente quer ver.",
-    body: "Os critérios do MCR são técnicos. O gerente não tem tempo. O contador conhece imposto, não crédito rural. Você fica no meio.",
+    title: "O banco não te diz o que o banco quer ver.",
+    body: "O contador conhece imposto. O técnico conhece lavoura. Ninguém conhece a mesa do crédito — só quem senta nela sabe o que aprova.",
   },
 ]
 
@@ -58,8 +58,8 @@ export function Problem() {
                 maxWidth: 440,
               }}
             >
-              Crédito rural não é falta de dinheiro no banco — é falta de dossiê no padrão que o
-              banco aprova. E isso é um problema técnico, não de sorte.
+              O dinheiro existe. O que falta é dossiê no padrão que o banco aprova. Isso é problema
+              técnico, não de sorte — e tem quem resolve por dentro.
             </p>
           </div>
 

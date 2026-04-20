@@ -92,10 +92,9 @@ export default function TermosPage() {
                 4. Pagamento e serviço
               </h2>
               <p>
-                O serviço pode ser prestado de forma gratuita em sua versão básica
-                ou mediante pagamento nas modalidades informadas na Plataforma.
-                Os valores, formas de pagamento e escopo de cada plano são
-                divulgados antes da contratação.
+                O serviço é prestado mediante pagamento único nas modalidades
+                informadas na Plataforma. Os valores, formas de pagamento e
+                escopo de cada plano são divulgados antes da contratação.
               </p>
               <p className="mt-3">
                 <strong>

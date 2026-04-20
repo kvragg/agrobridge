@@ -336,7 +336,7 @@ function LoginInner() {
               href="/cadastro"
               className="font-semibold text-[#166534] hover:underline"
             >
-              Criar conta grátis
+              Criar minha conta
             </Link>
           </p>
         </div>

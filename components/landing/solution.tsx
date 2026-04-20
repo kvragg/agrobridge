@@ -82,9 +82,9 @@ export function Solution() {
                 textWrap: "balance",
               }}
             >
-              Um consultor especializado
+              A inteligência de quem
               <br />
-              em crédito rural.
+              aprova crédito por dentro.
             </h2>
           </div>
           <div>
@@ -98,9 +98,9 @@ export function Solution() {
                 letterSpacing: "-0.005em",
               }}
             >
-              A gente não &ldquo;ajuda&rdquo; você a pedir crédito — monta o pedido no padrão que o
-              banco aprova. Entrevista com IA, checklist específico, dossiê no jeito que o comitê
-              lê.
+              Não é &ldquo;ajuda pra pedir crédito&rdquo; — é o pedido montado no padrão que o
+              comitê aprova. Entrevista com IA, checklist cirúrgico e dossiê na linguagem que o
+              analista defende internamente.
             </p>
           </div>
         </div>

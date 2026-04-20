@@ -122,10 +122,10 @@ export function Proof() {
     score >= 75 ? "var(--green-3)" : score >= 55 ? "#8a6d2a" : "var(--danger)"
 
   const stats = [
-    { k: "Projetos instruídos", v: "em piloto", tag: "placeholder honesto" },
+    { k: "Autoridade", v: "10 anos na mesa", tag: "experiência bancária" },
     { k: "Domínio do MCR", v: "Capítulos 1–16", tag: "técnico" },
     { k: "Tempo médio de dossiê", v: "3–5 dias", tag: "previsão atual" },
-    { k: "Custo para você", v: "R$ 0 até aprovar", tag: "sem mensalidade" },
+    { k: "Entrega", v: "100% digital", tag: "pagamento único" },
   ]
 
   return (
@@ -320,7 +320,7 @@ export function Proof() {
 
             <div style={{ marginTop: 32 }}>
               <Button variant="primary" size="md" href="/cadastro">
-                Continuar com meu caso real {Icon.arrow(14)}
+                Criar minha conta e iniciar diagnóstico {Icon.arrow(14)}
               </Button>
             </div>
           </div>
