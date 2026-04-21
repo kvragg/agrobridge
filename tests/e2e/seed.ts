@@ -58,6 +58,25 @@ async function main() {
     .eq('user_id', userId)
     .is('deleted_at', null)
 
+  // 3. Reset do histórico de chat (soft delete consistente com app)
+  //    e do contador freemium — senão o spec 07 (2 msgs IA) explode no
+  //    paywall depois de N rodadas. perfis_lead pode não existir se
+  //    trigger de signup não rodou — update silencioso.
+  await admin
+    .from('mensagens')
+    .update({ deleted_at: new Date().toISOString() })
+    .eq('user_id', userId)
+    .is('deleted_at', null)
+
+  await admin
+    .from('perfis_lead')
+    .update({
+      perguntas_respondidas_gratis: 0,
+      mini_analise_texto: null,
+      mini_analise_gerada_em: null,
+    })
+    .eq('user_id', userId)
+
   console.log('[seed] ok.')
   console.log(`E2E_TEST_EMAIL=${EMAIL}`)
   console.log(`E2E_TEST_USER_ID=${userId}`)
