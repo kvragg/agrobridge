@@ -11,6 +11,9 @@ export type AuditEventType =
   | 'dossie_gerado'
   | 'viabilidade_gerada'
   | 'pagamento_confirmado'
+  | 'conta_exportada'
+  | 'conta_exclusao_solicitada'
+  | 'conta_excluida'
 
 interface LogParams {
   userId: string | null

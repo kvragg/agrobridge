@@ -208,3 +208,69 @@ export async function enviarLembreteDocumentos(input: {
     html,
   })
 }
+
+// ── LGPD — Exclusão de conta (dupla confirmação) ───────────────────
+
+export async function enviarConfirmacaoExclusao(input: {
+  to: string
+  nome: string
+  urlConfirmacao: string
+  expiraEmMinutos: number
+}): Promise<boolean> {
+  const { nome, urlConfirmacao, expiraEmMinutos, to } = input
+  const html = wrap(`
+    <h1 style="color:#991b1b; font-size:22px; margin:0 0 16px;">
+      Confirme a exclusão da sua conta
+    </h1>
+    <p style="font-size:15px; line-height:1.55; margin:0 0 14px;">Olá, ${escapeHtml(nome)}.</p>
+    <p style="font-size:15px; line-height:1.55; margin:0 0 14px;">
+      Recebemos um pedido de exclusão da sua conta AgroBridge. Para confirmar,
+      clique no botão abaixo em até <strong>${expiraEmMinutos} minutos</strong>.
+    </p>
+    <p style="margin:24px 0;">
+      <a href="${urlConfirmacao}" style="display:inline-block; background:#991b1b; color:#fff; padding:13px 22px; border-radius:999px; text-decoration:none; font-weight:500; font-size:14px;">
+        Confirmar exclusão da conta
+      </a>
+    </p>
+    <p style="font-size:13px; color:#6b6b64; margin:0 0 8px;">
+      Você NÃO iniciou esse pedido? Ignore este e-mail — nada acontece sem
+      confirmação. Se desconfiar de acesso indevido, troque sua senha em /resetar-senha.
+    </p>
+    <p style="font-size:13px; color:#6b6b64; margin:0;">
+      A exclusão é imediata: seus processos, entrevistas, checklists e uploads ficam
+      invisíveis e bloqueados para uso. Por obrigação fiscal, os registros financeiros
+      são mantidos em modo arquivado conforme a Política de Privacidade (seção 7).
+    </p>
+  `)
+  return enviarEmail({
+    to,
+    subject: 'AgroBridge · confirme a exclusão da sua conta',
+    html,
+  })
+}
+
+export async function enviarExportacaoPronta(input: {
+  to: string
+  nome: string
+}): Promise<boolean> {
+  const { nome, to } = input
+  const html = wrap(`
+    <h1 style="color:#0f3d2e; font-size:22px; margin:0 0 16px;">
+      Exportação de dados concluída
+    </h1>
+    <p style="font-size:15px; line-height:1.55; margin:0 0 14px;">Olá, ${escapeHtml(nome)}.</p>
+    <p style="font-size:15px; line-height:1.55; margin:0 0 14px;">
+      Sua exportação de dados (LGPD Art. 18) foi gerada com sucesso e baixada
+      pelo seu navegador. Se você não solicitou, redefina sua senha imediatamente
+      em /resetar-senha e fale conosco.
+    </p>
+    <p style="font-size:13px; color:#6b6b64; margin:0;">
+      Este e-mail é apenas uma confirmação — ele não contém o arquivo exportado.
+    </p>
+  `)
+  return enviarEmail({
+    to,
+    subject: 'AgroBridge · exportação de dados concluída',
+    html,
+  })
+}

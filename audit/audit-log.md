@@ -44,3 +44,24 @@ Commit: wave 1 — defense in depth open redirect + no-store + check-secrets
 **Secrets:** ✅ check-secrets limpo
 
 Commit: wave 2 — tabela compras + vagas mentoria + gate mensal
+
+## [2026-04-21 02:10] Iteração 1 — Batch 3 (Wave 3)
+**Ação:** LGPD — página /privacidade expandida + soft-delete + exportar + excluir (dupla confirmação).
+**Arquivos:**
+- `supabase/migrations/20260421080000_soft_delete_pii.sql` (novo) — adiciona `deleted_at` em processos/mensagens/checklist_itens/uploads + índices parciais + rewrite das 4 policies RLS para filtrar `deleted_at IS NULL`. Função `soft_delete_user_data(user_id)` SECURITY DEFINER marca cascata. Tabela `pedidos_exclusao_conta` com hash SHA-256 + TTL 30 min + RLS fechada.
+- `app/privacidade/page.tsx` — seção 5 adiciona Cakto (faltava); seção 6 vira tabela operador×país×dados + Art. 33 incisos II/VIII; seção 8 adiciona autoatendimento (links para /conta/dados); data 21-abr-26.
+- `app/api/conta/exportar/route.ts` (novo) — GET autenticado, rate 1/dia, retorna JSON com processos/mensagens/checklist/uploads(+signed URLs TTL 15min)/compras/auth metadata. Content-Disposition attachment. Audit 'conta_exportada'. Email confirmação fire-and-forget.
+- `app/api/conta/excluir/route.ts` (novo) — POST dupla confirmação. Step 1 (body vazio): gera token 32B random, grava hash SHA-256 + IP + UA em `pedidos_exclusao_conta`, envia email, 202. Step 2 (body={token}): lookup restrito ao próprio user (defense-in-depth), valida expiração, chama RPC `soft_delete_user_data`, anonimiza `auth.users.email` → `deleted_<uuid>@agrobridge.invalid` + ban 100 anos, marca pedido confirmado, `signOut()`. Rate step1 3/h, step2 10/h por IP.
+- `lib/audit.ts` — tipos `AuditEventType` incluem `conta_exportada`, `conta_exclusao_solicitada`, `conta_excluida`.
+- `lib/email/resend.ts` — templates `enviarConfirmacaoExclusao` (com URL confirmação + aviso 30 min) e `enviarExportacaoPronta`.
+- `app/conta/dados/page.tsx` + `components/conta/ContaDadosClient.tsx` (novos) — UI com 2 cards (exportar, excluir). Checkbox obrigatória antes do CTA de exclusão, alertas visuais.
+- `app/conta/excluir/confirmar/page.tsx` + `components/conta/ConfirmarExclusaoClient.tsx` (novos) — consome `?t=<token>`, redireciona pra /login?next=... se não logado. Botão de confirmação manual (não auto-post — evita execução por prefetch/prewarm).
+
+**Nota §3.4:** Migration 080000 adiciona DDL novo mas não DROP. Segue padrão aditivo.
+
+**Build:** ✅ (4 novas rotas: /api/conta/excluir, /api/conta/exportar, /conta/dados, /conta/excluir/confirmar)
+**Typecheck:** ✅
+**Lint:** ✅ zero errors (11 warnings pré-existentes, não regressão)
+**Secrets:** ✅
+
+Commit: wave 3 — LGPD Art. 18 (privacidade + exportar + excluir soft-delete)

@@ -25,7 +25,7 @@ export default function PrivacidadePage() {
               Política de Privacidade
             </h1>
             <p className="mt-2 text-sm text-gray-500">
-              Última atualização: 18 de abril de 2026
+              Última atualização: 21 de abril de 2026
             </p>
             <p className="mt-3 text-sm text-gray-600">
               Esta Política descreve como o AgroBridge trata os dados pessoais
@@ -150,6 +150,12 @@ export default function PrivacidadePage() {
                   <strong>Resend</strong> — envio de e-mails transacionais
                   (confirmação, recuperação de senha, notificações).
                 </li>
+                <li>
+                  <strong>Cakto Tecnologia Ltda.</strong> — processamento de
+                  pagamentos (PIX, cartão de crédito, parcelamento). O
+                  AgroBridge não armazena dados de cartão — o checkout é
+                  conduzido pela Cakto como controladora dos dados financeiros.
+                </li>
               </ul>
               <p className="mt-3">
                 Em nenhuma hipótese o AgroBridge vende, aluga ou comercializa
@@ -159,12 +165,59 @@ export default function PrivacidadePage() {
 
             <section>
               <h2 className="mb-3 text-xl font-bold text-gray-900">
-                6. Transferência internacional
+                6. Transferência internacional (art. 33 da LGPD)
               </h2>
               <p>
                 Alguns operadores possuem infraestrutura fora do Brasil. As
-                transferências observam as garantias previstas no art. 33 da
-                LGPD, incluindo cláusulas contratuais padrão de proteção de dados.
+                transferências ocorrem com base no art. 33, inciso II (cláusulas
+                contratuais padrão e garantias contratuais específicas)
+                e inciso VIII (necessidade à execução do contrato).
+                Operadores e países envolvidos:
+              </p>
+              <div className="mt-3 overflow-x-auto">
+                <table className="min-w-full text-left text-sm">
+                  <thead className="border-b border-gray-200 text-xs uppercase tracking-wider text-gray-500">
+                    <tr>
+                      <th className="py-2 pr-4">Operador</th>
+                      <th className="py-2 pr-4">Local</th>
+                      <th className="py-2">Dados transferidos</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    <tr>
+                      <td className="py-2 pr-4 font-medium">Supabase Inc.</td>
+                      <td className="py-2 pr-4">EUA (Ohio)</td>
+                      <td className="py-2">Cadastro, entrevista, documentos</td>
+                    </tr>
+                    <tr>
+                      <td className="py-2 pr-4 font-medium">Anthropic PBC</td>
+                      <td className="py-2 pr-4">EUA</td>
+                      <td className="py-2">
+                        Texto da entrevista e prompts (sem uso para treino)
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="py-2 pr-4 font-medium">Vercel Inc.</td>
+                      <td className="py-2 pr-4">EUA (edge global)</td>
+                      <td className="py-2">Tráfego HTTP, logs operacionais</td>
+                    </tr>
+                    <tr>
+                      <td className="py-2 pr-4 font-medium">Resend</td>
+                      <td className="py-2 pr-4">EUA</td>
+                      <td className="py-2">E-mail e conteúdo da mensagem</td>
+                    </tr>
+                    <tr>
+                      <td className="py-2 pr-4 font-medium">Cakto</td>
+                      <td className="py-2 pr-4">Brasil</td>
+                      <td className="py-2">Nome, e-mail, dados de pagamento</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <p className="mt-3">
+                O AgroBridge mantém registros internos com o histórico dessas
+                transferências e pode disponibilizá-los ao titular mediante
+                solicitação.
               </p>
             </section>
 
@@ -212,6 +265,35 @@ export default function PrivacidadePage() {
                 </a>{' '}
                 e serão respondidas em até 15 (quinze) dias.
               </p>
+              <div className="mt-4 rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm">
+                <p className="font-semibold text-gray-900">
+                  Autoatendimento disponível:
+                </p>
+                <ul className="mt-2 list-disc space-y-1 pl-5">
+                  <li>
+                    <strong>Exportar meus dados</strong> — gere e baixe um
+                    arquivo JSON com todos os seus dados em{' '}
+                    <Link
+                      href="/conta/dados"
+                      className="font-medium text-[#166534] hover:underline"
+                    >
+                      /conta/dados
+                    </Link>
+                    .
+                  </li>
+                  <li>
+                    <strong>Excluir minha conta</strong> — solicite exclusão
+                    com confirmação por e-mail em{' '}
+                    <Link
+                      href="/conta/dados"
+                      className="font-medium text-[#166534] hover:underline"
+                    >
+                      /conta/dados
+                    </Link>
+                    . A exclusão observa o prazo de retenção fiscal (seção 7).
+                  </li>
+                </ul>
+              </div>
             </section>
 
             <section>
