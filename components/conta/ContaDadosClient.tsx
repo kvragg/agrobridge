@@ -153,17 +153,30 @@ function CardExcluir({ email }: { email: string }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({}),
       })
-      const json = await res.json().catch(() => ({}))
-      if (!res.ok) {
-        setEstado('erro')
-        setMensagem(json?.erro ?? 'Não foi possível enviar o pedido.')
+      const json = (await res.json().catch(() => ({}))) as {
+        ok?: boolean
+        email_enviado?: boolean
+        mensagem?: string
+        erro?: string
+      }
+      // Estado 'enviado' SO se o email realmente saiu — evita falsa
+      // confirmacao LGPD quando Resend falha.
+      if (res.ok && json.email_enviado) {
+        setEstado('enviado')
+        setMensagem(
+          json.mensagem ??
+            'E-mail enviado. Clique no link para concluir a exclusão.'
+        )
         return
       }
-      setEstado('enviado')
+      setEstado('erro')
       setMensagem(
         json?.mensagem ??
-          'E-mail de confirmação enviado. Clique no link para concluir a exclusão.'
+          json?.erro ??
+          'Não foi possível enviar o e-mail. Tente novamente.'
       )
+      // Libera o botão pra reenviar (checkbox já estava marcado)
+      setConfirmado(true)
     } catch {
       setEstado('erro')
       setMensagem('Falha de rede. Tente novamente.')
@@ -212,7 +225,9 @@ function CardExcluir({ email }: { email: string }) {
               ? 'Enviando e-mail…'
               : estado === 'enviado'
                 ? 'E-mail enviado'
-                : 'Solicitar exclusão'}
+                : estado === 'erro'
+                  ? 'Tentar novamente'
+                  : 'Solicitar exclusão'}
           </button>
 
           {mensagem && (
