@@ -7,6 +7,7 @@ export type AuditEventType =
   | 'login'
   | 'login_falha'
   | 'processo_criado'
+  | 'processo_excluido'
   | 'documento_validado'
   | 'dossie_gerado'
   | 'viabilidade_gerada'

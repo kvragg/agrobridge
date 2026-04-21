@@ -9,6 +9,7 @@ import {
   FileText,
   CreditCard,
 } from 'lucide-react'
+import ExcluirProcessoButton from '@/components/dashboard/ExcluirProcessoButton'
 
 interface Processo {
   id: string
@@ -200,11 +201,15 @@ export default async function DashboardPage() {
             {processos.map((p) => {
               const docsCount = contagens[p.id] ?? 0
               const prog = calcularProgresso(p, docsCount)
+              const descricaoCard = `${p.banco ?? 'Banco a definir'} · ${new Date(p.created_at).toLocaleDateString('pt-BR')}`
               return (
-                <li key={p.id}>
+                <li key={p.id} className="relative">
+                  <div className="absolute right-3 top-3 z-10">
+                    <ExcluirProcessoButton processoId={p.id} descricao={descricaoCard} />
+                  </div>
                   <Link
                     href={prog.href}
-                    className="group block rounded-2xl border border-gray-200 bg-white p-5 transition-all hover:border-[#166534]/30 hover:shadow-sm"
+                    className="group block rounded-2xl border border-gray-200 bg-white p-5 pr-16 transition-all hover:border-[#166534]/30 hover:shadow-sm"
                   >
                     <div className="flex items-start gap-4">
                       <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-green-50">
