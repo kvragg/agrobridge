@@ -30,6 +30,12 @@ export default async function AdminLayout({
               >
                 Compras
               </Link>
+              <Link
+                href="/admin/debug"
+                className="font-medium text-gray-700 hover:text-gray-900"
+              >
+                Debug
+              </Link>
             </nav>
           </div>
           <div className="flex items-center gap-3 text-xs text-gray-500">
