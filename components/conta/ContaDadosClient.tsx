@@ -3,13 +3,17 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, Download, Trash2, CheckCircle2, AlertTriangle } from 'lucide-react'
+import { PlanoBadge } from '@/components/ui/plano-badge'
+import type { PlanoComercial } from '@/lib/plano'
 
 export default function ContaDadosClient({
   nome,
   email,
+  plano,
 }: {
   nome: string
   email: string
+  plano: PlanoComercial
 }) {
   return (
     <main className="min-h-screen bg-gradient-to-br from-[#f0fdf4] to-[#f9fafb] px-4 py-10">
@@ -26,9 +30,10 @@ export default function ContaDadosClient({
           <p className="text-xs font-semibold uppercase tracking-widest text-[#166534]">
             Conta · LGPD Art. 18
           </p>
-          <h1 className="mt-1 text-3xl font-black text-gray-900">
-            Meus dados
-          </h1>
+          <div className="mt-1 flex flex-wrap items-center gap-3">
+            <h1 className="text-3xl font-black text-gray-900">Meus dados</h1>
+            <PlanoBadge plano={plano} size="md" />
+          </div>
           <p className="mt-2 text-sm text-gray-600">
             Olá, {nome}. Você tem direito de acessar, portar ou excluir seus
             dados a qualquer momento. As solicitações abaixo são atendidas de
@@ -153,17 +158,30 @@ function CardExcluir({ email }: { email: string }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({}),
       })
-      const json = await res.json().catch(() => ({}))
-      if (!res.ok) {
-        setEstado('erro')
-        setMensagem(json?.erro ?? 'Não foi possível enviar o pedido.')
+      const json = (await res.json().catch(() => ({}))) as {
+        ok?: boolean
+        email_enviado?: boolean
+        mensagem?: string
+        erro?: string
+      }
+      // Estado 'enviado' SO se o email realmente saiu — evita falsa
+      // confirmacao LGPD quando Resend falha.
+      if (res.ok && json.email_enviado) {
+        setEstado('enviado')
+        setMensagem(
+          json.mensagem ??
+            'E-mail enviado. Clique no link para concluir a exclusão.'
+        )
         return
       }
-      setEstado('enviado')
+      setEstado('erro')
       setMensagem(
         json?.mensagem ??
-          'E-mail de confirmação enviado. Clique no link para concluir a exclusão.'
+          json?.erro ??
+          'Não foi possível enviar o e-mail. Tente novamente.'
       )
+      // Libera o botão pra reenviar (checkbox já estava marcado)
+      setConfirmado(true)
     } catch {
       setEstado('erro')
       setMensagem('Falha de rede. Tente novamente.')
@@ -212,7 +230,9 @@ function CardExcluir({ email }: { email: string }) {
               ? 'Enviando e-mail…'
               : estado === 'enviado'
                 ? 'E-mail enviado'
-                : 'Solicitar exclusão'}
+                : estado === 'erro'
+                  ? 'Tentar novamente'
+                  : 'Solicitar exclusão'}
           </button>
 
           {mensagem && (

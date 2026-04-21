@@ -5,6 +5,8 @@ import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { LayoutDashboard, MessageSquare, CreditCard, UserCog, Menu, X, Sprout } from 'lucide-react'
 import SignOutButton from '@/components/ui/sign-out-button'
+import { PlanoBadge } from '@/components/ui/plano-badge'
+import type { PlanoComercial } from '@/lib/plano'
 
 const NAV = [
   { href: '/dashboard', label: 'Processos', icon: LayoutDashboard },
@@ -16,10 +18,11 @@ const NAV = [
 interface DashboardShellProps {
   nome: string
   email: string | undefined
+  plano: PlanoComercial
   children: React.ReactNode
 }
 
-export function DashboardShell({ nome, email, children }: DashboardShellProps) {
+export function DashboardShell({ nome, email, plano, children }: DashboardShellProps) {
   const [open, setOpen] = useState(false)
   const pathname = usePathname()
 
@@ -100,7 +103,10 @@ export function DashboardShell({ nome, email, children }: DashboardShellProps) {
               {nome[0].toUpperCase()}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold text-white">{nome}</p>
+              <div className="flex items-center gap-1.5">
+                <p className="truncate text-sm font-semibold text-white">{nome}</p>
+                <PlanoBadge plano={plano} />
+              </div>
               <p className="truncate text-xs text-white/50">{email}</p>
             </div>
           </div>

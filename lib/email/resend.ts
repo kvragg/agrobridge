@@ -7,6 +7,10 @@ interface DadosLead {
   whatsapp: string
 }
 
+export type EmailResult =
+  | { ok: true; resendId: string | null }
+  | { ok: false; error: string; status?: number }
+
 const RESEND_API = 'https://api.resend.com/emails'
 
 function getAuth() {
@@ -20,32 +24,44 @@ async function enviarEmail(payload: {
   subject: string
   html: string
   reply_to?: string
-}): Promise<boolean> {
+}): Promise<EmailResult> {
   const { apiKey, from } = getAuth()
   if (!apiKey) {
     console.warn('[Resend] RESEND_API_KEY ausente — email não enviado:', payload.subject)
-    return false
+    return { ok: false, error: 'RESEND_API_KEY ausente no ambiente' }
   }
-  const res = await fetch(RESEND_API, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      from,
-      to: Array.isArray(payload.to) ? payload.to : [payload.to],
-      subject: payload.subject,
-      html: payload.html,
-      reply_to: payload.reply_to,
-    }),
-  })
+  let res: Response
+  try {
+    res = await fetch(RESEND_API, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        from,
+        to: Array.isArray(payload.to) ? payload.to : [payload.to],
+        subject: payload.subject,
+        html: payload.html,
+        reply_to: payload.reply_to,
+      }),
+    })
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    console.error('[Resend] fetch falhou', msg)
+    return { ok: false, error: `fetch falhou: ${msg}` }
+  }
   if (!res.ok) {
     const txt = await res.text().catch(() => '')
     console.error('[Resend] Falha ao enviar:', res.status, txt)
-    return false
+    return {
+      ok: false,
+      status: res.status,
+      error: `Resend ${res.status}: ${txt.slice(0, 240)}`,
+    }
   }
-  return true
+  const json = (await res.json().catch(() => null)) as { id?: string } | null
+  return { ok: true, resendId: json?.id ?? null }
 }
 
 function wrap(content: string): string {
@@ -72,7 +88,7 @@ function escapeHtml(s: string): string {
 
 // ── Templates ───────────────────────────────────────────────────────
 
-export async function enviarLeadNotification(dados: DadosLead): Promise<void> {
+export async function enviarLeadNotification(dados: DadosLead): Promise<EmailResult> {
   const destino =
     process.env.LEAD_NOTIFICATION_EMAIL ?? 'paulocosta.contato1@gmail.com'
 
@@ -103,7 +119,7 @@ export async function enviarLeadNotification(dados: DadosLead): Promise<void> {
     </table>
   `)
 
-  await enviarEmail({
+  return enviarEmail({
     to: destino,
     subject: `[AgroBridge] Novo cadastro: ${dados.nome}`,
     html,
@@ -115,7 +131,7 @@ export async function enviarDossiePronto(input: {
   to: string
   nome: string
   processoId: string
-}): Promise<void> {
+}): Promise<EmailResult> {
   const { nome, processoId, to } = input
   const url = `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://agrobridge.app'}/checklist/${processoId}`
   const html = wrap(`
@@ -135,7 +151,7 @@ export async function enviarDossiePronto(input: {
       Revise antes de entregar. Qualquer ajuste pode ser solicitado pela plataforma.
     </p>
   `)
-  await enviarEmail({
+  return enviarEmail({
     to,
     subject: 'AgroBridge · seu dossiê de crédito está pronto',
     html,
@@ -147,7 +163,7 @@ export async function enviarPagamentoConfirmado(input: {
   nome: string
   valor: number
   processoId: string
-}): Promise<void> {
+}): Promise<EmailResult> {
   const { nome, valor, processoId, to } = input
   const url = `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://agrobridge.app'}/checklist/${processoId}`
   const valorFmt = `R$ ${valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
@@ -167,7 +183,7 @@ export async function enviarPagamentoConfirmado(input: {
       Guarde este e-mail como comprovante. A nota fiscal, se aplicável, será enviada em até 5 dias úteis.
     </p>
   `)
-  await enviarEmail({
+  return enviarEmail({
     to,
     subject: 'AgroBridge · pagamento confirmado',
     html,
@@ -179,7 +195,7 @@ export async function enviarLembreteDocumentos(input: {
   nome: string
   pendentes: string[]
   processoId: string
-}): Promise<void> {
+}): Promise<EmailResult> {
   const { nome, pendentes, processoId, to } = input
   const url = `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://agrobridge.app'}/checklist/${processoId}`
   const lista = pendentes
@@ -202,7 +218,7 @@ export async function enviarLembreteDocumentos(input: {
       </a>
     </p>
   `)
-  await enviarEmail({
+  return enviarEmail({
     to,
     subject: 'AgroBridge · documentos pendentes para seu dossiê',
     html,
@@ -216,7 +232,7 @@ export async function enviarConfirmacaoExclusao(input: {
   nome: string
   urlConfirmacao: string
   expiraEmMinutos: number
-}): Promise<boolean> {
+}): Promise<EmailResult> {
   const { nome, urlConfirmacao, expiraEmMinutos, to } = input
   const html = wrap(`
     <h1 style="color:#991b1b; font-size:22px; margin:0 0 16px;">
@@ -252,7 +268,7 @@ export async function enviarConfirmacaoExclusao(input: {
 export async function enviarExportacaoPronta(input: {
   to: string
   nome: string
-}): Promise<boolean> {
+}): Promise<EmailResult> {
   const { nome, to } = input
   const html = wrap(`
     <h1 style="color:#0f3d2e; font-size:22px; margin:0 0 16px;">

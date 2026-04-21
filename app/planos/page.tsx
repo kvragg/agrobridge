@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import PlanosClient from '@/components/planos/PlanosClient'
+import { getPlanoAtual } from '@/lib/plano'
 
 export const metadata = {
   title: 'Planos · AgroBridge',
@@ -26,6 +27,7 @@ export default async function PlanosPage() {
     .eq('user_id', user.id)
     .eq('pagamento_confirmado', false)
     .neq('status', 'concluido')
+    .is('deleted_at', null)
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle()
@@ -37,5 +39,13 @@ export default async function PlanosPage() {
   const nome =
     (user.user_metadata?.nome as string | undefined)?.split(' ')[0] ?? 'Produtor'
 
-  return <PlanosClient nome={nome} processoId={processoAtivo.id} />
+  const plano = await getPlanoAtual()
+
+  return (
+    <PlanosClient
+      nome={nome}
+      processoId={processoAtivo.id}
+      tierAtual={plano.tier}
+    />
+  )
 }

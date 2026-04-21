@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import ContaDadosClient from '@/components/conta/ContaDadosClient'
+import { getPlanoAtual } from '@/lib/plano'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -24,5 +25,13 @@ export default async function ContaDadosPage() {
     (typeof user.user_metadata?.nome === 'string' && user.user_metadata.nome) ||
     (user.email ? user.email.split('@')[0] : 'Produtor')
 
-  return <ContaDadosClient nome={nome} email={user.email ?? ''} />
+  const plano = await getPlanoAtual()
+
+  return (
+    <ContaDadosClient
+      nome={nome}
+      email={user.email ?? ''}
+      plano={plano.plano}
+    />
+  )
 }

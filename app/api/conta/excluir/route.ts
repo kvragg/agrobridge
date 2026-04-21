@@ -96,13 +96,11 @@ export async function POST(request: NextRequest) {
     return Response.json({ erro: 'Falha ao processar' }, { status: 500 })
   }
 
-  void logAuditEvent({
-    userId: user.id,
-    eventType: 'conta_exclusao_solicitada',
-    request,
-    payload: { ttl_minutos: TTL_MIN },
-  })
-
+  // Envia email SINCRONO para saber se chegou. LGPD exige que o user
+  // tenha feedback real — UI nao pode afirmar "email enviado" se Resend
+  // devolveu 403/quota. Timeout de 15s ja e garantido pelo maxDuration.
+  let emailEnviado = false
+  let emailErro: string | null = null
   if (user.email) {
     const nome =
       (typeof user.user_metadata?.nome === 'string' && user.user_metadata.nome) ||
@@ -110,24 +108,54 @@ export async function POST(request: NextRequest) {
     const urlConfirmacao = `${baseUrl()}/conta/excluir/confirmar?t=${encodeURIComponent(
       tokenRaw
     )}`
-    void enviarConfirmacaoExclusao({
-      to: user.email,
-      nome,
-      urlConfirmacao,
-      expiraEmMinutos: TTL_MIN,
-    }).catch((err) =>
-      console.error('[api/conta/excluir] falha email confirmacao', err)
+    try {
+      const result = await enviarConfirmacaoExclusao({
+        to: user.email,
+        nome,
+        urlConfirmacao,
+        expiraEmMinutos: TTL_MIN,
+      })
+      emailEnviado = result.ok
+      emailErro = result.ok ? null : result.error
+    } catch (err) {
+      console.error('[api/conta/excluir] exceção no envio', err)
+      emailErro = err instanceof Error ? err.message : 'erro desconhecido'
+    }
+  }
+
+  void logAuditEvent({
+    userId: user.id,
+    eventType: 'conta_exclusao_solicitada',
+    request,
+    payload: {
+      ttl_minutos: TTL_MIN,
+      email_enviado: emailEnviado,
+      email_erro: emailErro,
+    },
+  })
+
+  if (!emailEnviado) {
+    // UI precisa saber — não falamos "enviado" quando não foi. Motivos
+    // genericos para nao vazar configuracao.
+    return Response.json(
+      {
+        ok: false,
+        email_enviado: false,
+        mensagem:
+          'Não conseguimos enviar o e-mail agora. Tente novamente em alguns minutos ou fale com paulocosta.contato1@gmail.com.',
+      },
+      { status: 502 }
     )
   }
 
-  // 202 Accepted — processamento pendente de confirmação.
   return Response.json(
     {
       ok: true,
+      email_enviado: true,
       mensagem:
-        'Enviamos um e-mail com o link de confirmação. O link expira em ' +
+        'E-mail enviado. Clique no link dentro de ' +
         TTL_MIN +
-        ' minutos.',
+        ' minutos para confirmar a exclusão.',
     },
     { status: 202 }
   )
