@@ -11,6 +11,7 @@ import {
   Clock,
   ArrowRight,
 } from 'lucide-react'
+import { TIER_NIVEL, type Tier } from '@/lib/tier'
 
 // URLs Cakto — checkout externo, redirect (não iframe).
 // Cakto propaga `?ref=<processo_id>` da URL para o webhook (modo (ii) do plano).
@@ -109,9 +110,11 @@ interface VagasMentoriaApi {
 export default function PlanosClient({
   nome,
   processoId,
+  tierAtual,
 }: {
   nome: string
   processoId: string
+  tierAtual: Tier | null
 }) {
   const [vagasMentoria, setVagasMentoria] = useState<VagasMentoriaApi | null>(null)
 
@@ -176,6 +179,7 @@ export default function PlanosClient({
               plano={plano}
               processoId={processoId}
               vagasMentoria={plano.id === 'mentoria' ? vagasMentoria : null}
+              tierAtual={tierAtual}
             />
           ))}
         </div>
@@ -220,16 +224,23 @@ function PlanoCard({
   plano,
   processoId,
   vagasMentoria,
+  tierAtual,
 }: {
   plano: Plano
   processoId: string
   vagasMentoria: VagasMentoriaApi | null
+  tierAtual: Tier | null
 }) {
   const destaque = plano.destaque
   const ehMentoria = plano.id === 'mentoria'
   const mentoriaEsgotada =
     ehMentoria && vagasMentoria !== null && vagasMentoria.vagas_restantes <= 0
-  const desabilitado = !plano.href || mentoriaEsgotada
+  // Tier <= que o user já tem: não vender de novo.
+  const jaPossui = tierAtual !== null && plano.id === tierAtual
+  const tierInferior =
+    tierAtual !== null && TIER_NIVEL[plano.id] < TIER_NIVEL[tierAtual]
+  const bloqueadoPorPlano = jaPossui || tierInferior
+  const desabilitado = !plano.href || mentoriaEsgotada || bloqueadoPorPlano
   const href = plano.href ? comRef(plano.href, processoId) : ''
 
   return (
@@ -313,9 +324,13 @@ function PlanoCard({
           disabled
           className="mt-7 flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-gray-100 px-4 py-4 text-sm font-bold text-gray-400"
         >
-          {mentoriaEsgotada
-            ? 'Esgotado — volte no próximo mês'
-            : 'Checkout em configuração'}
+          {jaPossui
+            ? 'Plano atual — você já tem esse acesso'
+            : tierInferior
+              ? 'Incluso no seu plano'
+              : mentoriaEsgotada
+                ? 'Esgotado — volte no próximo mês'
+                : 'Checkout em configuração'}
         </button>
       ) : (
         <a

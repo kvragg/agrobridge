@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { DashboardShell } from '@/components/ui/dashboard-shell'
+import { getPlanoAtual } from '@/lib/plano'
 
 export default async function DashboardLayout({
   children,
@@ -21,8 +22,10 @@ export default async function DashboardLayout({
     user.email?.split('@')[0] ??
     'Usuário'
 
+  const plano = await getPlanoAtual()
+
   return (
-    <DashboardShell nome={nome} email={user.email}>
+    <DashboardShell nome={nome} email={user.email} plano={plano.plano}>
       {children}
     </DashboardShell>
   )

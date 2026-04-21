@@ -3,13 +3,17 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, Download, Trash2, CheckCircle2, AlertTriangle } from 'lucide-react'
+import { PlanoBadge } from '@/components/ui/plano-badge'
+import type { PlanoComercial } from '@/lib/plano'
 
 export default function ContaDadosClient({
   nome,
   email,
+  plano,
 }: {
   nome: string
   email: string
+  plano: PlanoComercial
 }) {
   return (
     <main className="min-h-screen bg-gradient-to-br from-[#f0fdf4] to-[#f9fafb] px-4 py-10">
@@ -26,9 +30,10 @@ export default function ContaDadosClient({
           <p className="text-xs font-semibold uppercase tracking-widest text-[#166534]">
             Conta · LGPD Art. 18
           </p>
-          <h1 className="mt-1 text-3xl font-black text-gray-900">
-            Meus dados
-          </h1>
+          <div className="mt-1 flex flex-wrap items-center gap-3">
+            <h1 className="text-3xl font-black text-gray-900">Meus dados</h1>
+            <PlanoBadge plano={plano} size="md" />
+          </div>
           <p className="mt-2 text-sm text-gray-600">
             Olá, {nome}. Você tem direito de acessar, portar ou excluir seus
             dados a qualquer momento. As solicitações abaixo são atendidas de
