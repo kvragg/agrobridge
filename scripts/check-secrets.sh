@@ -49,6 +49,10 @@ for arquivo in $arquivos; do
   if file "$arquivo" 2>/dev/null | grep -qiE 'binary|executable'; then
     continue
   fi
+  # .env.example é template público — placeholders xxxx... não são secrets
+  if [[ "$(basename "$arquivo")" == ".env.example" ]]; then
+    continue
+  fi
   for padrao in "${padroes[@]}"; do
     if grep -HEn "$padrao" "$arquivo" 2>/dev/null; then
       encontrou=1

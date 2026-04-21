@@ -108,3 +108,19 @@ Commit: wave 4+5 — logger estruturado + upstash rate-limit adapter
 **Secrets:** ✅
 
 Commit: wave 6 — testes unitários superfícies novas + robots/sitemap + UI scan
+
+## [2026-04-21 03:30] Iteração 1 — Batch 6 (Wave 7)
+**Ação:** DX/docs — `.env.local.example` expandido com todas env vars atuais, `CLAUDE.md` convertido de redirect em mapa real de arquitetura, `README.md` reescrito para setup reprodutível.
+**Arquivos:**
+- `.env.local.example` — adiciona `NEXT_PUBLIC_SITE_URL`, `UPSTASH_REDIS_REST_URL`/`TOKEN` (opcional), `SENTRY_DSN` (opcional, TODO). Seções comentadas, referência aos preços Bronze/Prata/Ouro e ao mapeamento interno diagnostico/dossie/mentoria.
+- `CLAUDE.md` — era apenas `@AGENTS.md` (redirect). Agora: stack real com versões, 8 módulos mapeados, 8 convenções críticas (tier interno vs comercial, server-only, idempotência, audit, rate limit, redirects, errors, RLS soft delete), limites absolutos (§3.4), comandos frequentes, arquivos de topo, dívida conhecida. Mantém redirect `@AGENTS.md` no topo.
+- `README.md` — substitui template create-next-app. Pré-requisitos, setup 5 passos, matriz env vars obrigatórias vs opcionais, comandos, árvore de arquitetura, fluxo principal do produto, seção segurança/LGPD, notas de deploy.
+
+**Decisão de escopo:** Nenhum arquivo de código tocado — só docs. Seguindo a regra "docs no final" porque a arquitetura já estava estável nas waves 1-6.
+
+**Build:** ⏭️ (docs-only, não afeta)
+**Typecheck:** ✅
+**Lint:** ✅ 11 warnings pré-existentes
+**Secrets:** ✅
+
+Commit: wave 7 — .env.example + CLAUDE.md + README setup reprodutível
