@@ -72,7 +72,8 @@ describe("[E4] audit trail", () => {
     await new Promise((r) => setImmediate(r));
 
     expect(hoisted.insert).toHaveBeenCalledTimes(1);
-    const arg = hoisted.insert.mock.calls[0][0] as Record<string, unknown>;
+    const chamada = hoisted.insert.mock.calls[0] as unknown as [Record<string, unknown>];
+    const arg = chamada[0];
     expect(arg.event_type).toBe("processo_criado");
     expect(arg.user_id).toBe(userId);
     expect(arg.target_id).toBe(novoProcessoId);

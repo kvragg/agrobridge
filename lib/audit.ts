@@ -7,10 +7,14 @@ export type AuditEventType =
   | 'login'
   | 'login_falha'
   | 'processo_criado'
+  | 'processo_excluido'
   | 'documento_validado'
   | 'dossie_gerado'
   | 'viabilidade_gerada'
   | 'pagamento_confirmado'
+  | 'conta_exportada'
+  | 'conta_exclusao_solicitada'
+  | 'conta_excluida'
 
 interface LogParams {
   userId: string | null

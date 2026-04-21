@@ -197,6 +197,8 @@ export async function POST(request: NextRequest) {
       p_provider: 'cakto',
       p_tier: tier,
       p_raw: payload as unknown as Record<string, unknown>,
+      p_amount_cents: valorCentavos,
+      p_product_id: data.product?.id ?? data.product?.offer_id ?? null,
     }
   )
 

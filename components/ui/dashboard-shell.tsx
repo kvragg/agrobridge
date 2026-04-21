@@ -3,12 +3,14 @@
 import { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
-import { LayoutDashboard, MessageSquare, Menu, X, Sprout } from 'lucide-react'
+import { LayoutDashboard, MessageSquare, CreditCard, UserCog, Menu, X, Sprout } from 'lucide-react'
 import SignOutButton from '@/components/ui/sign-out-button'
 
 const NAV = [
   { href: '/dashboard', label: 'Processos', icon: LayoutDashboard },
   { href: '/entrevista/nova', label: 'Nova Entrevista', icon: MessageSquare },
+  { href: '/planos', label: 'Planos', icon: CreditCard },
+  { href: '/conta/dados', label: 'Minha Conta', icon: UserCog },
 ]
 
 interface DashboardShellProps {
@@ -21,9 +23,11 @@ export function DashboardShell({ nome, email, children }: DashboardShellProps) {
   const [open, setOpen] = useState(false)
   const pathname = usePathname()
 
-  useEffect(() => {
+  const [pathnameAnterior, setPathnameAnterior] = useState(pathname)
+  if (pathname !== pathnameAnterior) {
+    setPathnameAnterior(pathname)
     setOpen(false)
-  }, [pathname])
+  }
 
   useEffect(() => {
     if (!open) return
