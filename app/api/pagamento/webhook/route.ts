@@ -153,21 +153,26 @@ export async function POST(request: NextRequest) {
     return Response.json({ ok: true, ignored: ev })
   }
 
-  // Resolve processo_id em chain — Cakto pode entregar de 3 formas:
+  // Resolve processo_id em chain — Cakto pode entregar de 4 formas:
   //   (i)  metadata.processo_id  (Cakto Pro / planos com metadata)
   //   (ii) data.ref              (Cakto propaga `?ref=<id>` da URL do checkout)
-  //   (iii) lookup pelo email do customer (último processo aberto do user)
+  //   (iii) lookup pelo email     (último processo aberto do user)
+  //   (iv) auto-cria processo    (user existe mas nunca abriu processo —
+  //                               caso típico: paga antes de começar a entrevista)
   const supabase = createAdminClient()
   const processoId = await resolveProcessoId(supabase, data)
 
   if (!processoId) {
+    // Registra em compras como "orfao" para o admin reprocessar manualmente
+    // (user não existe no Supabase ou email ausente).
+    await registrarCompraOrfa(supabase, data, ev, eventId, payload)
     console.warn(
-      '[pagamento/webhook] evento sem processo_id (metadata/ref/email)',
+      '[pagamento/webhook] compra orfa — user nao encontrado',
       ev,
       eventId,
       { email: data.customer?.email }
     )
-    return Response.json({ ok: true, ignored: 'sem_processo_id' })
+    return Response.json({ ok: true, ignored: 'sem_user_lookup' })
   }
 
   // Determina o tier a partir do produto Cakto
@@ -285,11 +290,13 @@ async function resolveProcessoId(
     return null
   }
 
+  // (iii) — tenta pegar um processo aberto existente
   const { data: procRow, error: procErr } = await supabase
     .from('processos')
     .select('id')
     .eq('user_id', userId)
     .eq('pagamento_confirmado', false)
+    .is('deleted_at', null)
     .neq('status', 'concluido')
     .order('created_at', { ascending: false })
     .limit(1)
@@ -299,7 +306,58 @@ async function resolveProcessoId(
     console.error('[pagamento/webhook] falha lookup processo por email', procErr.message)
     return null
   }
-  return procRow?.id ?? null
+  if (procRow?.id) return procRow.id
+
+  // (iv) — user existe mas nunca criou processo: cria um placeholder
+  // para que o RPC v2 tenha onde gravar o tier + pagamento_confirmado.
+  const { data: novoProc, error: novoErr } = await supabase
+    .from('processos')
+    .insert({
+      user_id: userId,
+      status: 'entrevista',
+      fase: 'pagamento',
+    })
+    .select('id')
+    .single()
+
+  if (novoErr || !novoProc) {
+    console.error(
+      '[pagamento/webhook] falha auto-criar processo p/ pagamento',
+      novoErr?.message
+    )
+    return null
+  }
+  console.info(
+    '[pagamento/webhook] processo auto-criado para pagamento orfao',
+    { user: userId, processo: novoProc.id, email }
+  )
+  return novoProc.id
+}
+
+// Grava uma compra "orfã" (sem user identificado) na tabela `compras` via
+// RPC admin para o painel admin reprocessar manualmente. Se email ausente
+// ou user não encontrado, nada a fazer — grava em log estruturado.
+async function registrarCompraOrfa(
+  _supabase: ReturnType<typeof createAdminClient>,
+  data: CaktoData,
+  evento: string,
+  eventId: string,
+  payload: CaktoPayload
+): Promise<void> {
+  try {
+    await _supabase.from('webhook_events').insert({
+      provider: 'cakto',
+      event_id: `orfa_${eventId}`,
+      payload: {
+        ...(payload as unknown as Record<string, unknown>),
+        _orfa: true,
+        _evento: evento,
+        _email: data.customer?.email ?? null,
+      },
+    })
+  } catch (err) {
+    console.error('[pagamento/webhook] falha gravar orfa em webhook_events', err)
+  }
 }
 
 // supabase-js v2.103 não expõe getUserByEmail; chamamos a admin REST API
