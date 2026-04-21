@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
     admin.from('perfis_lead').select('*').eq('user_id', user.id).maybeSingle(),
     admin
       .from('mensagens')
-      .select('role, content, created_at')
+      .select('role, content')
       .eq('user_id', user.id)
       .is('deleted_at', null)
       .order('created_at', { ascending: false })
@@ -67,7 +67,12 @@ export async function POST(request: NextRequest) {
   ])
 
   const perfil = (perfilRaw ?? null) as PerfilLead | null
-  const historico = (historicoRaw ?? []).reverse() as MensagemChat[]
+  // Sanitiza pro shape exato da Anthropic API. messages.create() rejeita
+  // qualquer campo extra (created_at, id, user_id) com 400 invalid_request_error
+  // — defense-in-depth contra futuros selects vazarem colunas.
+  const historico: MensagemChat[] = (historicoRaw ?? [])
+    .reverse()
+    .map((m) => ({ role: m.role as MensagemChat['role'], content: m.content }))
 
   // Gate freemium: tier=free + limite ja atingido -> retorna paywall direto sem consumir IA.
   const isFree = plano.tier === null
