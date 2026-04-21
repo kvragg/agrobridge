@@ -37,7 +37,7 @@ export default function ConfirmadoPage() {
           Conta ativa!
         </h1>
         <p className="mb-8 text-base text-gray-600">
-          Agora escolha como você quer aprovar seu crédito.
+          Agora é escolher o nível de prontidão do seu pedido.
         </p>
 
         <div className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm text-gray-500 shadow-sm ring-1 ring-gray-200">

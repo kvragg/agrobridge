@@ -122,7 +122,7 @@ export function Proof() {
     score >= 75 ? "var(--green-3)" : score >= 55 ? "#8a6d2a" : "var(--danger)"
 
   const stats = [
-    { k: "Autoridade", v: "10 anos na mesa", tag: "experiência bancária" },
+    { k: "Autoridade", v: "14 anos no SFN", tag: "fundador · ex-banco privado" },
     { k: "Domínio do MCR", v: "Capítulos 1–16", tag: "técnico" },
     { k: "Tempo médio de dossiê", v: "3–5 dias", tag: "previsão atual" },
     { k: "Entrega", v: "100% digital", tag: "pagamento único" },
@@ -320,7 +320,7 @@ export function Proof() {
 
             <div style={{ marginTop: 32 }}>
               <Button variant="primary" size="md" href="/cadastro">
-                Criar minha conta e iniciar diagnóstico {Icon.arrow(14)}
+                Iniciar diagnóstico gratuito {Icon.arrow(14)}
               </Button>
             </div>
           </div>

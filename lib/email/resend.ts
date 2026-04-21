@@ -55,7 +55,7 @@ function wrap(content: string): string {
         ${content}
       </div>
       <p style="margin-top: 24px; font-size: 11px; color: #9ca3af; text-align: center;">
-        AgroBridge · consultoria especializada em crédito rural
+        AgroBridge · feito por quem decidiu crédito por 14 anos dentro do banco
       </p>
     </div>
   `.trim()
@@ -122,8 +122,9 @@ export async function enviarDossiePronto(input: {
     <h1 style="color:#0f3d2e; font-size:22px; margin:0 0 16px;">Seu dossiê está pronto</h1>
     <p style="font-size:15px; line-height:1.55; margin:0 0 14px;">Olá, ${escapeHtml(nome)}.</p>
     <p style="font-size:15px; line-height:1.55; margin:0 0 14px;">
-      Concluímos a montagem do seu dossiê técnico de crédito rural. O PDF com a defesa pró-aprovação,
-      o checklist personalizado e os documentos anexados já está disponível na sua conta.
+      O PDF já traz a defesa de crédito em linguagem de comitê, o checklist ordenado e os
+      documentos anexados no padrão que o analista do banco espera receber. Foi preparado por
+      quem decidiu crédito por 14 anos dentro de um banco privado de grande porte.
     </p>
     <p style="margin:24px 0;">
       <a href="${url}" style="display:inline-block; background:#0f3d2e; color:#fff; padding:13px 22px; border-radius:999px; text-decoration:none; font-weight:500; font-size:14px;">
@@ -131,7 +132,7 @@ export async function enviarDossiePronto(input: {
       </a>
     </p>
     <p style="font-size:13px; color:#6b6b64; margin:0;">
-      Revise antes de entregar ao seu gerente. Qualquer ajuste pode ser solicitado pela plataforma.
+      Revise antes de entregar. Qualquer ajuste pode ser solicitado pela plataforma.
     </p>
   `)
   await enviarEmail({
@@ -154,7 +155,8 @@ export async function enviarPagamentoConfirmado(input: {
     <h1 style="color:#0f3d2e; font-size:22px; margin:0 0 16px;">Pagamento confirmado</h1>
     <p style="font-size:15px; line-height:1.55; margin:0 0 14px;">Olá, ${escapeHtml(nome)}.</p>
     <p style="font-size:15px; line-height:1.55; margin:0 0 14px;">
-      Recebemos seu pagamento de <strong>${valorFmt}</strong>. O download do seu dossiê final está liberado.
+      Pagamento de <strong>${valorFmt}</strong> confirmado. Liberação imediata — seu dossiê
+      final já está na conta, no padrão que o analista do banco usa pra defender o pedido.
     </p>
     <p style="margin:24px 0;">
       <a href="${url}" style="display:inline-block; background:#0f3d2e; color:#fff; padding:13px 22px; border-radius:999px; text-decoration:none; font-weight:500; font-size:14px;">
@@ -185,10 +187,11 @@ export async function enviarLembreteDocumentos(input: {
     .map((d) => `<li style="margin-bottom:6px;">${escapeHtml(d)}</li>`)
     .join('')
   const html = wrap(`
-    <h1 style="color:#0f3d2e; font-size:22px; margin:0 0 16px;">Documentos ainda pendentes</h1>
+    <h1 style="color:#0f3d2e; font-size:22px; margin:0 0 16px;">Falta pouco pro dossiê fechar</h1>
     <p style="font-size:15px; line-height:1.55; margin:0 0 14px;">Olá, ${escapeHtml(nome)}.</p>
     <p style="font-size:15px; line-height:1.55; margin:0 0 14px;">
-      Seu dossiê já está em montagem, mas faltam alguns documentos para concluirmos:
+      Sem esses documentos o dossiê não fecha — e a janela do banco pra decidir costuma ser
+      curta. Envie quando puder, leva só alguns minutos:
     </p>
     <ul style="font-size:14px; line-height:1.55; margin:0 0 20px; padding-left:18px; color:#2a2a2a;">
       ${lista}

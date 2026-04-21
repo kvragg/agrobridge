@@ -29,7 +29,12 @@
       "Read(//c/Users/Paulo/Documents/**)",
       "Read(//c/Users/Paulo/**)",
       "Read(//c/Users/Paulo/OneDrive/**)",
-      "Read(//c/Users/Paulo/iCloudDrive/**)"
+      "Read(//c/Users/Paulo/iCloudDrive/**)",
+      "Bash(npx supabase *)",
+      "Bash(npx vitest *)",
+      "Bash(rm \"C:/Users/Paulo/AgroBridge/agrobridge/tests/integration/pagamento-criar-duplicacao.test.ts\" \"C:/Users/Paulo/AgroBridge/agrobridge/app/api/pagamento/criar/route.ts\" \"C:/Users/Paulo/AgroBridge/agrobridge/lib/pagarme/index.ts\")",
+      "Bash(rmdir \"C:/Users/Paulo/AgroBridge/agrobridge/app/api/pagamento/criar\" \"C:/Users/Paulo/AgroBridge/agrobridge/lib/pagarme\")",
+      "Bash(grep -E \"pagarme|^pagarme$\")"
     ]
   }
 }

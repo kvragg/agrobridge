@@ -1,7 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
+import { logAuditEvent } from '@/lib/audit'
 
-export async function POST() {
+export async function POST(request: NextRequest) {
   const supabase = await createClient()
   const {
     data: { user },
@@ -23,6 +24,14 @@ export async function POST() {
       { status: 500 }
     )
   }
+
+  // Audit (E4): fire-and-forget.
+  void logAuditEvent({
+    userId: user.id,
+    eventType: 'processo_criado',
+    targetId: processo.id,
+    request,
+  })
 
   return NextResponse.json({ id: processo.id })
 }

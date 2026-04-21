@@ -37,7 +37,6 @@ export default function DossieCard({
 }: DossieCardProps) {
   const [pagamento, setPagamento] = useState<PagamentoState | null>(null)
   const [carregandoStatus, setCarregandoStatus] = useState(true)
-  const [criandoCobranca, setCriandoCobranca] = useState(false)
   const [gerandoDossie, setGerandoDossie] = useState(false)
   const [urlDossie, setUrlDossie] = useState<string | null>(null)
   const [erro, setErro] = useState('')
@@ -78,27 +77,6 @@ export default function DossieCard({
     return () => clearInterval(t)
   }, [pagamento?.status, carregarStatus])
 
-  async function criarCobranca() {
-    setErro('')
-    setCriandoCobranca(true)
-    try {
-      const res = await fetch('/api/pagamento/criar', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ processo_id: processoId }),
-      })
-      const data = await res.json().catch(() => ({}))
-      if (!res.ok) {
-        throw new Error(data?.erro ?? 'Falha ao criar cobrança')
-      }
-      setPagamento(data)
-    } catch (err) {
-      setErro(err instanceof Error ? err.message : 'Erro ao criar cobrança')
-    } finally {
-      setCriandoCobranca(false)
-    }
-  }
-
   async function gerarDossie() {
     setErro('')
     setPendentes(null)
@@ -133,7 +111,7 @@ export default function DossieCard({
     setTimeout(() => setCopiado(false), 2000)
   }
 
-  const valorBRL = `R$ ${((pagamento?.valor_centavos ?? 29700) / 100).toLocaleString(
+  const valorBRL = `R$ ${((pagamento?.valor_centavos ?? 29799) / 100).toLocaleString(
     'pt-BR',
     { minimumFractionDigits: 2 }
   )}`
@@ -284,7 +262,7 @@ export default function DossieCard({
                   <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
                     Dossiê final
                   </p>
-                  <p className="mt-1 text-2xl font-black text-gray-900">R$ 297,00</p>
+                  <p className="mt-1 text-2xl font-black text-gray-900">R$ 297,99</p>
                 </div>
                 <span className="rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-semibold text-[#166534]">
                   PIX
@@ -318,7 +296,7 @@ export default function DossieCard({
                 className="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-[#166534] px-4 py-4 text-base font-semibold text-white shadow-sm transition-colors hover:bg-[#14532d]"
               >
                 <QrCode className="h-5 w-5" />
-                Pagar R$ 297
+                Pagar R$ 297,99
                 <ExternalLink className="h-4 w-4 opacity-70" />
               </a>
             ) : (
@@ -334,11 +312,6 @@ export default function DossieCard({
               PIX ou cartão em até 12x. Cobrança única — independente da aprovação bancária.<br />
               Após pagar, o dossiê é liberado por email em até algumas horas.
             </p>
-
-            {/* evita warning de variável não usada até migrarmos 100% pro Cakto */}
-            {false && (
-              <button onClick={criarCobranca} disabled={criandoCobranca} hidden />
-            )}
           </div>
         )}
 

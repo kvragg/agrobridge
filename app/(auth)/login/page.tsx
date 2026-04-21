@@ -193,19 +193,19 @@ function LoginInner() {
             <Sprout className="h-7 w-7 text-[#86efac]" />
           </div>
           <blockquote className="text-xl font-bold leading-snug text-white">
-            &ldquo;Dossiê completo,
+            &ldquo;14 anos dentro da mesa.
             <br />
-            crédito aprovado.&rdquo;
+            Seu pedido chega pronto.&rdquo;
           </blockquote>
           <p className="mt-3 text-sm text-green-300">
-            Entrevista, checklist e documentação — tudo em um lugar.
+            Entrevista, checklist e dossiê — feitos por quem decidiu crédito dentro do banco.
           </p>
         </div>
 
         <div className="space-y-3">
           {[
-            "Checklist personalizado por banco",
-            "IA treinada no MCR do Bacen",
+            "Checklist personalizado por linha de crédito",
+            "Domínio do MCR · capítulos 1–16",
             "LGPD compliant",
           ].map((item) => (
             <div

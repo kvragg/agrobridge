@@ -19,7 +19,6 @@ export default function CadastroPage() {
   const [confirmarSenha, setConfirmarSenha] = useState("")
   const [aceitouTermos, setAceitouTermos] = useState(false)
   const [erro, setErro] = useState("")
-  const [emailJaCadastrado, setEmailJaCadastrado] = useState(false)
   const [sucessoReenvio, setSucessoReenvio] = useState(false)
   const [reenviando, setReenviando] = useState(false)
   const [carregando, setCarregando] = useState(false)
@@ -29,7 +28,6 @@ export default function CadastroPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setErro("")
-    setEmailJaCadastrado(false)
     setSucessoReenvio(false)
 
     const vSenha = validarSenha(senha)
@@ -61,9 +59,7 @@ export default function CadastroPage() {
       const data = await res.json()
 
       if (!res.ok) {
-        if (data?.codigo === "email_ja_cadastrado") {
-          setEmailJaCadastrado(true)
-        } else if (res.status === 429) {
+        if (res.status === 429) {
           setErro(data?.erro ?? "Muitas tentativas. Aguarde alguns minutos.")
         } else {
           setErro(data?.erro ?? "Erro ao criar conta.")
@@ -125,10 +121,11 @@ export default function CadastroPage() {
           </p>
           <p className="mb-6 font-semibold text-[#166534]">{email}</p>
           <p className="mb-4 text-sm text-gray-500">
-            Clique no link do e-mail para ativar sua conta.
+            Clique no link do e-mail para ativar sua conta. Se você já se
+            cadastrou antes, basta entrar.
           </p>
 
-          <div className="mb-8 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-left text-sm text-amber-800">
+          <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-left text-sm text-amber-800">
             <p className="font-semibold">Não recebeu em alguns minutos?</p>
             <p className="mt-1">
               Verifique também sua caixa de <strong>spam</strong> ou{" "}
@@ -136,12 +133,35 @@ export default function CadastroPage() {
               <em>no-reply / AgroBridge</em>.
             </p>
           </div>
-          <Link
-            href="/login"
-            className="inline-flex min-h-[48px] w-full items-center justify-center rounded-xl bg-[#166534] px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-[#14532d]"
-          >
-            Ir para o login
-          </Link>
+
+          {sucessoReenvio && (
+            <Alert variante="sucesso" className="mb-4 !py-2">
+              Link de confirmação reenviado. Verifique sua caixa de entrada e
+              spam.
+            </Alert>
+          )}
+          {erro && (
+            <Alert variante="erro" className="mb-4 !py-2">
+              {erro}
+            </Alert>
+          )}
+
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <button
+              type="button"
+              onClick={handleReenviar}
+              disabled={reenviando}
+              className="min-h-[48px] flex-1 rounded-xl border border-[#166534]/30 bg-white px-4 py-3 text-sm font-semibold text-[#166534] transition-colors hover:bg-green-50 disabled:opacity-60"
+            >
+              {reenviando ? "Reenviando..." : "Reenviar confirmação"}
+            </button>
+            <Link
+              href="/login"
+              className="inline-flex min-h-[48px] flex-1 items-center justify-center rounded-xl bg-[#166534] px-4 py-3 text-sm font-bold text-white transition-colors hover:bg-[#14532d]"
+            >
+              Fazer login
+            </Link>
+          </div>
         </div>
       </main>
     )
@@ -157,7 +177,7 @@ export default function CadastroPage() {
             <span className="text-gray-900">Bridge</span>
           </Link>
           <p className="mt-2 text-sm text-gray-500">
-            Crie sua conta e comece agora
+            Crie sua conta. A entrevista começa logo depois.
           </p>
         </div>
 
@@ -205,10 +225,7 @@ export default function CadastroPage() {
                 <input
                   type="email"
                   value={email}
-                  onChange={(e) => {
-                    setEmail(e.target.value)
-                    setEmailJaCadastrado(false)
-                  }}
+                  onChange={(e) => setEmail(e.target.value)}
                   required
                   autoComplete="email"
                   placeholder="joao@exemplo.com"
@@ -305,40 +322,6 @@ export default function CadastroPage() {
             </div>
 
             {erro && <Alert variante="erro">{erro}</Alert>}
-
-            {emailJaCadastrado && (
-              <div className="space-y-2 rounded-xl border border-amber-200 bg-amber-50 p-4">
-                <p className="text-sm font-semibold text-amber-800">
-                  Este e-mail já está cadastrado.
-                </p>
-                <p className="text-xs text-amber-700">
-                  Se você já confirmou o e-mail, faça login. Caso ainda não
-                  tenha confirmado, podemos reenviar o link.
-                </p>
-                {sucessoReenvio && (
-                  <Alert variante="sucesso" className="!py-2">
-                    Link de confirmação reenviado. Verifique sua caixa de entrada
-                    e spam.
-                  </Alert>
-                )}
-                <div className="flex flex-col gap-2 pt-1 sm:flex-row">
-                  <button
-                    type="button"
-                    onClick={handleReenviar}
-                    disabled={reenviando}
-                    className="flex-1 rounded-lg border border-amber-300 bg-white px-3 py-2 text-xs font-semibold text-amber-800 transition-colors hover:bg-amber-100 disabled:opacity-60"
-                  >
-                    {reenviando ? "Reenviando..." : "Reenviar confirmação"}
-                  </button>
-                  <Link
-                    href="/login"
-                    className="flex-1 rounded-lg bg-[#166534] px-3 py-2 text-center text-xs font-semibold text-white transition-colors hover:bg-[#14532d]"
-                  >
-                    Fazer login
-                  </Link>
-                </div>
-              </div>
-            )}
 
             <div className="flex items-start gap-2 rounded-lg bg-green-50 px-3.5 py-2.5 text-xs text-green-800">
               <Mail className="mt-0.5 h-4 w-4 flex-shrink-0 text-[#166534]" />

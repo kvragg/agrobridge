@@ -93,9 +93,10 @@ export function Differentiator() {
                 maxWidth: 460,
               }}
             >
-              A AgroBridge foi construída por um analista sênior que passou uma década dentro da
-              mesa de crédito rural de um dos maiores bancos do país. Ele conhece cada linha do MCR,
-              cada critério de comitê, cada motivo silencioso de reprovação.
+              A AgroBridge foi construída por um especialista com 14 anos no Sistema Financeiro
+              Nacional, formado dentro de um banco privado de grande porte. Começou na linha de
+              frente como caixa, escalou para carteira Agro III e chegou à gestão de agência
+              integral.
             </p>
             <p
               style={{
@@ -106,8 +107,8 @@ export function Differentiator() {
                 maxWidth: 460,
               }}
             >
-              Isso não é atendimento — é tradução técnica entre a sua fazenda e o comitê que aprova
-              (ou não) o seu dinheiro.
+              Isso não é atendimento — é tradução técnica entre a sua fazenda e o analista que
+              aprova (ou não) o seu dinheiro.
             </p>
 
             <div
@@ -117,41 +118,74 @@ export function Differentiator() {
                 background: "var(--bg-2)",
                 border: "1px solid var(--line)",
                 borderRadius: 14,
-                display: "flex",
-                gap: 18,
-                alignItems: "center",
               }}
             >
-              <div
-                style={{
-                  width: 56,
-                  height: 56,
-                  borderRadius: "50%",
-                  background: "linear-gradient(135deg, #2a5a45 0%, #0f3d2e 100%)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "#fff",
-                  fontWeight: 500,
-                  fontSize: 18,
-                  flexShrink: 0,
-                }}
-              >
-                F
-              </div>
-              <div>
-                <div style={{ fontSize: 14.5, fontWeight: 500 }}>Fundador AgroBridge</div>
+              <div style={{ display: "flex", gap: 18, alignItems: "center" }}>
                 <div
-                  className="mono"
                   style={{
-                    fontSize: 11.5,
-                    color: "var(--muted)",
-                    marginTop: 2,
-                    letterSpacing: "0.04em",
+                    width: 56,
+                    height: 56,
+                    borderRadius: "50%",
+                    background: "linear-gradient(135deg, #2a5a45 0%, #0f3d2e 100%)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "#fff",
+                    fontWeight: 500,
+                    fontSize: 18,
+                    flexShrink: 0,
                   }}
                 >
-                  [ ex-analista sênior · mesa de crédito rural · 10 anos ]
+                  F
                 </div>
+                <div>
+                  <div style={{ fontSize: 14.5, fontWeight: 500 }}>Fundador AgroBridge</div>
+                  <div
+                    className="mono"
+                    style={{
+                      fontSize: 11.5,
+                      color: "var(--muted)",
+                      marginTop: 2,
+                      letterSpacing: "0.04em",
+                    }}
+                  >
+                    [ 14 anos no SFN · gestor de carteira Agro · ex-banco privado ]
+                  </div>
+                </div>
+              </div>
+              <div
+                style={{
+                  marginTop: 18,
+                  display: "flex",
+                  gap: 6,
+                  flexWrap: "wrap",
+                }}
+              >
+                {[
+                  { tag: "FBB-420", src: "FEBRABAN" },
+                  { tag: "CPA-20", src: "ANBIMA" },
+                  { tag: "Rehagro", src: "Cooperativismo" },
+                ].map((c) => (
+                  <div
+                    key={c.tag}
+                    className="mono"
+                    style={{
+                      fontSize: 10.5,
+                      letterSpacing: "0.08em",
+                      textTransform: "uppercase",
+                      padding: "5px 10px",
+                      borderRadius: 999,
+                      background: "rgba(15,61,46,0.06)",
+                      border: "1px solid var(--line-2)",
+                      color: "var(--ink-2)",
+                      display: "inline-flex",
+                      gap: 6,
+                    }}
+                  >
+                    <span style={{ fontWeight: 600 }}>{c.tag}</span>
+                    <span style={{ color: "var(--muted)" }}>· {c.src}</span>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -160,7 +194,7 @@ export function Differentiator() {
             <DiffCard
               tag="MCR dominado"
               title="Cada cultura, cada linha, cada limite."
-              body="Custeio, investimento, Pronamp, Pronaf, Moderfrota, Inovagro. A gente sabe qual linha serve pra você — e qual não."
+              body="Custeio, investimento, PRONAF, PRONAMP, FCO, BNDES, CPR, Moderfrota, Inovagro. A gente identifica qual linha serve pra você — e qual não enquadra."
             />
             <DiffCard
               tag="Risco de reprovação"

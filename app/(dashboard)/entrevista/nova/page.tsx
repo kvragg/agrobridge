@@ -185,11 +185,11 @@ export default function NovaEntrevistaPage() {
   }
 
   function mensagemErroPorStatus(status: number): string {
-    if (status === 401) return 'Sessão expirada. Faça login novamente.'
-    if (status === 413) return 'Conversa muito longa. Reinicie a entrevista.'
-    if (status === 429) return 'Muitas requisições. Aguarde 1 minuto e tente novamente.'
-    if (status >= 500) return 'Erro no servidor de IA. Tente novamente em alguns minutos.'
-    return 'Não foi possível processar sua mensagem. Tente novamente.'
+    if (status === 401) return 'Sua sessão expirou. Entre de novo para continuar.'
+    if (status === 413) return 'A conversa ficou longa demais. Recomece a entrevista — leva uns 10 minutos.'
+    if (status === 429) return 'Muitas mensagens em pouco tempo. Espere um minuto e tente de novo.'
+    if (status >= 500) return 'O servidor de IA tropeçou. Tente de novo em alguns minutos.'
+    return 'Não deu pra processar sua mensagem. Tente de novo.'
   }
 
   async function handleEnviar(e: React.FormEvent) {
@@ -242,9 +242,9 @@ export default function NovaEntrevistaPage() {
           <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-green-100">
             <CheckCircle2 className="h-7 w-7 text-[#16a34a]" />
           </div>
-          <p className="font-semibold text-gray-700">Entrevista concluída!</p>
+          <p className="font-semibold text-gray-700">Pronto. A IA já entendeu seu caso.</p>
           <p className="mt-1 text-sm text-gray-400">
-            Gerando seu checklist personalizado...
+            Montando o checklist exato de documentos do seu perfil...
           </p>
           <Loader2 className="mx-auto mt-3 h-5 w-5 animate-spin text-[#166534]" />
         </div>

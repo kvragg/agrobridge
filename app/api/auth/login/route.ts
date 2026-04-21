@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
+import crypto from 'node:crypto'
 import { createClient } from '@/lib/supabase/server'
 import { rateLimit } from '@/lib/rate-limit'
 import { extrairIp, normalizarEmail, validarEmail } from '@/lib/validation'
+import { logAuditEvent } from '@/lib/audit'
+
+function hashEmail(email: string): string {
+  return crypto.createHash('sha256').update(email).digest('hex').slice(0, 16)
+}
 
 const MAX_TENTATIVAS = 5
 const JANELA_MS = 15 * 60 * 1000 // 15 minutos
@@ -41,12 +47,21 @@ export async function POST(request: NextRequest) {
   }
 
   const supabase = await createClient()
-  const { error } = await supabase.auth.signInWithPassword({
+  const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password: senha,
   })
 
   if (error) {
+    // Audit (E4): registra a tentativa fracassada com hash do e-mail
+    // (nunca em texto plano — não vira shadow PII na trilha).
+    void logAuditEvent({
+      userId: null,
+      eventType: 'login_falha',
+      request,
+      payload: { email_hash: hashEmail(email) },
+    })
+
     const msg = error.message.toLowerCase()
     if (msg.includes('email not confirmed')) {
       return NextResponse.json(
@@ -62,6 +77,13 @@ export async function POST(request: NextRequest) {
       { status: 401 }
     )
   }
+
+  void logAuditEvent({
+    userId: data.user?.id ?? null,
+    eventType: 'login',
+    request,
+    payload: { email_hash: hashEmail(email) },
+  })
 
   return NextResponse.json({ ok: true })
 }

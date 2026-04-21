@@ -329,7 +329,7 @@ export function Hero() {
             marginBottom: 48,
           }}
         >
-          <Eyebrow>Safra 25/26 · janela fechando</Eyebrow>
+          <Eyebrow>Safra 25/26 · 14 anos dentro da mesa</Eyebrow>
           <div style={{ flex: 1 }} />
           <span
             className="mono"
@@ -364,12 +364,12 @@ export function Hero() {
                 textWrap: "balance",
               }}
             >
-              O banco tem o dinheiro.
+              O banco não nega
               <br />
               <span style={{ color: "var(--muted)", fontWeight: 400 }}>
-                O seu dossiê é que
+                o seu crédito.
                 <br />
-                bloqueia o crédito.
+                Nega o seu papel.
               </span>
             </h1>
             <p
@@ -383,14 +383,14 @@ export function Hero() {
                 letterSpacing: "-0.005em",
               }}
             >
-              Aprove sua safra com a inteligência de quem decide crédito rural por dentro do banco.
-              Entrevista técnica, checklist exato e defesa em linguagem de comitê — pronto para
-              chegar ao gerente.
+              Cada semana sem o dossiê pronto é insumo mais caro e janela menor. Em 10 minutos de
+              entrevista a IA entende o seu caso, monta o checklist exato e prepara um dossiê no
+              formato que o banco aprova — escrito por quem aprovou crédito por 14 anos.
             </p>
 
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 40 }}>
               <Button size="lg" variant="primary" href="/cadastro">
-                Criar minha conta e iniciar diagnóstico {Icon.arrow(15)}
+                Iniciar diagnóstico gratuito {Icon.arrow(15)}
               </Button>
             </div>
 
@@ -405,8 +405,8 @@ export function Hero() {
                 gap: 24,
               }}
             >
-              <TrustStat k="Autoridade" v="10 anos na mesa" />
-              <TrustStat k="Padrão" v="Linguagem de comitê" />
+              <TrustStat k="Experiência" v="14 anos no SFN" />
+              <TrustStat k="Certificações" v="FEBRABAN · ANBIMA" />
               <TrustStat k="Entrega" v="100% digital" />
             </div>
           </div>

@@ -152,7 +152,9 @@ export default async function DashboardPage() {
       {/* Header */}
       <div className="flex w-full flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0 flex-1">
-          <p className="text-sm text-gray-400">Bem-vindo de volta</p>
+          <p className="text-sm text-gray-400">
+            {total > 0 ? 'Bem-vindo de volta' : 'Seu espaço de trabalho'}
+          </p>
           <h1 className="text-2xl font-black text-gray-900">Olá, {nome}!</h1>
         </div>
         <Link
@@ -294,17 +296,18 @@ function EmptyState() {
         <ClipboardList className="h-8 w-8 text-[#166534]" />
       </div>
       <p className="text-base font-bold text-gray-700">
-        Nenhum processo iniciado
+        Comece pela entrevista.
       </p>
-      <p className="mt-1.5 max-w-xs text-sm text-gray-400">
-        Inicie uma entrevista com a IA e receba seu checklist de crédito rural personalizado.
+      <p className="mt-1.5 max-w-sm text-sm text-gray-400">
+        São 10 minutos. A IA entende seu caso, monta o checklist exato de documentos
+        e prepara o pedido na linguagem que o analista do banco usa.
       </p>
       <Link
         href="/entrevista/nova"
         className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#166534] px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-[#14532d]"
       >
         <Plus className="h-4 w-4" />
-        Iniciar agora
+        Começar entrevista
       </Link>
     </div>
   )

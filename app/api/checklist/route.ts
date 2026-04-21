@@ -1,5 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { gerarChecklist, SONNET_MODEL } from '@/lib/anthropic/sonnet'
+import { rateLimit } from '@/lib/rate-limit'
+import { lerTier, temAcesso, TIER_NOME } from '@/lib/tier'
 import type { PerfilEntrevista } from '@/types/entrevista'
 import { NextRequest } from 'next/server'
 
@@ -20,6 +22,16 @@ export async function POST(request: NextRequest) {
     return Response.json({ erro: 'Não autorizado' }, { status: 401 })
   }
 
+  // Rate-limit IA por usuário — checklist tem cache, mas re-gerações
+  // forçadas ou processos múltiplos não devem queimar Sonnet sem teto.
+  const limite = rateLimit(`ia:checklist:${user.id}`, 10, 60 * 60 * 1000)
+  if (!limite.ok) {
+    return Response.json(
+      { erro: 'Limite de gerações por hora atingido. Aguarde alguns minutos.' },
+      { status: 429, headers: { 'Retry-After': String(limite.retryAfterSeconds) } }
+    )
+  }
+
   const body = (await request.json()) as { processo_id: string }
   const { processo_id } = body
 
@@ -29,11 +41,14 @@ export async function POST(request: NextRequest) {
 
   const { data: processo } = await supabase
     .from('processos')
-    .select('id, perfil_json, status')
+    .select('id, perfil_json, status, user_id')
     .eq('id', processo_id)
     .single()
 
-  if (!processo) {
+  // Defense-in-depth (E2): RLS já filtra, mas se uma policy for relaxada
+  // ou um caller usar admin client por engano, o ownership check explícito
+  // ainda corta a vulnerabilidade IDOR.
+  if (!processo || processo.user_id !== user.id) {
     return Response.json({ erro: 'Processo não encontrado' }, { status: 404 })
   }
 
@@ -48,6 +63,23 @@ export async function POST(request: NextRequest) {
   const perfilJson = processo.perfil_json as Record<string, unknown>
   if (perfilJson._checklist_md && typeof perfilJson._checklist_md === 'string') {
     return Response.json({ checklist: perfilJson._checklist_md })
+  }
+
+  // Gate de tier: checklist completo é entregável do tier `dossie` em diante.
+  // Quem só pagou `diagnostico` recebe a Análise de Viabilidade em /api/viabilidade.
+  const tier = lerTier(perfilJson)
+  if (!temAcesso(tier, 'dossie')) {
+    return Response.json(
+      {
+        erro: 'Checklist completo faz parte do Dossiê Bancário Completo (R$ 297,99). Para destravar, faça o upgrade.',
+        codigo: 'tier_insuficiente',
+        tier_atual: tier ?? 'nenhum',
+        tier_atual_nome: tier ? TIER_NOME[tier] : null,
+        tier_minimo: 'dossie',
+        tier_minimo_nome: TIER_NOME.dossie,
+      },
+      { status: 402 }
+    )
   }
 
   // Gerar checklist com Sonnet
@@ -87,6 +119,7 @@ export async function POST(request: NextRequest) {
       perfil_json: { ...perfilJson, _checklist_md: checklistMarkdown },
     })
     .eq('id', processo_id)
+    .eq('user_id', user.id)
 
   return Response.json({ checklist: checklistMarkdown })
 }

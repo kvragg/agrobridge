@@ -1,6 +1,9 @@
 import { NextRequest } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { validarDocumento } from '@/lib/anthropic/validador'
+import { logAuditEvent } from '@/lib/audit'
+import { realMimeType } from '@/lib/file-sniff'
+import { rateLimit } from '@/lib/rate-limit'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
@@ -15,6 +18,15 @@ export async function POST(request: NextRequest) {
   } = await supabase.auth.getUser()
   if (!user) {
     return Response.json({ erro: 'Não autorizado' }, { status: 401 })
+  }
+
+  // Rate-limit IA por usuário — protege saldo Anthropic contra abuso.
+  const limite = rateLimit(`ia:validar:${user.id}`, 30, 60 * 60 * 1000)
+  if (!limite.ok) {
+    return Response.json(
+      { erro: 'Limite de validações por hora atingido. Tente novamente mais tarde.' },
+      { status: 429, headers: { 'Retry-After': String(limite.retryAfterSeconds) } }
+    )
   }
 
   const body = (await request.json().catch(() => ({}))) as {
@@ -67,7 +79,21 @@ export async function POST(request: NextRequest) {
 
   const arrayBuf = await fileBlob.arrayBuffer()
   const buffer = Buffer.from(arrayBuf)
-  const mimeType = fileBlob.type || 'application/pdf'
+
+  // Magic bytes: tipo real do arquivo, não o que o browser declarou.
+  // Bloqueia upload disfarçado (ex.: .exe renomeado para .pdf) antes de
+  // gastar token Anthropic e antes do prompt injection via metadata.
+  const detectado = realMimeType(buffer)
+  if (detectado === 'application/octet-stream') {
+    return Response.json(
+      {
+        erro:
+          'Tipo de arquivo não reconhecido. Envie PDF, JPG ou PNG real.',
+      },
+      { status: 415 }
+    )
+  }
+  const mimeType = detectado
 
   try {
     const resultado = await validarDocumento({
@@ -100,6 +126,17 @@ export async function POST(request: NextRequest) {
         },
       })
       .eq('id', processo_id)
+
+    void logAuditEvent({
+      userId: user.id,
+      eventType: 'documento_validado',
+      targetId: processo_id,
+      request,
+      payload: {
+        doc_slug,
+        status: (resultado as { status?: string })?.status ?? null,
+      },
+    })
 
     return Response.json({ ok: true, resultado })
   } catch (err) {

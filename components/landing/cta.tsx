@@ -115,7 +115,7 @@ export function CTA() {
 
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 48 }}>
             <Button size="lg" variant="onDark" href="/cadastro">
-              Criar minha conta e iniciar diagnóstico {Icon.arrow(15)}
+              Iniciar diagnóstico gratuito {Icon.arrow(15)}
             </Button>
           </div>
 

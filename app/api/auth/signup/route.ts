@@ -11,6 +11,7 @@ import {
   validarWhatsApp,
 } from '@/lib/validation'
 import { enviarLeadNotification } from '@/lib/email/resend'
+import { logAuditEvent } from '@/lib/audit'
 
 const MAX_CADASTROS = 3
 const JANELA_MS = 60 * 60 * 1000 // 1 hora
@@ -78,13 +79,13 @@ export async function POST(request: NextRequest) {
 
   if (error) {
     if (error.message === 'User already registered') {
-      return NextResponse.json(
-        {
-          erro: 'Este e-mail já está cadastrado.',
-          codigo: 'email_ja_cadastrado',
-        },
-        { status: 409 }
-      )
+      // Anti-enumeração (E5/APEX-SEC): resposta indistinguível do
+      // caminho de sucesso. Nunca confirmar nem negar existência do
+      // e-mail. Atacante perde o oráculo; usuário legítimo encontra os
+      // botões "Reenviar confirmação" e "Fazer login" na tela de
+      // confirmação. Lead notification NÃO é disparada (canal lateral).
+      console.info('[signup] tentativa de re-registro silenciosamente ignorada')
+      return NextResponse.json({ ok: true, temSessao: false })
     }
     return NextResponse.json(
       { erro: error.message || 'Erro ao criar conta.' },
@@ -98,6 +99,14 @@ export async function POST(request: NextRequest) {
   } catch (e) {
     console.error('[signup] erro ao notificar lead:', e)
   }
+
+  // Audit (E4): fire-and-forget.
+  void logAuditEvent({
+    userId: data.user?.id ?? null,
+    eventType: 'signup',
+    request,
+    payload: { tem_sessao: Boolean(data.session) },
+  })
 
   // Se já houver sessão (email confirmation off), informar client
   const temSessao = Boolean(data.session)

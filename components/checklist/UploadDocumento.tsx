@@ -89,7 +89,7 @@ export default function UploadDocumento({
             const path = `${prefixo}/${f.name}`
             const { data: urlData } = await supabase.storage
               .from('documentos')
-              .createSignedUrl(path, 3600)
+              .createSignedUrl(path, 120)
             // Match a validação mais recente para esse storage_path
             const v = validacoesDoc.find(
               (x) => (x as Validacao & { storage_path?: string }).storage_path === path
@@ -161,11 +161,11 @@ export default function UploadDocumento({
     setErro('')
 
     if (file.size > MAX_MB * 1024 * 1024) {
-      setErro(`Arquivo muito grande. Máximo: ${MAX_MB}MB.`)
+      setErro(`Arquivo passou de ${MAX_MB}MB. Comprima o PDF ou envie uma página por vez.`)
       return
     }
     if (!TIPOS_ACEITOS.includes(file.type) || !EXT_ACEITAS.test(file.name)) {
-      setErro('Use PDF, JPG ou PNG.')
+      setErro('Só aceita PDF, JPG ou PNG aqui.')
       return
     }
 
@@ -173,7 +173,7 @@ export default function UploadDocumento({
     const { data: userData } = await supabase.auth.getUser()
     const user = userData.user
     if (!user) {
-      setErro('Sessão expirada. Faça login novamente.')
+      setErro('Sua sessão expirou. Entre de novo pra continuar.')
       setEnviando(false)
       return
     }
@@ -187,14 +187,14 @@ export default function UploadDocumento({
       .upload(path, file, { upsert: false })
 
     if (upErr) {
-      setErro('Erro ao enviar. Tente novamente.')
+      setErro('Não deu pra enviar. Confira sua conexão e tente de novo.')
       setEnviando(false)
       return
     }
 
     const { data: urlData } = await supabase.storage
       .from('documentos')
-      .createSignedUrl(path, 3600)
+      .createSignedUrl(path, 120)
 
     setArquivos((prev) => [
       ...prev,
@@ -221,7 +221,7 @@ export default function UploadDocumento({
       .from('documentos')
       .remove([arq.storagePath])
     if (rmErr) {
-      setErro('Não foi possível remover o arquivo.')
+      setErro('Não deu pra remover o arquivo. Tente de novo em alguns segundos.')
       return
     }
     setArquivos((prev) => prev.filter((a) => a.nome !== arq.nome))
@@ -344,7 +344,7 @@ export default function UploadDocumento({
                   onClick={() => validarArquivo(arq.storagePath)}
                   className="mt-1.5 text-[10px] font-medium text-[#166534] hover:underline"
                 >
-                  Validar com IA
+                  Checar antes do banco ver
                 </button>
               )}
             </div>

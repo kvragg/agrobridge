@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Cards Cakto — 300×250 · 3 variações por tier</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,700;0,900;1,700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+  :root {
+    --ink: #0f172a;
+    --muted: #525252;
+
+    --bronze-bg-1: #fefce8;
+    --bronze-bg-2: #fef3c7;
+    --bronze-accent: #b45309;
+    --bronze-deep: #78350f;
+
+    --prata-bg-1: #0f3d2e;
+    --prata-bg-2: #14532d;
+    --prata-bg-3: #052e16;
+    --prata-gold: #facc15;
+    --prata-mint: #86efac;
+
+    --ouro-bg: #fffbeb;
+    --ouro-deep: #0f3d2e;
+    --ouro-gold: #b8860b;
+    --ouro-gold-soft: #d4af37;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', -apple-system, 'Segoe UI', Roboto, system-ui, sans-serif;
+    background: #f5f5f4;
+    color: var(--ink);
+    padding: 56px 40px 80px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1 { font-size: 28px; margin: 0 0 6px; letter-spacing: -0.5px; font-weight: 800; }
+  .sub-h1 { color: #525252; font-size: 14px; margin: 0 0 32px; max-width: 720px; line-height: 1.55; }
+
+  h2.tier-head {
+    font-size: 15px; text-transform: uppercase; letter-spacing: 2px;
+    font-weight: 700; margin: 40px 0 20px;
+    padding: 10px 16px; display: inline-block; border-radius: 8px;
+  }
+  h2.bronze { background: linear-gradient(90deg, #fef3c7, #fde68a); color: #78350f; }
+  h2.prata  { background: linear-gradient(90deg, #14532d, #0f3d2e); color: #facc15; }
+  h2.ouro   { background: linear-gradient(90deg, #fef3c7, #d4af37); color: #0f3d2e; }
+
+  .grid { display: flex; flex-wrap: wrap; gap: 28px; max-width: 1100px; }
+  .item { display: flex; flex-direction: column; gap: 14px; }
+
+  /* ====================================================
+     BASE CARD — 300×250, rendered pixel-perfect by html2canvas
+     ==================================================== */
+  .card {
+    width: 300px; height: 250px; border-radius: 14px;
+    overflow: hidden; position: relative;
+    font-family: 'Inter', -apple-system, 'Segoe UI', sans-serif;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.10), 0 2px 4px rgba(0,0,0,0.04);
+  }
+
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 9.5px; font-weight: 800; letter-spacing: 1.6px;
+    padding: 5px 10px; border-radius: 4px;
+    text-transform: uppercase;
+    font-family: 'Inter', sans-serif;
+  }
+  .badge-line::before {
+    content: ''; display: inline-block;
+    width: 14px; height: 1.5px; background: currentColor; opacity: 0.5;
+  }
+  .price { font-weight: 900; letter-spacing: -1px; line-height: 1; font-variant-numeric: tabular-nums; }
+  .price-cents { font-size: 0.6em; font-weight: 700; letter-spacing: 0; }
+  .price-sub { font-size: 9px; letter-spacing: 0.8px; text-transform: uppercase; font-weight: 600; margin-top: 3px; opacity: 0.7; }
+
+  /* ====================================================
+     BRONZE — warm cream + copper accent. "Diagnóstico rápido"
+     ==================================================== */
+  .b-base {
+    background:
+      radial-gradient(circle at 100% 0%, rgba(234,179,8,0.12) 0%, transparent 50%),
+      linear-gradient(140deg, #fffbeb 0%, #fefce8 100%);
+    color: var(--bronze-deep);
+    padding: 22px;
+    display: flex; flex-direction: column; justify-content: space-between;
+  }
+  .b-base .badge { background: var(--bronze-accent); color: #fff8e1; }
+  .b-base .title { font-size: 20px; font-weight: 800; line-height: 1.15; color: #1c1917; letter-spacing: -0.4px; margin-top: 10px; }
+  .b-base .sub { font-size: 11.5px; font-weight: 500; line-height: 1.4; color: #57534e; margin-top: 5px; }
+  .b-base .price { font-size: 30px; color: var(--bronze-accent); }
+  .b-base .price-sub { color: #57534e; }
+
+  /* B1 — "Parecer em 24h" (speed angle) */
+  #b1 .deadline {
+    position: absolute; top: 18px; right: 18px;
+    font-size: 9px; font-weight: 700; letter-spacing: 1.2px;
+    color: var(--bronze-deep); text-transform: uppercase; opacity: 0.55;
+  }
+  #b1 .deadline strong { font-weight: 900; }
+
+  /* B2 — split layout: left copper stripe, right content */
+  #b2 {
+    padding: 0; display: flex;
+    background: linear-gradient(90deg, var(--bronze-accent) 0 90px, #fffbeb 90px);
+    color: var(--bronze-deep);
+  }
+  #b2 .stripe {
+    width: 90px; padding: 20px 14px; color: #fef3c7;
+    display: flex; flex-direction: column; justify-content: space-between;
+  }
+  #b2 .stripe .big24 { font-size: 42px; font-weight: 900; line-height: 0.9; letter-spacing: -2px; }
+  #b2 .stripe .big24 small { font-size: 11px; display: block; font-weight: 600; letter-spacing: 0.5px; margin-top: 2px; opacity: 0.85; }
+  #b2 .stripe .stripe-label { font-size: 9px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; opacity: 0.7; }
+  #b2 .content {
+    flex: 1; padding: 22px 20px;
+    display: flex; flex-direction: column; justify-content: space-between;
+    color: #1c1917;
+  }
+  #b2 .content .title { font-size: 18px; font-weight: 800; line-height: 1.2; letter-spacing: -0.3px; }
+  #b2 .content .sub { font-size: 11px; color: #57534e; line-height: 1.45; margin-top: 6px; }
+  #b2 .content .price { font-size: 26px; color: var(--bronze-accent); font-weight: 900; }
+  #b2 .content .price-sub { color: #78716c; font-size: 9px; }
+
+  /* B3 — serif title, editorial feel */
+  #b3 .eyebrow {
+    font-family: 'Inter', sans-serif;
+    font-size: 9px; font-weight: 800; letter-spacing: 2.5px;
+    color: var(--bronze-accent); text-transform: uppercase;
+  }
+  #b3 .title-serif {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 22px; font-style: italic; font-weight: 700;
+    line-height: 1.15; color: #1c1917; margin-top: 12px;
+    letter-spacing: -0.3px;
+  }
+  #b3 .rule {
+    width: 32px; height: 2px; background: var(--bronze-accent); margin: 10px 0 8px;
+  }
+  #b3 .sub { font-size: 11px; color: #57534e; line-height: 1.4; }
+
+  /* ====================================================
+     PRATA — deep green + gold accents. "Mais vendido · pro"
+     ==================================================== */
+  .p-base {
+    background:
+      radial-gradient(circle at 10% 0%, rgba(134,239,172,0.08) 0%, transparent 40%),
+      radial-gradient(circle at 100% 100%, rgba(250,204,21,0.10) 0%, transparent 45%),
+      linear-gradient(135deg, var(--prata-bg-2) 0%, var(--prata-bg-1) 60%, var(--prata-bg-3) 100%);
+    color: #fff;
+    padding: 22px;
+    display: flex; flex-direction: column; justify-content: space-between;
+  }
+  .p-base .badge { background: var(--prata-gold); color: var(--prata-bg-3); font-weight: 900; }
+  .p-base .title { font-size: 20px; font-weight: 800; line-height: 1.15; letter-spacing: -0.4px; margin-top: 10px; }
+  .p-base .sub { font-size: 11.5px; color: var(--prata-mint); line-height: 1.4; margin-top: 5px; font-weight: 500; }
+  .p-base .price { font-size: 30px; color: var(--prata-mint); }
+  .p-base .price-sub { color: #bbf7d0; }
+
+  /* P1 — hero "MAIS VENDIDO" with gold ribbon */
+  #p1 .ribbon {
+    position: absolute; top: 14px; right: -30px; transform: rotate(35deg);
+    background: var(--prata-gold); color: var(--prata-bg-3);
+    font-size: 9px; font-weight: 900; letter-spacing: 1.5px;
+    padding: 4px 36px; text-transform: uppercase;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  }
+  #p1 .micro-star { color: var(--prata-gold); font-size: 11px; margin-right: 2px; }
+
+  /* P2 — 3-item inclusion list */
+  #p2 .checklist { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; }
+  #p2 .checklist-item {
+    display: flex; align-items: center; gap: 7px;
+    font-size: 11px; font-weight: 600; color: #ecfccb;
+    line-height: 1.2;
+  }
+  #p2 .check-dot {
+    width: 14px; height: 14px; border-radius: 50%;
+    background: var(--prata-gold); color: var(--prata-bg-3);
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 9px; font-weight: 900; flex-shrink: 0;
+  }
+  #p2 .title { font-size: 17px; }
+
+  /* P3 — editorial quote */
+  #p3 .quote-mark {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 60px; line-height: 0.5; color: var(--prata-gold);
+    font-weight: 900; height: 22px;
+  }
+  #p3 .quote-text {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 15px; font-style: italic; font-weight: 700;
+    line-height: 1.25; color: #fff; letter-spacing: -0.2px;
+    margin-top: 4px;
+  }
+  #p3 .attribution {
+    font-size: 9.5px; font-weight: 600; color: var(--prata-mint);
+    letter-spacing: 0.8px; text-transform: uppercase; margin-top: 8px;
+  }
+  #p3 .tier-label { font-size: 9.5px; font-weight: 800; letter-spacing: 1.8px; color: var(--prata-gold); text-transform: uppercase; }
+  #p3 .price { font-size: 26px; }
+
+  /* ====================================================
+     OURO — cream + deep green + warm gold. "Exclusivo · acesso"
+     ==================================================== */
+  .o-base {
+    background:
+      radial-gradient(circle at 100% 0%, rgba(212,175,55,0.18) 0%, transparent 50%),
+      linear-gradient(140deg, #fffbeb 0%, #fef3c7 100%);
+    color: var(--ouro-deep);
+    padding: 22px;
+    display: flex; flex-direction: column; justify-content: space-between;
+    border: 1.5px solid var(--ouro-gold-soft);
+  }
+  .o-base .badge {
+    background: var(--ouro-deep); color: var(--ouro-gold-soft);
+    letter-spacing: 1.8px;
+  }
+  .o-base .title { font-size: 20px; font-weight: 800; line-height: 1.15; letter-spacing: -0.4px; margin-top: 10px; color: var(--ouro-deep); }
+  .o-base .sub { font-size: 11.5px; color: #57534e; line-height: 1.4; margin-top: 5px; font-weight: 500; }
+  .o-base .price { font-size: 30px; color: var(--ouro-deep); }
+  .o-base .price-sub { color: var(--ouro-gold); font-weight: 700; }
+
+  /* O1 — scarcity: big "6" */
+  #o1 .big-six {
+    position: absolute; right: 14px; top: 18px;
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 88px; font-weight: 900; line-height: 0.85;
+    color: var(--ouro-gold-soft); opacity: 0.85;
+    letter-spacing: -4px;
+  }
+  #o1 .big-six-sub {
+    position: absolute; right: 22px; top: 96px;
+    font-size: 9px; font-weight: 800; letter-spacing: 1.5px;
+    color: var(--ouro-deep); text-transform: uppercase;
+  }
+
+  /* O2 — dark luxury version */
+  #o2 {
+    background:
+      radial-gradient(circle at 100% 0%, rgba(212,175,55,0.25) 0%, transparent 55%),
+      linear-gradient(135deg, #14532d 0%, #0f3d2e 100%);
+    color: #fffbeb;
+    border: 1.5px solid var(--ouro-gold-soft);
+  }
+  #o2 .badge { background: var(--ouro-gold-soft); color: var(--ouro-deep); }
+  #o2 .title { font-family: 'Playfair Display', Georgia, serif; font-size: 22px; font-weight: 900; color: #fffbeb; letter-spacing: -0.3px; line-height: 1.1; margin-top: 14px; }
+  #o2 .sub { color: #fde68a; font-size: 11px; margin-top: 8px; }
+  #o2 .price { color: var(--ouro-gold-soft); font-size: 28px; }
+  #o2 .price-sub { color: #fde68a; font-weight: 700; letter-spacing: 1px; }
+  #o2 .tag-scarcity {
+    position: absolute; top: 18px; right: 18px;
+    font-size: 9px; font-weight: 800; color: var(--ouro-gold-soft);
+    letter-spacing: 1.3px; text-transform: uppercase;
+    padding: 3px 8px; border: 1px solid var(--ouro-gold-soft); border-radius: 3px;
+  }
+
+  /* O3 — editorial with gold rule */
+  #o3 .eyebrow {
+    font-size: 9px; font-weight: 800; letter-spacing: 2.5px;
+    color: var(--ouro-gold); text-transform: uppercase;
+  }
+  #o3 .title-serif {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 21px; font-style: italic; font-weight: 700;
+    line-height: 1.15; color: var(--ouro-deep); letter-spacing: -0.3px;
+    margin-top: 10px;
+  }
+  #o3 .gold-rule { width: 40px; height: 2px; background: var(--ouro-gold-soft); margin: 10px 0 8px; }
+  #o3 .sub { font-size: 11px; color: #57534e; line-height: 1.4; }
+  #o3 .credentials {
+    font-size: 9px; font-weight: 700; letter-spacing: 1px; color: var(--ouro-gold);
+    text-transform: uppercase; margin-top: 2px;
+  }
+
+  /* ====================================================
+     Controls
+     ==================================================== */
+  button {
+    padding: 10px 16px; font-size: 12px; font-weight: 700;
+    background: #166534; color: white; border: none; border-radius: 8px;
+    cursor: pointer; transition: background 0.15s;
+    font-family: inherit; letter-spacing: 0.3px;
+    align-self: flex-start;
+  }
+  button:hover { background: #14532d; }
+  button.batch {
+    background: #0f3d2e; margin-left: 12px;
+  }
+  button.batch:hover { background: #052e16; }
+
+  .tier-actions { margin: 12px 0 0; }
+</style>
+</head>
+<body>
+
+<h1>Cards Cakto — 3 variações por tier (300×250)</h1>
+<p class="sub-h1">
+  Cada tier traz <strong>3 ângulos psicológicos</strong> diferentes — sobe o card que mais combina com o público do produto no painel Cakto.
+  Clica em <strong>Baixar PNG</strong> em cada um. Ou use <strong>Baixar tudo do tier</strong> pra pegar os 3 de uma vez.
+</p>
+
+<!-- =================== BRONZE =================== -->
+<h2 class="tier-head bronze">🥉 Bronze · R$ 29,99</h2>
+
+<div class="grid">
+
+  <div class="item">
+    <div id="b1" class="card b-base">
+      <span class="deadline"><strong>↻ 24h</strong> úteis</span>
+      <div>
+        <span class="badge">Bronze · Diagnóstico</span>
+        <div class="title">Parecer de viabilidade em 24h</div>
+        <div class="sub">Em linguagem de comitê — não de influencer agro.</div>
+      </div>
+      <div>
+        <div class="price">R$ 29<span class="price-cents">,99</span></div>
+        <div class="price-sub">pagamento único</div>
+      </div>
+    </div>
+    <button onclick="save('b1','cakto-bronze-1-parecer24h.png')">Baixar PNG</button>
+  </div>
+
+  <div class="item">
+    <div id="b2" class="card">
+      <div class="stripe">
+        <div class="stripe-label">Bronze</div>
+        <div class="big24">24<small>horas úteis</small></div>
+        <div class="stripe-label">Parecer</div>
+      </div>
+      <div class="content">
+        <div>
+          <div class="title">Saiba se o pleito vale antes de protocolar</div>
+          <div class="sub">Entrevista guiada + parecer escrito por ex-mesa.</div>
+        </div>
+        <div>
+          <div class="price">R$ 29<span class="price-cents">,99</span></div>
+          <div class="price-sub">pagamento único</div>
+        </div>
+      </div>
+    </div>
+    <button onclick="save('b2','cakto-bronze-2-stripe.png')">Baixar PNG</button>
+  </div>
+
+  <div class="item">
+    <div id="b3" class="card b-base">
+      <div>
+        <div class="eyebrow">Bronze · Entrada</div>
+        <div class="title-serif">O parecer que o comitê faria — antes do banco.</div>
+        <div class="rule"></div>
+        <div class="sub">Diagnóstico técnico do seu pleito, por quem decidiu crédito 14 anos.</div>
+      </div>
+      <div>
+        <div class="price">R$ 29<span class="price-cents">,99</span></div>
+        <div class="price-sub">pagamento único</div>
+      </div>
+    </div>
+    <button onclick="save('b3','cakto-bronze-3-editorial.png')">Baixar PNG</button>
+  </div>
+
+</div>
+
+<div class="tier-actions">
+  <button class="batch" onclick="saveAll([['b1','cakto-bronze-1-parecer24h.png'],['b2','cakto-bronze-2-stripe.png'],['b3','cakto-bronze-3-editorial.png']])">
+    ↓ Baixar os 3 Bronze
+  </button>
+</div>
+
+<!-- =================== PRATA =================== -->
+<h2 class="tier-head prata">🥈 Prata · R$ 297,99 · Mais vendido</h2>
+
+<div class="grid">
+
+  <div class="item">
+    <div id="p1" class="card p-base">
+      <span class="ribbon">★ Mais vendido</span>
+      <div>
+        <span class="badge">Prata · Completo</span>
+        <div class="title">Dossiê Bancário Completo</div>
+        <div class="sub">O pedido pronto pra sentar na mesa do comitê.</div>
+      </div>
+      <div>
+        <div class="price">R$ 297<span class="price-cents">,99</span></div>
+        <div class="price-sub">pagamento único · inclui bronze</div>
+      </div>
+    </div>
+    <button onclick="save('p1','cakto-prata-1-ribbon.png')">Baixar PNG</button>
+  </div>
+
+  <div class="item">
+    <div id="p2" class="card p-base">
+      <div>
+        <span class="badge">Prata · Pacote 3×</span>
+        <div class="title">Tudo num pacote só</div>
+        <div class="checklist">
+          <div class="checklist-item"><span class="check-dot">✓</span>Diagnóstico de viabilidade</div>
+          <div class="checklist-item"><span class="check-dot">✓</span>Checklist personalizado + validação</div>
+          <div class="checklist-item"><span class="check-dot">✓</span>Dossiê em PDF com defesa técnica</div>
+        </div>
+      </div>
+      <div>
+        <div class="price">R$ 297<span class="price-cents">,99</span></div>
+        <div class="price-sub">pagamento único</div>
+      </div>
+    </div>
+    <button onclick="save('p2','cakto-prata-2-checklist.png')">Baixar PNG</button>
+  </div>
+
+  <div class="item">
+    <div id="p3" class="card p-base">
+      <div>
+        <div class="tier-label">Prata · Dossiê</div>
+        <div class="quote-mark">"</div>
+        <div class="quote-text">A defesa é o que separa o pleito aprovado do pleito negado.</div>
+        <div class="attribution">— ex-mesa de crédito · 14 anos SFN</div>
+      </div>
+      <div>
+        <div class="price">R$ 297<span class="price-cents">,99</span></div>
+        <div class="price-sub">pagamento único</div>
+      </div>
+    </div>
+    <button onclick="save('p3','cakto-prata-3-quote.png')">Baixar PNG</button>
+  </div>
+
+</div>
+
+<div class="tier-actions">
+  <button class="batch" onclick="saveAll([['p1','cakto-prata-1-ribbon.png'],['p2','cakto-prata-2-checklist.png'],['p3','cakto-prata-3-quote.png']])">
+    ↓ Baixar os 3 Prata
+  </button>
+</div>
+
+<!-- =================== OURO =================== -->
+<h2 class="tier-head ouro">🥇 Ouro · R$ 697,99 · Acesso exclusivo</h2>
+
+<div class="grid">
+
+  <div class="item">
+    <div id="o1" class="card o-base">
+      <div class="big-six">6</div>
+      <div class="big-six-sub">vagas / mês</div>
+      <div>
+        <span class="badge">Ouro · Mentoria</span>
+        <div class="title">Mentoria 1-a-1 com ex-mesa</div>
+        <div class="sub">1h de revisão cirúrgica do seu pleito.</div>
+      </div>
+      <div>
+        <div class="price">R$ 697<span class="price-cents">,99</span></div>
+        <div class="price-sub">pagamento único</div>
+      </div>
+    </div>
+    <button onclick="save('o1','cakto-ouro-1-escassez.png')">Baixar PNG</button>
+  </div>
+
+  <div class="item">
+    <div id="o2" class="card">
+      <span class="tag-scarcity">6 vagas/mês</span>
+      <div>
+        <span class="badge">Ouro · Acesso à Mesa</span>
+        <div class="title">Cadeira na mesa de crédito</div>
+        <div class="sub">Você senta do lado de quem decide aprovação há 14 anos.</div>
+      </div>
+      <div>
+        <div class="price">R$ 697<span class="price-cents">,99</span></div>
+        <div class="price-sub">1h · online · 1-a-1</div>
+      </div>
+    </div>
+    <button onclick="save('o2','cakto-ouro-2-acesso.png')">Baixar PNG</button>
+  </div>
+
+  <div class="item">
+    <div id="o3" class="card o-base">
+      <div>
+        <div class="eyebrow">Ouro · Revisão 1-a-1</div>
+        <div class="title-serif">Seu pleito revisado ponto a ponto.</div>
+        <div class="gold-rule"></div>
+        <div class="sub">Por quem decidiu aprovação de crédito agro.</div>
+        <div class="credentials">14 anos SFN · FBB-420 · CPA-20 · Rehagro</div>
+      </div>
+      <div>
+        <div class="price">R$ 697<span class="price-cents">,99</span></div>
+        <div class="price-sub">pagamento único</div>
+      </div>
+    </div>
+    <button onclick="save('o3','cakto-ouro-3-credenciais.png')">Baixar PNG</button>
+  </div>
+
+</div>
+
+<div class="tier-actions">
+  <button class="batch" onclick="saveAll([['o1','cakto-ouro-1-escassez.png'],['o2','cakto-ouro-2-acesso.png'],['o3','cakto-ouro-3-credenciais.png']])">
+    ↓ Baixar os 3 Ouro
+  </button>
+</div>
+
+<script>
+  function save(id, filename) {
+    const el = document.getElementById(id);
+    return html2canvas(el, {
+      scale: 2,
+      backgroundColor: null,
+      logging: false,
+      useCORS: true,
+      letterRendering: true,
+    }).then(canvas => {
+      const link = document.createElement('a');
+      link.download = filename;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    });
+  }
+
+  async function saveAll(list) {
+    for (const [id, filename] of list) {
+      await save(id, filename);
+      await new Promise(r => setTimeout(r, 350));
+    }
+  }
+</script>
+
+</body>
+</html>

@@ -104,7 +104,7 @@ export default function ChecklistClient({
           data.map(async (f) => {
             const { data: urlData } = await supabase.storage
               .from('documentos')
-              .createSignedUrl(`${prefixo}/${f.name}`, 3600)
+              .createSignedUrl(`${prefixo}/${f.name}`, 120)
             return {
               nome: f.name,
               tamanho: f.metadata?.size ?? 0,
@@ -163,7 +163,7 @@ export default function ChecklistClient({
 
     const { data: urlData } = await supabase.storage
       .from('documentos')
-      .createSignedUrl(path, 3600)
+      .createSignedUrl(path, 120)
 
     setArquivos((prev) => [
       ...prev,

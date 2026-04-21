@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { criarStreamEntrevista, HAIKU_MODEL } from '@/lib/anthropic/haiku'
 import type { MensagemChat } from '@/lib/anthropic/haiku'
+import { rateLimit } from '@/lib/rate-limit'
 import { NextRequest } from 'next/server'
 
 function detalharErroAnthropic(err: unknown): {
@@ -56,6 +57,15 @@ export async function POST(request: NextRequest) {
     return new Response('Não autorizado', { status: 401 })
   }
 
+  // Rate-limit IA por usuário — protege saldo Anthropic. 60 turnos/h cobre UX real.
+  const limite = rateLimit(`ia:entrevista:${user.id}`, 60, 60 * 60 * 1000)
+  if (!limite.ok) {
+    return new Response('Muitas mensagens. Aguarde alguns minutos.', {
+      status: 429,
+      headers: { 'Retry-After': String(limite.retryAfterSeconds) },
+    })
+  }
+
   const body = await request.json() as {
     processo_id: string
     messages: MensagemChat[]
@@ -83,14 +93,15 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  // Verificar que o processo pertence ao usuário (RLS também garante, mas defence-in-depth)
+  // Defense-in-depth (E2): RLS também garante, mas o check explícito de
+  // user_id corta IDOR se uma policy for relaxada ou um caller usar admin.
   const { data: processo } = await supabase
     .from('processos')
-    .select('id')
+    .select('id, user_id')
     .eq('id', processo_id)
     .single()
 
-  if (!processo) {
+  if (!processo || processo.user_id !== user.id) {
     return new Response('Processo não encontrado', { status: 404 })
   }
 
@@ -137,7 +148,9 @@ export async function POST(request: NextRequest) {
         try {
           const perfil = JSON.parse(jsonStr)
 
-          // Salvar perfil_json no processo
+          // Salvar perfil_json no processo (filtra por user_id também:
+          // defense-in-depth — evita escrever em processo alheio se RLS
+          // for relaxada ou caller errar no client).
           await supabase
             .from('processos')
             .update({
@@ -147,6 +160,7 @@ export async function POST(request: NextRequest) {
               valor: perfil?.necessidade_credito?.valor || null,
             })
             .eq('id', processo_id)
+            .eq('user_id', user.id)
 
           controller.enqueue(
             encoder.encode(

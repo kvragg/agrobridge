@@ -11,10 +11,18 @@ import {
   ArrowRight,
 } from 'lucide-react'
 
-// Links Cakto — plugar aqui quando tiver os checkouts prontos
-const CAKTO_DIAGNOSTICO = ''
-const CAKTO_DOSSIE = ''
-const CAKTO_MENTORIA = ''
+// URLs Cakto — checkout externo, redirect (não iframe).
+// Cakto propaga `?ref=<processo_id>` da URL para o webhook (modo (ii) do plano).
+// Fallback para lookup-por-email no webhook caso não propague.
+const CAKTO_DIAGNOSTICO = 'https://pay.cakto.com.br/wwdtenz_857137'
+const CAKTO_DOSSIE = 'https://pay.cakto.com.br/t4ajfpf_857143'
+const CAKTO_MENTORIA = 'https://pay.cakto.com.br/efia2s6_857148'
+
+function comRef(url: string, processoId: string): string {
+  if (!url) return url
+  const sep = url.includes('?') ? '&' : '?'
+  return `${url}${sep}ref=${encodeURIComponent(processoId)}`
+}
 
 interface Feature {
   text: string
@@ -56,7 +64,7 @@ const PLANOS: Plano[] = [
     id: 'dossie',
     nome: 'Dossiê Bancário Completo',
     tagline: 'O pedido pronto pra sentar na mesa do comitê.',
-    preco: 'R$ 297',
+    preco: 'R$ 297,99',
     precoSub: 'pagamento único',
     icone: <FileText className="h-6 w-6" />,
     destaque: true,
@@ -76,7 +84,7 @@ const PLANOS: Plano[] = [
     id: 'mentoria',
     nome: 'Acesso à Mesa de Crédito',
     tagline: 'Revisão cirúrgica com quem sentava na mesa.',
-    preco: 'R$ 699',
+    preco: 'R$ 697,99',
     precoSub: 'pagamento único',
     icone: <UserCheck className="h-6 w-6" />,
     features: [
@@ -84,14 +92,20 @@ const PLANOS: Plano[] = [
       { text: 'Consultoria pessoal e direta com o fundador' },
       { text: 'Revisão minuciosa do seu dossiê' },
       { text: 'Correção de gargalos ocultos antes do banco ver' },
-      { text: 'Alinhamento de estratégia com ótica de quem aprovou crédito por 10 anos' },
+      { text: 'Alinhamento de estratégia com a ótica de quem decidiu crédito por 14 anos dentro do banco' },
     ],
     cta: 'Quero a mentoria especializada',
     href: CAKTO_MENTORIA,
   },
 ]
 
-export default function PlanosClient({ nome }: { nome: string }) {
+export default function PlanosClient({
+  nome,
+  processoId,
+}: {
+  nome: string
+  processoId: string
+}) {
   return (
     <main className="min-h-screen bg-gradient-to-br from-[#f0fdf4] via-white to-[#f9fafb]">
       {/* Header */}
@@ -119,18 +133,19 @@ export default function PlanosClient({ nome }: { nome: string }) {
           <h1 className="text-balance text-3xl font-black leading-[1.05] tracking-tight text-gray-900 sm:text-5xl">
             Escolha como você quer
             <br />
-            <span className="text-[#166534]">aprovar seu crédito.</span>
+            <span className="text-[#166534]">chegar no banco.</span>
           </h1>
           <p className="mx-auto mt-5 max-w-xl text-pretty text-base text-gray-600 sm:text-lg">
-            Pagamento único. Entrega imediata após confirmação. Sem mensalidade, sem fidelidade —
-            você leva o dossiê pro banco e segue com a sua safra.
+            Pagamento único, sem fidelidade. Cada nível foi desenhado por quem decidiu crédito
+            por 14 anos dentro de um banco privado de grande porte — você leva o pedido pronto
+            pra mesa e segue com a sua safra.
           </p>
         </div>
 
         {/* Cards */}
         <div className="mt-12 grid gap-5 sm:mt-16 md:grid-cols-3 md:gap-6">
           {PLANOS.map((plano) => (
-            <PlanoCard key={plano.id} plano={plano} />
+            <PlanoCard key={plano.id} plano={plano} processoId={processoId} />
           ))}
         </div>
 
@@ -170,9 +185,16 @@ export default function PlanosClient({ nome }: { nome: string }) {
   )
 }
 
-function PlanoCard({ plano }: { plano: Plano }) {
+function PlanoCard({
+  plano,
+  processoId,
+}: {
+  plano: Plano
+  processoId: string
+}) {
   const destaque = plano.destaque
   const desabilitado = !plano.href
+  const href = plano.href ? comRef(plano.href, processoId) : ''
 
   return (
     <div
@@ -241,7 +263,7 @@ function PlanoCard({ plano }: { plano: Plano }) {
         </button>
       ) : (
         <a
-          href={plano.href}
+          href={href}
           target="_blank"
           rel="noopener noreferrer"
           className={`mt-7 flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl px-4 py-4 text-sm font-bold transition-all ${

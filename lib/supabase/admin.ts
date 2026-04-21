@@ -1,6 +1,8 @@
+import 'server-only'
 import { createClient } from '@supabase/supabase-js'
 
-// Server-only — nunca importar de client components.
+// Server-only — enforced at build-time por `server-only`.
+// Qualquer import a partir de Client Component quebra o build.
 // Usa SUPABASE_SERVICE_ROLE_KEY: exposição ao browser permite bypass total do RLS.
 // Apenas em Server Actions e Route Handlers.
 export function createAdminClient() {
