@@ -18,9 +18,9 @@ export default async function PlanosPage() {
     redirect('/login?next=/planos')
   }
 
-  // Processo ativo = aberto pelo user e ainda sem pagamento. O webhook Cakto
-  // precisa desse id pra confirmar o pagamento. Sem ele, manda o user pra
-  // entrevista pra criar um — o checkout sem processo_id seria órfão.
+  // Processo ativo é só o "ref" repassado ao Cakto pra facilitar o match no
+  // webhook. Se não existir, o webhook tem fallback por email + auto-cria
+  // placeholder — não precisamos bloquear a visualização de planos.
   const { data: processoAtivo } = await supabase
     .from('processos')
     .select('id')
@@ -32,10 +32,6 @@ export default async function PlanosPage() {
     .limit(1)
     .maybeSingle()
 
-  if (!processoAtivo) {
-    redirect('/entrevista/nova?next=/planos')
-  }
-
   const nome =
     (user.user_metadata?.nome as string | undefined)?.split(' ')[0] ?? 'Produtor'
 
@@ -44,7 +40,7 @@ export default async function PlanosPage() {
   return (
     <PlanosClient
       nome={nome}
-      processoId={processoAtivo.id}
+      processoId={processoAtivo?.id ?? null}
       tierAtual={plano.tier}
     />
   )
