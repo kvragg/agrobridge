@@ -21,9 +21,11 @@ export function DashboardShell({ nome, email, children }: DashboardShellProps) {
   const [open, setOpen] = useState(false)
   const pathname = usePathname()
 
-  useEffect(() => {
+  const [pathnameAnterior, setPathnameAnterior] = useState(pathname)
+  if (pathname !== pathnameAnterior) {
+    setPathnameAnterior(pathname)
     setOpen(false)
-  }, [pathname])
+  }
 
   useEffect(() => {
     if (!open) return

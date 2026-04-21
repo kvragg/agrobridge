@@ -3,11 +3,11 @@ import { NextResponse, type NextRequest } from 'next/server'
 
 // Rotas de API que NÃO exigem sessão autenticada:
 // - /api/auth/*            (signup, login, logout, resend — lidam com auth elas mesmas)
-// - /api/pagamento/webhook (autenticado via HMAC do Pagar.me, não via sessão)
+// - /api/pagamento/webhook (autenticado via HMAC do Cakto, não via sessão)
 const PUBLIC_API_PREFIXES = ['/api/auth', '/api/pagamento/webhook']
 
 // Rotas web (páginas) que exigem sessão autenticada:
-const ROTAS_PROTEGIDAS_WEB = ['/dashboard', '/entrevista', '/checklist']
+const ROTAS_PROTEGIDAS_WEB = ['/dashboard', '/entrevista', '/checklist', '/planos', '/conta']
 
 function requerAuthWeb(pathname: string): boolean {
   return ROTAS_PROTEGIDAS_WEB.some((rota) => pathname.startsWith(rota))
@@ -66,7 +66,8 @@ export async function proxy(request: NextRequest) {
 
   // Evita cache de conteúdo autenticado em proxies/CDN
   if (authWeb || authApi) {
-    supabaseResponse.headers.set('Cache-Control', 'no-store, max-age=0')
+    supabaseResponse.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, private, max-age=0')
+    supabaseResponse.headers.set('Pragma', 'no-cache')
   }
 
   return supabaseResponse

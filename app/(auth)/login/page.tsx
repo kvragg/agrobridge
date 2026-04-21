@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { Eye, EyeOff, ArrowRight, Sprout } from "lucide-react"
 import { Alert } from "@/components/ui/alert"
+import { sanitizarCaminhoInterno } from "@/lib/safe-redirect"
 
 export default function LoginPage() {
   return (
@@ -27,7 +28,7 @@ function LoginInner() {
   const [carregando, setCarregando] = useState(false)
   const [mostrarSenha, setMostrarSenha] = useState(false)
 
-  const destino = searchParams.get("next") || "/dashboard"
+  const destino = sanitizarCaminhoInterno(searchParams.get("next"), "/dashboard")
 
   useEffect(() => {
     if (searchParams.get("erro") === "confirmacao") {

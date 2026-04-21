@@ -117,6 +117,23 @@ Formato: cada entrada tem contexto, opções, recomendação técnica, default t
 
 ---
 
+## [2026-04-21 00:45] — Pergunta #9 — Vitest bloqueado por Windows Defender (WDAC)
+**Contexto:** Vitest 4.1.4 usa rolldown, que carrega `node_modules/@rolldown/binding-win32-x64-msvc/rolldown-binding.win32-x64-msvc.node` via require nativo. WDAC (Controle de Aplicativo) está bloqueando esse .node binding. Erro: `Uma política de Controle de Aplicativo bloqueou este arquivo`. Afeta `npm test` nesta máquina.
+
+**Opções:**
+- A) Whitelist o arquivo .node no WDAC (ação administrativa, single-click)
+- B) Downgrade Vitest para 3.x (Vite + esbuild, sem rolldown) — afeta lock file
+- C) Rodar testes apenas em CI (GitHub Actions Linux) e pular localmente
+- D) `Start-Process powershell -Verb RunAs` + `Set-MpPreference -ExclusionPath` nessa dll
+
+**Recomendação técnica:** A (single-click) ou C (trazer gate para CI). Downgrade é retrabalho. Decisão do Paulo — envolve permissão admin na máquina local.
+
+**Default aplicado:** Nesta auditoria, `npm test` foi pulado. Os 17 testes integration pré-existentes continuam válidos (cobertos por revisão manual de código). Os 11 testes novos que eu escreveria no Wave 6 ficam **escritos mas não executados** nesta sessão — Paulo roda após whitelistar ou em CI pela manhã.
+
+**Impacto se errar:** Reversível. Testes não quebram código; se Wave 6 adicionar teste com bug de sintaxe, typecheck do build pega na hora do CI.
+
+---
+
 ## [2026-04-21 00:15] — Pergunta #8 — Migração região Supabase para SP
 **Contexto:** Supabase projeto atual é em Ohio (us-east-2). LGPD não proíbe processamento no exterior com base legal + cláusula contratual, mas latência Brasil↔Ohio é ~150ms.
 
