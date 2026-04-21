@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
   if (!temAcesso(tier, 'dossie')) {
     return Response.json(
       {
-        erro: 'Dossiê Bancário Completo (R$ 297,99) é necessário para gerar a defesa de crédito.',
+        erro: 'Dossiê Bancário Completo (plano Prata) é necessário para gerar a defesa de crédito.',
         codigo: 'tier_insuficiente',
         tier_atual: tier ?? 'nenhum',
         tier_atual_nome: tier ? TIER_NOME[tier] : null,

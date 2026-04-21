@@ -1,101 +1,18 @@
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { getPlanoAtual } from '@/lib/plano'
 import Link from 'next/link'
-import {
-  ClipboardList,
-  Plus,
-  ArrowRight,
-  FileSearch,
-  MessageSquare,
-  FileText,
-  CreditCard,
-} from 'lucide-react'
-import ExcluirProcessoButton from '@/components/dashboard/ExcluirProcessoButton'
+import { redirect } from 'next/navigation'
+import { Sparkles, ArrowRight, Download, FileText, ClipboardList, MessageCircle, ShieldCheck, Lock, CheckCircle2 } from 'lucide-react'
+import type { PerfilLead } from '@/types/perfil-lead'
 
-interface Processo {
+export const dynamic = 'force-dynamic'
+
+interface ProcessoResumo {
   id: string
-  status: string | null
-  banco: string | null
-  valor: number | null
-  created_at: string
   perfil_json: Record<string, unknown> | null
-}
-
-interface Progresso {
-  etapaAtual: number // 1..5
-  etapaLabel: string
-  cta: string
-  href: string
-  pct: number
-}
-
-const ETAPAS = [
-  'Entrevista',
-  'Checklist',
-  'Documentos',
-  'Pagamento',
-  'Dossiê',
-] as const
-
-function calcularProgresso(p: Processo, docsCount: number): Progresso {
-  const pj = p.perfil_json ?? {}
-  const temPerfil = !!(pj as { perfil?: unknown }).perfil
-  const temChecklist = typeof (pj as { _checklist_md?: string })._checklist_md === 'string'
-  const pagamento = (pj as { _pagamento?: { status?: string } })._pagamento
-  const pago = pagamento?.status === 'paid'
-  const dossieGerado = typeof (pj as { _dossie_gerado_em?: string })._dossie_gerado_em === 'string'
-
-  if (!temPerfil) {
-    return {
-      etapaAtual: 1,
-      etapaLabel: 'Entrevista em andamento',
-      cta: 'Retomar entrevista',
-      href: `/entrevista/${p.id}`,
-      pct: 10,
-    }
-  }
-  if (!temChecklist) {
-    return {
-      etapaAtual: 2,
-      etapaLabel: 'Gerando checklist',
-      cta: 'Abrir checklist',
-      href: `/checklist/${p.id}`,
-      pct: 30,
-    }
-  }
-  if (docsCount < 3) {
-    return {
-      etapaAtual: 3,
-      etapaLabel: `${docsCount} documento${docsCount === 1 ? '' : 's'} enviado${docsCount === 1 ? '' : 's'}`,
-      cta: 'Enviar documentos',
-      href: `/checklist/${p.id}`,
-      pct: 45 + Math.min(docsCount * 5, 15),
-    }
-  }
-  if (!pago) {
-    return {
-      etapaAtual: 4,
-      etapaLabel: 'Pronto para pagamento',
-      cta: 'Pagar dossiê',
-      href: `/checklist/${p.id}`,
-      pct: 70,
-    }
-  }
-  if (!dossieGerado) {
-    return {
-      etapaAtual: 5,
-      etapaLabel: 'Gerar dossiê final',
-      cta: 'Gerar PDF',
-      href: `/checklist/${p.id}`,
-      pct: 85,
-    }
-  }
-  return {
-    etapaAtual: 5,
-    etapaLabel: 'Dossiê concluído',
-    cta: 'Baixar dossiê',
-    href: `/checklist/${p.id}`,
-    pct: 100,
-  }
+  pagamento_confirmado: boolean
+  created_at: string
 }
 
 export default async function DashboardPage() {
@@ -103,218 +20,278 @@ export default async function DashboardPage() {
   const {
     data: { user },
   } = await supabase.auth.getUser()
+  if (!user) redirect('/login?next=/dashboard')
 
-  const { data: processosRaw } = await supabase
-    .from('processos')
-    .select('id, status, banco, valor, created_at, perfil_json')
-    .order('created_at', { ascending: false })
+  const admin = createAdminClient()
 
-  const processos = (processosRaw ?? []) as Processo[]
+  const [{ data: perfilRaw }, plano, { data: processosRaw }] = await Promise.all([
+    admin.from('perfis_lead').select('*').eq('user_id', user.id).maybeSingle(),
+    getPlanoAtual(),
+    admin
+      .from('processos')
+      .select('id, perfil_json, pagamento_confirmado, created_at')
+      .eq('user_id', user.id)
+      .is('deleted_at', null)
+      .order('created_at', { ascending: false }),
+  ])
 
-  // Contar arquivos por processo (raiz + subpastas)
-  const contagens: Record<string, number> = {}
-  if (user) {
-    for (const p of processos) {
-      const prefix = `${user.id}/${p.id}`
-      const { data: raiz } = await supabase.storage
-        .from('documentos')
-        .list(prefix, { limit: 200 })
-      let count = 0
-      const subpastas: string[] = []
-      for (const f of raiz ?? []) {
-        if (f.name === 'dossie.pdf') continue
-        if (!f.metadata) {
-          subpastas.push(f.name)
-        } else if (f.metadata.size) {
-          count += 1
-        }
-      }
-      for (const pasta of subpastas) {
-        const { data: subs } = await supabase.storage
-          .from('documentos')
-          .list(`${prefix}/${pasta}`, { limit: 50 })
-        count += (subs ?? []).filter((f) => f.metadata?.size).length
-      }
-      contagens[p.id] = count
-    }
-  }
-
-  const nome =
-    (user?.user_metadata?.nome as string | undefined)?.split(' ')[0] ?? 'Produtor'
-
-  const total = processos.length
-  const concluidos = processos.filter(
-    (p) => typeof (p.perfil_json as { _dossie_gerado_em?: string } | null)?._dossie_gerado_em === 'string'
-  ).length
-  const emAndamento = total - concluidos
+  const perfil = (perfilRaw ?? null) as PerfilLead | null
+  const processos = (processosRaw ?? []) as ProcessoResumo[]
+  const nomeCurto =
+    (perfil?.nome?.split(' ')[0]) ??
+    (user.user_metadata?.nome as string | undefined)?.split(' ')[0] ??
+    'produtor'
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="flex w-full flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="min-w-0 flex-1">
-          <p className="text-sm text-gray-400">
-            {total > 0 ? 'Bem-vindo de volta' : 'Seu espaço de trabalho'}
-          </p>
-          <h1 className="text-2xl font-black text-gray-900">Olá, {nome}!</h1>
-        </div>
-        <Link
-          href="/entrevista/nova"
-          className="inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-[#166534] px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-[#14532d] sm:w-auto"
-        >
-          <Plus className="h-4 w-4" />
-          Nova entrevista
-        </Link>
-      </div>
+    <div className="space-y-6">
+      <header>
+        <p className="text-sm text-gray-400">Plano atual: {plano.plano}</p>
+        <h1 className="text-2xl font-black text-gray-900">
+          Olá, {nomeCurto}!
+        </h1>
+      </header>
 
-      {/* Stats */}
-      {total > 0 && (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
-          {[
-            { label: 'Total de processos', value: total, color: 'text-gray-900' },
-            { label: 'Em andamento', value: emAndamento, color: 'text-amber-600' },
-            { label: 'Concluídos', value: concluidos, color: 'text-emerald-600' },
-          ].map((stat) => (
-            <div
-              key={stat.label}
-              className="rounded-2xl border border-gray-200 bg-white px-5 py-4"
-            >
-              <p className="text-xs font-medium text-gray-400">{stat.label}</p>
-              <p className={`mt-1 text-2xl font-black ${stat.color}`}>
-                {stat.value}
-              </p>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Processos */}
-      <div>
-        <h2 className="mb-4 text-xs font-semibold uppercase tracking-wider text-gray-400">
-          Meus processos
-        </h2>
-
-        {!processos.length ? (
-          <EmptyState />
-        ) : (
-          <ul className="space-y-3">
-            {processos.map((p) => {
-              const docsCount = contagens[p.id] ?? 0
-              const prog = calcularProgresso(p, docsCount)
-              const descricaoCard = `${p.banco ?? 'Banco a definir'} · ${new Date(p.created_at).toLocaleDateString('pt-BR')}`
-              return (
-                <li key={p.id} className="relative">
-                  <div className="absolute right-3 top-3 z-10">
-                    <ExcluirProcessoButton processoId={p.id} descricao={descricaoCard} />
-                  </div>
-                  <Link
-                    href={prog.href}
-                    className="group block rounded-2xl border border-gray-200 bg-white p-5 pr-16 transition-all hover:border-[#166534]/30 hover:shadow-sm"
-                  >
-                    <div className="flex items-start gap-4">
-                      <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-green-50">
-                        <IconePorEtapa etapa={prog.etapaAtual} />
-                      </div>
-
-                      <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-                          <p className="font-semibold text-gray-900">
-                            {p.banco ?? 'Banco a definir'}
-                          </p>
-                          <p className="text-sm text-gray-400">
-                            {p.valor
-                              ? `R$ ${p.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
-                              : 'valor a definir'}
-                            {' · '}
-                            {new Date(p.created_at).toLocaleDateString('pt-BR')}
-                          </p>
-                        </div>
-
-                        <p className="mt-0.5 text-xs text-gray-500">
-                          {prog.etapaLabel}
-                        </p>
-
-                        {/* Barra de progresso */}
-                        <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-gray-100">
-                          <div
-                            className="h-full rounded-full bg-[#166534] transition-all"
-                            style={{ width: `${prog.pct}%` }}
-                          />
-                        </div>
-
-                        {/* Steps */}
-                        <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs">
-                          {ETAPAS.map((label, i) => {
-                            const n = i + 1
-                            const ativa = n === prog.etapaAtual
-                            const feita = n < prog.etapaAtual || (n === 5 && prog.pct === 100)
-                            return (
-                              <span
-                                key={label}
-                                className={
-                                  feita
-                                    ? 'text-[#166534] font-medium'
-                                    : ativa
-                                      ? 'text-amber-700 font-semibold'
-                                      : 'text-gray-300'
-                                }
-                              >
-                                {feita ? '✓ ' : ''}
-                                {label}
-                              </span>
-                            )
-                          })}
-                        </div>
-                      </div>
-
-                      <div className="flex flex-col items-end gap-2">
-                        <span className="rounded-full bg-[#166534]/10 px-3 py-1 text-xs font-semibold text-[#166534]">
-                          {prog.cta}
-                        </span>
-                        <ArrowRight className="h-4 w-4 text-gray-300 transition-transform group-hover:translate-x-0.5 group-hover:text-gray-400" />
-                      </div>
-                    </div>
-                  </Link>
-                </li>
-              )
-            })}
-          </ul>
-        )}
-      </div>
+      <CardEstado plano={plano.plano} perfil={perfil} processos={processos} />
     </div>
   )
 }
 
-function IconePorEtapa({ etapa }: { etapa: number }) {
-  const cls = 'h-5 w-5 text-[#166534]'
-  if (etapa === 1) return <MessageSquare className={cls} />
-  if (etapa === 2) return <ClipboardList className={cls} />
-  if (etapa === 3) return <FileSearch className={cls} />
-  if (etapa === 4) return <CreditCard className={cls} />
-  return <FileText className={cls} />
-}
+function CardEstado({
+  plano,
+  perfil,
+  processos,
+}: {
+  plano: string
+  perfil: PerfilLead | null
+  processos: ProcessoResumo[]
+}) {
+  const isFree = plano === 'Free'
+  const perguntas = perfil?.perguntas_respondidas_gratis ?? 0
+  const miniPronta = !!perfil?.mini_analise_texto
 
-function EmptyState() {
-  return (
-    <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 bg-white py-20 text-center">
-      <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-green-50">
-        <ClipboardList className="h-8 w-8 text-[#166534]" />
+  // 1) Free sem interagir — dor + autoridade + urgência
+  if (isFree && perguntas === 0) {
+    return (
+      <div className="space-y-5">
+        <div className="rounded-2xl border border-[#166534]/30 bg-gradient-to-br from-green-50 via-white to-white p-6 shadow-sm md:p-8">
+          <div className="mb-3 flex items-center gap-2">
+            <Sparkles className="h-5 w-5 text-[#166534]" />
+            <p className="text-xs font-bold uppercase tracking-wider text-[#166534]">
+              Análise gratuita · sem cartão
+            </p>
+          </div>
+          <h2 className="text-2xl font-black leading-tight text-gray-900 md:text-3xl">
+            Você já levou NÃO do banco por &ldquo;faltar um papel&rdquo;?
+          </h2>
+          <p className="mt-3 max-w-2xl text-sm text-gray-700 md:text-base">
+            90% dos pedidos de crédito rural voltam por documento fora do padrão MCR —
+            matrícula desatualizada, CCIR vencido, CAR embargado, CND com pendência.
+            Cada devolução é um mês a menos de safra.
+          </p>
+
+          <div className="mt-5 rounded-xl border border-amber-200 bg-amber-50 p-4">
+            <p className="text-xs font-bold uppercase tracking-wider text-amber-800">
+              Plano Safra 2025/26 aberto
+            </p>
+            <p className="mt-1 text-sm text-amber-900">
+              Enquadramento abre fila por ordem de chegada. Chegar pronto no gerente é
+              a diferença entre assinar o contrato agora ou esperar o próximo ciclo.
+            </p>
+          </div>
+
+          <div className="mt-5 space-y-2 text-sm text-gray-700">
+            <div className="flex items-start gap-2">
+              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[#166534]" />
+              <span>
+                <strong>IA treinada no MCR</strong> (Manual de Crédito Rural do Bacen) —
+                lê sua situação e aponta a linha mais provável e a faixa de taxa 2025/26.
+              </span>
+            </div>
+            <div className="flex items-start gap-2">
+              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[#166534]" />
+              <span>
+                <strong>Checklist 100% enquadrado no MCR</strong>, com links oficiais
+                (INCRA, SICAR, Receita, Fazenda, Prefeitura) — sem chute.
+              </span>
+            </div>
+            <div className="flex items-start gap-2">
+              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[#166534]" />
+              <span>
+                <strong>Defesa técnica</strong> construída por quem esteve do lado do
+                comitê de crédito — a mesma estrutura que o Banco espera ler.
+              </span>
+            </div>
+          </div>
+
+          <Link
+            href="/entrevista"
+            className="mt-6 inline-flex min-h-[52px] items-center gap-2 rounded-xl bg-[#166534] px-6 py-3 text-base font-bold text-white shadow-sm transition-colors hover:bg-[#14532d]"
+          >
+            Falar com a IA AgroBridge agora
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+          <p className="mt-3 text-xs text-gray-500">
+            5 perguntas · resposta em menos de 2 minutos · nenhum dado compartilhado com banco.
+          </p>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-4 rounded-xl border border-gray-200 bg-white px-5 py-3 text-xs text-gray-600">
+          <span className="flex items-center gap-1.5">
+            <ShieldCheck className="h-4 w-4 text-[#166534]" />
+            Conformidade LGPD
+          </span>
+          <span className="flex items-center gap-1.5">
+            <Lock className="h-4 w-4 text-[#166534]" />
+            Dados criptografados (Supabase + RLS)
+          </span>
+          <span className="flex items-center gap-1.5">
+            <CheckCircle2 className="h-4 w-4 text-[#166534]" />
+            Você controla exportação e exclusão
+          </span>
+        </div>
       </div>
-      <p className="text-base font-bold text-gray-700">
-        Comece pela entrevista.
-      </p>
-      <p className="mt-1.5 max-w-sm text-sm text-gray-400">
-        São 10 minutos. A IA entende seu caso, monta o checklist exato de documentos
-        e prepara o pedido na linguagem que o analista do banco usa.
+    )
+  }
+
+  // 2) Free com entrevista em andamento (ainda não chegou no gate)
+  if (isFree && perguntas > 0 && perguntas < 5 && !miniPronta) {
+    const restam = 5 - perguntas
+    const pct = Math.round((perguntas / 5) * 100)
+    return (
+      <div className="rounded-2xl border border-amber-200 bg-amber-50/60 p-6">
+        <div className="mb-2 flex items-center gap-2">
+          <MessageCircle className="h-5 w-5 text-amber-700" />
+          <p className="text-sm font-semibold text-amber-800">Entrevista em andamento</p>
+        </div>
+        <h2 className="text-lg font-black text-gray-900">
+          {perguntas}/5 perguntas respondidas
+        </h2>
+        <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-white/60">
+          <div
+            className="h-full rounded-full bg-[#166534] transition-all"
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+        <p className="mt-3 text-sm text-gray-700">
+          Falta{restam === 1 ? '' : 'm'} {restam} pergunta{restam === 1 ? '' : 's'} pra você
+          receber sua análise gratuita.
+        </p>
+        <Link
+          href="/entrevista"
+          className="mt-5 inline-flex min-h-[48px] items-center gap-2 rounded-xl bg-[#166534] px-5 py-3 text-sm font-bold text-white hover:bg-[#14532d]"
+        >
+          Continuar entrevista
+          <ArrowRight className="h-4 w-4" />
+        </Link>
+      </div>
+    )
+  }
+
+  // 3) Free com mini-análise gerada — CTA de pagamento
+  if (isFree && miniPronta) {
+    const previewMax = 260
+    const preview = (perfil?.mini_analise_texto ?? '').slice(0, previewMax)
+    const temMais = (perfil?.mini_analise_texto?.length ?? 0) > previewMax
+    return (
+      <div className="rounded-2xl border border-[#166534]/20 bg-gradient-to-br from-green-50 to-white p-6 md:p-8">
+        <div className="mb-3 flex items-center gap-2">
+          <Sparkles className="h-5 w-5 text-[#166534]" />
+          <p className="text-sm font-semibold text-[#166534]">Sua análise gratuita está pronta</p>
+        </div>
+        <h2 className="text-xl font-black text-gray-900">Chegou a hora do dossiê completo</h2>
+        <div className="mt-3 whitespace-pre-wrap rounded-xl border border-gray-200 bg-white p-4 text-sm text-gray-700">
+          {preview}{temMais ? '...' : ''}
+        </div>
+        <div className="mt-5 flex flex-wrap gap-3">
+          <Link
+            href="/planos"
+            className="inline-flex min-h-[48px] items-center gap-2 rounded-xl bg-[#166534] px-5 py-3 text-sm font-bold text-white hover:bg-[#14532d]"
+          >
+            Quero meu dossiê completo
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+          <Link
+            href="/entrevista"
+            className="inline-flex min-h-[48px] items-center gap-2 rounded-xl border border-gray-300 bg-white px-5 py-3 text-sm font-semibold text-gray-800 hover:border-[#166534] hover:text-[#166534]"
+          >
+            Ver análise completa
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
+  // 4) Pago mas sem processo — significa que acabou de pagar ou não criou.
+  //    Processos-modelo ainda é o container da entrega (dossiê).
+  const processosPagos = processos.filter((p) => p.pagamento_confirmado)
+  const ultimoProcesso = processosPagos[0] ?? null
+
+  if (!ultimoProcesso) {
+    return (
+      <div className="rounded-2xl border border-[#166534]/20 bg-white p-6 md:p-8">
+        <div className="mb-3 flex items-center gap-2">
+          <ClipboardList className="h-5 w-5 text-[#166534]" />
+          <p className="text-sm font-semibold text-[#166534]">Plano {plano} ativo</p>
+        </div>
+        <h2 className="text-xl font-black text-gray-900">Continue a entrevista com a IA</h2>
+        <p className="mt-2 text-sm text-gray-600">
+          Com o plano ativado, sua entrevista agora é ilimitada. Siga até eu ter
+          tudo que preciso pra montar seu dossiê.
+        </p>
+        <Link
+          href="/entrevista"
+          className="mt-5 inline-flex min-h-[48px] items-center gap-2 rounded-xl bg-[#166534] px-5 py-3 text-sm font-bold text-white hover:bg-[#14532d]"
+        >
+          Continuar entrevista
+          <ArrowRight className="h-4 w-4" />
+        </Link>
+      </div>
+    )
+  }
+
+  const dossieGerado = typeof (ultimoProcesso.perfil_json as { _dossie_gerado_em?: string } | null)?._dossie_gerado_em === 'string'
+
+  if (dossieGerado) {
+    return (
+      <div className="rounded-2xl border border-emerald-200 bg-emerald-50/60 p-6">
+        <div className="mb-3 flex items-center gap-2">
+          <FileText className="h-5 w-5 text-emerald-700" />
+          <p className="text-sm font-semibold text-emerald-800">Dossiê pronto</p>
+        </div>
+        <h2 className="text-xl font-black text-gray-900">Seu dossiê bancário está disponível</h2>
+        <p className="mt-2 text-sm text-gray-600">
+          O PDF com a defesa técnica e o checklist completo foi gerado. Baixe, leve ao
+          gerente e nós mandamos seu caso pro próximo passo.
+        </p>
+        <Link
+          href={`/checklist/${ultimoProcesso.id}`}
+          className="mt-5 inline-flex min-h-[48px] items-center gap-2 rounded-xl bg-emerald-700 px-5 py-3 text-sm font-bold text-white hover:bg-emerald-800"
+        >
+          <Download className="h-4 w-4" />
+          Baixar dossiê
+        </Link>
+      </div>
+    )
+  }
+
+  // Pago mas dossiê ainda não gerado: tem checklist pendente
+  return (
+    <div className="rounded-2xl border border-amber-200 bg-amber-50/60 p-6">
+      <div className="mb-3 flex items-center gap-2">
+        <ClipboardList className="h-5 w-5 text-amber-700" />
+        <p className="text-sm font-semibold text-amber-800">Checklist pendente</p>
+      </div>
+      <h2 className="text-xl font-black text-gray-900">Envie os documentos do seu checklist</h2>
+      <p className="mt-2 text-sm text-gray-600">
+        Com todos os documentos enviados, eu gero o dossiê completo com a defesa técnica do seu crédito.
       </p>
       <Link
-        href="/entrevista/nova"
-        className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#166534] px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-[#14532d]"
+        href={`/checklist/${ultimoProcesso.id}`}
+        className="mt-5 inline-flex min-h-[48px] items-center gap-2 rounded-xl bg-[#166534] px-5 py-3 text-sm font-bold text-white hover:bg-[#14532d]"
       >
-        <Plus className="h-4 w-4" />
-        Começar entrevista
+        Ver checklist
+        <ArrowRight className="h-4 w-4" />
       </Link>
     </div>
   )
 }
-

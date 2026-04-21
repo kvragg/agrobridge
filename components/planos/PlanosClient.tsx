@@ -20,8 +20,8 @@ const CAKTO_DIAGNOSTICO = 'https://pay.cakto.com.br/wwdtenz_857137'
 const CAKTO_DOSSIE = 'https://pay.cakto.com.br/t4ajfpf_857143'
 const CAKTO_MENTORIA = 'https://pay.cakto.com.br/efia2s6_857148'
 
-function comRef(url: string, processoId: string): string {
-  if (!url) return url
+function comRef(url: string, processoId: string | null): string {
+  if (!url || !processoId) return url
   const sep = url.includes('?') ? '&' : '?'
   return `${url}${sep}ref=${encodeURIComponent(processoId)}`
 }
@@ -113,7 +113,7 @@ export default function PlanosClient({
   tierAtual,
 }: {
   nome: string
-  processoId: string
+  processoId: string | null
   tierAtual: Tier | null
 }) {
   const [vagasMentoria, setVagasMentoria] = useState<VagasMentoriaApi | null>(null)
@@ -227,7 +227,7 @@ function PlanoCard({
   tierAtual,
 }: {
   plano: Plano
-  processoId: string
+  processoId: string | null
   vagasMentoria: VagasMentoriaApi | null
   tierAtual: Tier | null
 }) {

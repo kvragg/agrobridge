@@ -260,9 +260,11 @@ export default function DossieCard({
               <div className="flex items-baseline justify-between">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
-                    Dossiê final
+                    Dossiê final — Plano Prata
                   </p>
-                  <p className="mt-1 text-2xl font-black text-gray-900">R$ 297,99</p>
+                  <p className="mt-1 text-sm font-semibold text-gray-700">
+                    Pagamento único · PIX
+                  </p>
                 </div>
                 <span className="rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-semibold text-[#166534]">
                   PIX
@@ -296,7 +298,7 @@ export default function DossieCard({
                 className="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-[#166534] px-4 py-4 text-base font-semibold text-white shadow-sm transition-colors hover:bg-[#14532d]"
               >
                 <QrCode className="h-5 w-5" />
-                Pagar R$ 297,99
+                Ver valor e pagar
                 <ExternalLink className="h-4 w-4 opacity-70" />
               </a>
             ) : (

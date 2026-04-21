@@ -3,14 +3,14 @@
 import { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
-import { LayoutDashboard, MessageSquare, CreditCard, UserCog, Menu, X, Sprout } from 'lucide-react'
+import { LayoutDashboard, Sparkles, CreditCard, UserCog, Menu, X, Sprout } from 'lucide-react'
 import SignOutButton from '@/components/ui/sign-out-button'
 import { PlanoBadge } from '@/components/ui/plano-badge'
 import type { PlanoComercial } from '@/lib/plano'
 
 const NAV = [
-  { href: '/dashboard', label: 'Processos', icon: LayoutDashboard },
-  { href: '/entrevista/nova', label: 'Nova Entrevista', icon: MessageSquare },
+  { href: '/dashboard', label: 'Painel', icon: LayoutDashboard },
+  { href: '/entrevista', label: 'Falar com a IA AgroBridge', icon: Sparkles },
   { href: '/planos', label: 'Planos', icon: CreditCard },
   { href: '/conta/dados', label: 'Minha Conta', icon: UserCog },
 ]

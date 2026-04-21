@@ -17,8 +17,9 @@ export default function AdminDebugPage() {
       <section className="rounded-xl border border-gray-200 bg-white p-6">
         <h2 className="text-lg font-bold text-gray-900">Teste de envio Resend</h2>
         <p className="mt-1 text-sm text-gray-500">
-          Valida API key + domínio + quota. O destinatário padrão é o próprio
-          admin logado.
+          Valida credencial, domínio e quota. Também permite disparar os 4
+          templates reais (com retry e trilha em <code>audit_events</code>).
+          Destinatário padrão é o admin logado.
         </p>
         <DebugEmailForm />
       </section>
