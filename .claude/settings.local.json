@@ -34,7 +34,30 @@
       "Bash(npx vitest *)",
       "Bash(rm \"C:/Users/Paulo/AgroBridge/agrobridge/tests/integration/pagamento-criar-duplicacao.test.ts\" \"C:/Users/Paulo/AgroBridge/agrobridge/app/api/pagamento/criar/route.ts\" \"C:/Users/Paulo/AgroBridge/agrobridge/lib/pagarme/index.ts\")",
       "Bash(rmdir \"C:/Users/Paulo/AgroBridge/agrobridge/app/api/pagamento/criar\" \"C:/Users/Paulo/AgroBridge/agrobridge/lib/pagarme\")",
-      "Bash(grep -E \"pagarme|^pagarme$\")"
+      "Bash(grep -E \"pagarme|^pagarme$\")",
+      "Bash(start *)",
+      "mcp__claude_ai_Vercel__list_projects",
+      "Bash(gh pr *)",
+      "Bash(claude --version)",
+      "Bash(npm ls *)",
+      "Bash(npm root *)",
+      "Bash(claude doctor *)",
+      "Bash(npm view *)",
+      "Bash(awk '{print $NF}')",
+      "Bash(git -C /c/Users/Paulo/AgroBridge/agrobridge status --short)",
+      "Bash(git -C /c/Users/Paulo/AgroBridge/agrobridge log --oneline -10)",
+      "Bash(git -C /c/Users/Paulo/AgroBridge/agrobridge stash push -u -m \"auditoria-local-settings\" -- .claude/settings.local.json)",
+      "Bash(git -C /c/Users/Paulo/AgroBridge/agrobridge checkout -b audit-2026-04-20)",
+      "Bash(git -C /c/Users/Paulo/AgroBridge/agrobridge add .gitignore audit/)",
+      "Bash(git *)",
+      "Bash(chmod +x /c/Users/Paulo/AgroBridge/agrobridge/scripts/check-secrets.sh)",
+      "Bash(bash /c/Users/Paulo/AgroBridge/agrobridge/scripts/check-secrets.sh --all)",
+      "Bash(npm test *)",
+      "mcp__supabase__execute_sql",
+      "mcp__supabase__list_branches",
+      "mcp__claude_ai_Vercel__get_runtime_logs",
+      "mcp__supabase__apply_migration",
+      "Bash(bash scripts/check-secrets.sh)"
     ]
   }
 }

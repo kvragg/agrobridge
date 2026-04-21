@@ -15,6 +15,10 @@ export type AuditEventType =
   | 'conta_exportada'
   | 'conta_exclusao_solicitada'
   | 'conta_excluida'
+  | 'perfil_lead_atualizado'
+  | 'mini_analise_gerada'
+  | 'gate_freemium_ativado'
+  | 'chat_mensagem'
 
 interface LogParams {
   userId: string | null
