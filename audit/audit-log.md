@@ -65,3 +65,21 @@ Commit: wave 2 — tabela compras + vagas mentoria + gate mensal
 **Secrets:** ✅
 
 Commit: wave 3 — LGPD Art. 18 (privacidade + exportar + excluir soft-delete)
+
+## [2026-04-21 02:35] Iteração 1 — Batch 4 (Wave 4 + Wave 5)
+**Ação:** Logger estruturado JSON server-only + ponto único de captura de erros (plug Sentry futuro) + adapter Upstash Redis REST para rate limit distribuído.
+**Arquivos:**
+- `lib/logger.ts` (novo) — logger JSON uma-linha, 4 níveis (debug/info/warn/error), lista de `CAMPOS_PROIBIDOS` que auto-redacta PII (email, senha, nome, cpf, cnpj, token, etc). `capturarErroProducao(err, ctx)` — ponto único. TODO explícito pra plugar `Sentry.captureException` quando DSN definido.
+- `lib/rate-limit-upstash.ts` (novo) — `rateLimitRemoto(chave, max, janelaMs)` async. Usa Upstash REST pipeline (INCR + PEXPIRE NX + PTTL) com timeout 1.5s + AbortSignal. Fallback auto para in-memory `rateLimit` se env vars ausentes ou request falhar. Zero SDK, fetch puro.
+- `app/api/conta/exportar/route.ts` + `app/api/conta/excluir/route.ts` — migradas pra `rateLimitRemoto`. Rotas LGPD são as mais críticas p/ consistência multi-instância.
+
+**Decisão de default:**
+- **Sentry SDK não instalado** nesta sessão (revisado na pergunta #3 do questions-for-paulo). Decisão pragmática: adicionar bundle/config sem DSN útil é ruído. O `capturarErroProducao` é o ponto de plug — Paulo configura DSN e basta 1 PR de ~30 linhas pra ativar.
+- **Upstash SDK não instalado** — REST API é fetch simples, 1 arquivo, sem deps novas. Env vars vazias = fallback in-memory (comportamento atual).
+
+**Build:** ✅
+**Typecheck:** ✅
+**Lint:** ✅ 11 warnings pré-existentes, sem regressão
+**Secrets:** ✅
+
+Commit: wave 4+5 — logger estruturado + upstash rate-limit adapter

@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { rateLimit } from '@/lib/rate-limit'
+import { rateLimitRemoto } from '@/lib/rate-limit-upstash'
 import { logAuditEvent } from '@/lib/audit'
 import { enviarExportacaoPronta } from '@/lib/email/resend'
 
@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
   }
 
   // 1/dia por user. Chave inclui user.id para não colidir com IP compartilhado.
-  const limite = rateLimit(`conta:exportar:${user.id}`, 1, 24 * 60 * 60 * 1000)
+  const limite = await rateLimitRemoto(`conta:exportar:${user.id}`, 1, 24 * 60 * 60 * 1000)
   if (!limite.ok) {
     return Response.json(
       {

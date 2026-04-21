@@ -46,9 +46,9 @@ Formato: cada entrada tem contexto, opções, recomendação técnica, default t
 
 **Recomendação técnica:** A. SDK instalado e configurado significa que adicionar DSN depois é 1 env var na Vercel. Zero custo se DSN vazio (Sentry SDK detecta e no-op).
 
-**Default aplicado:** A — `@sentry/nextjs` instalado, DSN lido de `SENTRY_DSN`, fallback no-op.
+**Default aplicado (revisado no Wave 4):** A' — em vez de instalar `@sentry/nextjs` cedo (adiciona bundle size + exige wizard de config sem DSN), criei `lib/logger.ts` com logger estruturado JSON + `capturarErroProducao(err, ctx)` como ponto único de captura. Quando Paulo configurar `SENTRY_DSN`, basta `npm i @sentry/nextjs` + adicionar `Sentry.captureException(err, ...)` dentro da função — call-sites não mudam. TODO explícito no código.
 
-**Impacto se errar:** Reversível. Desinstalar Sentry é `npm uninstall` + remover 3 arquivos config.
+**Impacto se errar:** Reversível. Adicionar SDK depois é 1 PR de ~30 linhas.
 
 ---
 

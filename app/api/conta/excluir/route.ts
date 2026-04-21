@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server'
 import crypto from 'node:crypto'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { rateLimit } from '@/lib/rate-limit'
+import { rateLimitRemoto } from '@/lib/rate-limit-upstash'
 import { logAuditEvent } from '@/lib/audit'
 import { enviarConfirmacaoExclusao } from '@/lib/email/resend'
 
@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
   }
 
   // ─── Step 1 — solicitação ──────────────────────────────────
-  const limite = rateLimit(`conta:excluir:step1:${user.id}`, 3, 60 * 60 * 1000)
+  const limite = await rateLimitRemoto(`conta:excluir:step1:${user.id}`, 3, 60 * 60 * 1000)
   if (!limite.ok) {
     return Response.json(
       {
@@ -139,7 +139,7 @@ async function confirmarExclusao(
   token: string
 ): Promise<Response> {
   const ip = extrairIp(request) ?? 'sem-ip'
-  const limite = rateLimit(`conta:excluir:step2:${ip}`, 10, 60 * 60 * 1000)
+  const limite = await rateLimitRemoto(`conta:excluir:step2:${ip}`, 10, 60 * 60 * 1000)
   if (!limite.ok) {
     return Response.json(
       { erro: 'Muitas tentativas. Aguarde alguns minutos.' },
