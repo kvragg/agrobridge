@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { useEffect, useState } from 'react'
 import {
   Check,
   Zap,
@@ -99,6 +100,12 @@ const PLANOS: Plano[] = [
   },
 ]
 
+interface VagasMentoriaApi {
+  limite_mensal: number
+  vagas_usadas: number
+  vagas_restantes: number
+}
+
 export default function PlanosClient({
   nome,
   processoId,
@@ -106,6 +113,25 @@ export default function PlanosClient({
   nome: string
   processoId: string
 }) {
+  const [vagasMentoria, setVagasMentoria] = useState<VagasMentoriaApi | null>(null)
+
+  useEffect(() => {
+    let cancelado = false
+    fetch('/api/planos/vagas-mentoria', { cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((json: VagasMentoriaApi | null) => {
+        if (!cancelado && json && typeof json.vagas_restantes === 'number') {
+          setVagasMentoria(json)
+        }
+      })
+      .catch(() => {
+        // falha silenciosa — card da Mentoria fica sem badge de vagas
+      })
+    return () => {
+      cancelado = true
+    }
+  }, [])
+
   return (
     <main className="min-h-screen bg-gradient-to-br from-[#f0fdf4] via-white to-[#f9fafb]">
       {/* Header */}
@@ -145,7 +171,12 @@ export default function PlanosClient({
         {/* Cards */}
         <div className="mt-12 grid gap-5 sm:mt-16 md:grid-cols-3 md:gap-6">
           {PLANOS.map((plano) => (
-            <PlanoCard key={plano.id} plano={plano} processoId={processoId} />
+            <PlanoCard
+              key={plano.id}
+              plano={plano}
+              processoId={processoId}
+              vagasMentoria={plano.id === 'mentoria' ? vagasMentoria : null}
+            />
           ))}
         </div>
 
@@ -188,12 +219,17 @@ export default function PlanosClient({
 function PlanoCard({
   plano,
   processoId,
+  vagasMentoria,
 }: {
   plano: Plano
   processoId: string
+  vagasMentoria: VagasMentoriaApi | null
 }) {
   const destaque = plano.destaque
-  const desabilitado = !plano.href
+  const ehMentoria = plano.id === 'mentoria'
+  const mentoriaEsgotada =
+    ehMentoria && vagasMentoria !== null && vagasMentoria.vagas_restantes <= 0
+  const desabilitado = !plano.href || mentoriaEsgotada
   const href = plano.href ? comRef(plano.href, processoId) : ''
 
   return (
@@ -208,6 +244,24 @@ function PlanoCard({
         <div className="absolute -top-3 left-1/2 -translate-x-1/2">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-[#c9a86a] to-[#b8965a] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-white shadow-md">
             ★ {plano.badge}
+          </span>
+        </div>
+      )}
+
+      {ehMentoria && vagasMentoria !== null && (
+        <div className="absolute -top-3 right-4">
+          <span
+            className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] shadow-md ${
+              mentoriaEsgotada
+                ? 'bg-gray-800 text-white'
+                : vagasMentoria.vagas_restantes <= 2
+                  ? 'bg-red-600 text-white'
+                  : 'bg-white text-gray-800 ring-1 ring-gray-300'
+            }`}
+          >
+            {mentoriaEsgotada
+              ? 'ESGOTADO ESTE MÊS'
+              : `${vagasMentoria.vagas_restantes} / ${vagasMentoria.limite_mensal} vagas`}
           </span>
         </div>
       )}
@@ -259,7 +313,9 @@ function PlanoCard({
           disabled
           className="mt-7 flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-gray-100 px-4 py-4 text-sm font-bold text-gray-400"
         >
-          Checkout em configuração
+          {mentoriaEsgotada
+            ? 'Esgotado — volte no próximo mês'
+            : 'Checkout em configuração'}
         </button>
       ) : (
         <a
