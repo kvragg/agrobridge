@@ -11,13 +11,6 @@ interface Regra {
 
 const REGRAS: Regra[] = [
   {
-    match: /\b(nirf|cafir)\b/i,
-    link: {
-      label: 'Emitir comprovante CAFIR (NIRF)',
-      url: 'https://www.gov.br/pt-br/servicos/emitir-comprovante-de-inscricao-cafir',
-    },
-  },
-  {
     match: /\bcar\b|cadastro ambiental rural/i,
     link: {
       label: 'Abrir portal do SICAR',

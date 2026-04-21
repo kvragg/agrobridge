@@ -211,12 +211,12 @@ function HeaderChat({ plano, perguntasUsadas, limite, mostraContador }: {
       </div>
       <div className="min-w-0 flex-1">
         <h1 className="text-lg font-bold text-gray-900">IA AgroBridge</h1>
-        <p className="text-xs text-gray-400">Consultora especializada em credito rural — plano atual: {plano}</p>
+        <p className="text-xs text-gray-400">Consultora especializada em crédito rural — plano atual: {plano}</p>
       </div>
       {mostraContador && (
         <div className="flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
           <Sparkles className="h-3 w-3" />
-          {perguntasUsadas}/{limite} perguntas gratis
+          {perguntasUsadas}/{limite} perguntas grátis
         </div>
       )}
     </div>
@@ -227,7 +227,7 @@ function BoasVindas({ onSugestao }: { onSugestao: (s: string) => void }) {
   const sugestoes = [
     'Quero custeio pra plantar soja na minha fazenda',
     'Tenho 300 ha de pasto e quero investir em confinamento',
-    'Preciso refinanciar um credito que ja tomei',
+    'Preciso refinanciar um crédito que já tomei',
   ]
   return (
     <div className="rounded-2xl border border-dashed border-[#166534]/30 bg-green-50/40 p-5">
@@ -236,7 +236,7 @@ function BoasVindas({ onSugestao }: { onSugestao: (s: string) => void }) {
         <p className="font-bold text-gray-800">Comece como quiser</p>
       </div>
       <p className="mb-4 text-sm text-gray-600">
-        Me conta sua situacao. Eu mapeio o perfil, sugiro a linha e monto o checklist certo.
+        Me conta sua situação. Eu mapeio o perfil, sugiro a linha e monto o checklist certo.
       </p>
       <div className="flex flex-wrap gap-2">
         {sugestoes.map((s) => (
@@ -259,7 +259,7 @@ function PaywallCard({ miniAnalise }: { miniAnalise: string | null }) {
     <div className="rounded-2xl border border-[#166534]/20 bg-gradient-to-br from-green-50 to-white p-5 md:p-6">
       <div className="mb-3 flex items-center gap-2">
         <Sparkles className="h-5 w-5 text-[#166534]" />
-        <h2 className="text-base font-bold text-gray-900">Sua analise gratuita</h2>
+        <h2 className="text-base font-bold text-gray-900">Sua análise gratuita</h2>
       </div>
 
       {miniAnalise ? (
@@ -268,7 +268,7 @@ function PaywallCard({ miniAnalise }: { miniAnalise: string | null }) {
         </div>
       ) : (
         <p className="text-sm text-gray-600">
-          Estou preparando sua analise agora. Atualize a pagina em alguns segundos.
+          Estou preparando sua análise agora. Atualize a página em alguns segundos.
         </p>
       )}
 
@@ -280,8 +280,8 @@ function PaywallCard({ miniAnalise }: { miniAnalise: string | null }) {
           Ver planos e continuar
         </Link>
         <p className="flex-1 text-xs text-gray-500">
-          Pra eu redigir a defesa tecnica, montar o roteiro de comite e finalizar o dossie,
-          escolha um plano. Voce mantem a conversa e tudo que ja contamos.
+          Pra eu redigir a defesa técnica, montar o roteiro de comitê e finalizar o dossiê,
+          escolha um plano. Você mantém a conversa e tudo que já contamos.
         </p>
       </div>
     </div>
@@ -310,9 +310,9 @@ function Bubble({ mensagem, streaming }: { mensagem: Mensagem; streaming?: boole
 }
 
 function mensagemPorStatus(status: number): string {
-  if (status === 401) return 'Sua sessao expirou. Faca login de novo.'
+  if (status === 401) return 'Sua sessão expirou. Faça login de novo.'
   if (status === 413) return 'Sua mensagem ficou longa demais.'
   if (status === 429) return 'Muitas mensagens em pouco tempo. Espere um minuto.'
-  if (status >= 500) return 'A IA tropecou. Tente em alguns segundos.'
-  return 'Nao deu pra processar. Tente de novo.'
+  if (status >= 500) return 'A IA tropeçou. Tente em alguns segundos.'
+  return 'Não deu pra processar. Tente de novo.'
 }

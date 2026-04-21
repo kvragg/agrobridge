@@ -14,7 +14,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { criarStreamChat, detalharErroAnthropic, type MensagemChat } from '@/lib/anthropic/chat'
-import { extrairFatosDaTroca } from '@/lib/anthropic/extrair-fatos'
+import { extrairFatosDaTroca } from '@/lib/ai/extract-facts'
 import { gerarMiniAnalise } from '@/lib/anthropic/mini-analise'
 import { rateLimit } from '@/lib/rate-limit'
 import { logAuditEvent } from '@/lib/audit'

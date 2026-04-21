@@ -91,9 +91,9 @@ export default async function AdminDashboardPage() {
   return (
     <div className="space-y-10">
       <section>
-        <h1 className="text-2xl font-black text-gray-900">Visao geral</h1>
+        <h1 className="text-2xl font-black text-gray-900">Visão geral</h1>
         <p className="mt-1 text-sm text-gray-500">
-          Metricas operacionais em tempo quase-real (cache 30s).
+          Métricas operacionais em tempo quase-real (cache 30s).
         </p>
       </section>
 
@@ -111,7 +111,7 @@ export default async function AdminDashboardPage() {
 
       <section>
         <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-400">
-          Distribuicao
+          Distribuição
         </h2>
         <BarraHorizontal tierCount={tierCount} total={totalLeads} />
       </section>
@@ -124,18 +124,18 @@ export default async function AdminDashboardPage() {
           <CardMetrica titulo="Receita 24h" valor={formatCentavos(receita.dia)} />
           <CardMetrica titulo="Receita 7d" valor={formatCentavos(receita.semana)} />
           <CardMetrica titulo="Receita 30d" valor={formatCentavos(receita.mes)} />
-          <CardMetrica titulo="Ticket medio" valor={formatCentavos(ticketMedio)} />
+          <CardMetrica titulo="Ticket médio" valor={formatCentavos(ticketMedio)} />
         </div>
       </section>
 
       <section>
         <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-400">
-          Conversao
+          Conversão
         </h2>
         <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
           <CardMetrica titulo="Total de leads" valor={totalLeads.toString()} />
           <CardMetrica titulo="Pagantes" valor={totalPagantes.toString()} />
-          <CardMetrica titulo="Taxa conversao" valor={`${conversao.toFixed(1)}%`} />
+          <CardMetrica titulo="Taxa conversão" valor={`${conversao.toFixed(1)}%`} />
         </div>
       </section>
 

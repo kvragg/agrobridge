@@ -147,7 +147,7 @@ export default async function AdminLeadDetalhePage({
       {perfil?.mini_analise_texto && (
         <section>
           <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-400">
-            Mini-analise gerada{' '}
+            Mini-análise gerada{' '}
             {perfil.mini_analise_gerada_em &&
               `em ${formatData(perfil.mini_analise_gerada_em)}`}
           </h2>
@@ -217,7 +217,7 @@ export default async function AdminLeadDetalhePage({
         </h2>
         {mensagens.length === 0 ? (
           <div className="rounded-lg border border-dashed border-gray-300 bg-white p-4 text-center text-xs text-gray-400">
-            Nenhuma mensagem trocada.
+            Nenhuma mensagem trocada ainda.
           </div>
         ) : (
           <div className="space-y-2 rounded-xl border border-gray-200 bg-white p-4">

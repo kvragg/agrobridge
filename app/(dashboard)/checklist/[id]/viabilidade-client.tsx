@@ -277,7 +277,7 @@ function UpgradeCard() {
               href="/planos"
               className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-bold text-[#0f3d2e] transition-colors hover:bg-green-50"
             >
-              Fazer upgrade — R$ 297,99
+              Ver planos e fazer upgrade
               <ArrowUpRight className="h-4 w-4" />
             </a>
             <span className="text-xs text-green-200">Pagamento único, sem fidelidade</span>

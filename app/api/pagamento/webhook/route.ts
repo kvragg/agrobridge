@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { enviarPagamentoConfirmado } from '@/lib/email/resend'
 import { logAuditEvent } from '@/lib/audit'
 import { type Tier, TIER_PRECO_CENTAVOS } from '@/lib/tier'
+import { tierParaPlano } from '@/lib/plano'
 
 export const runtime = 'nodejs'
 export const maxDuration = 30
@@ -232,11 +233,13 @@ export async function POST(request: NextRequest) {
       data.customer?.name?.trim() ||
       row.email.split('@')[0]
     try {
+      const planoLabel = tierParaPlano(tier)
       await enviarPagamentoConfirmado({
         to: row.email,
         nome,
         valor: valorCentavos / 100,
         processoId,
+        tierNome: planoLabel === 'Free' ? undefined : planoLabel,
       })
     } catch (err) {
       console.error('[pagamento/webhook] falha email', err)

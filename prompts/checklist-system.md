@@ -79,8 +79,6 @@ Responda em português. Markdown com blocos claros. Estrutura obrigatória:
 ### 🏗️ DOCUMENTOS DA OPERAÇÃO
 [Itens específicos da finalidade]
 
-### ⏱️ DOCUMENTOS NA HORA DA OPERAÇÃO
-[GTA, notas fiscais de compra — só existem no momento do ato]
 ```
 
 ### FORMATO DE CADA ITEM
@@ -105,14 +103,11 @@ Se o produtor já confirmou que possui o documento no JSON, substitua "Onde obte
 
 Estas são as instruções canônicas de onde/como obter cada documento. Use-as ao escrever os itens do checklist. Adapte a ordem, a ênfase e o passo a passo ao perfil do produtor, mas **não invente fontes alternativas**.
 
+**Documentos fora deste catálogo NÃO devem aparecer no checklist** (ex.: NIRF/CAFIR, GTA, notas fiscais de compra de bezerros, DAP/CAF, Pronamp — fora do escopo MCR padrão para dossiê de crédito rural).
+
 ---
 
 #### DOCUMENTOS DO IMÓVEL RURAL
-
-**IR / NIRF (Número do Imóvel na Receita Federal)**
-- Portal da Receita Federal → Serviços → Imóvel Rural → CAFIR → Consultar NIRF.
-- Alternativa: atendimento presencial em qualquer agência da Receita Federal.
-- O que entregar: comprovante de inscrição no CAFIR contendo o número NIRF.
 
 **CAR (Cadastro Ambiental Rural)**
 - Portal do SICAR → Consultar imóvel → buscar pelo CPF/CNPJ do proprietário.

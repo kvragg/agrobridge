@@ -1,5 +1,14 @@
-// Server-only — 2a chamada Haiku (barata, nao-stream) que extrai fatos novos
-// de uma troca recente e devolve estrutura para merge no perfil_lead.
+// Server-only — IA v2.1: extração de fatos estruturados da última troca,
+// com prompt caching (5min ephemeral) no system para baratear a 2ª
+// chamada por turno (entrevista → extração).
+//
+// Reexporta `FatosExtraidos` e `extrairFatosDaTroca` para compatibilidade
+// com o chat legado em `lib/anthropic/extrair-fatos.ts`, mas com:
+//   - system em array de blocks com cache_control: ephemeral
+//   - modelo dedicado (haiku 4.5)
+//   - tolerância a JSON em code fence
+//   - sanitização estrita de campos diretos
+
 import 'server-only'
 import Anthropic from '@anthropic-ai/sdk'
 import type { PerfilLeadCamposDiretos } from '@/types/perfil-lead'
@@ -10,48 +19,49 @@ let _client: Anthropic | null = null
 function getClient(): Anthropic {
   if (!_client) {
     const key = process.env.ANTHROPIC_API_KEY
-    if (!key) throw new Error('ANTHROPIC_API_KEY nao configurada')
+    if (!key) throw new Error('ANTHROPIC_API_KEY não configurada')
     _client = new Anthropic({ apiKey: key })
   }
   return _client
 }
 
-const SYSTEM = `Voce e um extrator de fatos estruturados. Analise a ultima troca entre o lead e a IA AgroBridge.
-Extraia APENAS fatos explicitamente confirmados (nao invente). Retorne UM UNICO JSON valido, sem explicacao, sem code fence.
+const SYSTEM_EXTRATOR = `Você é um extrator de fatos estruturados para a IA AgroBridge (consultoria em crédito rural Brasil).
 
-Formato:
+Sua única tarefa: ler a última troca entre o lead e a IA e devolver UM ÚNICO JSON válido com fatos EXPLICITAMENTE confirmados pelo lead nessa troca. Não invente. Não infira. Se não foi dito, use null.
+
+Formato EXATO (sem code fence, sem comentário, sem explicação):
 {
   "campos_diretos": {
-    "nome": "Paulo" ou null,
-    "cpf": "000.000.000-00" ou null,
-    "telefone": "(XX) 9XXXX-XXXX" ou null,
-    "estado_uf": "MT" ou null,
-    "municipio": "Sorriso" ou null,
-    "fazenda_nome": "Fazenda Boa Vista" ou null,
-    "fazenda_area_ha": 850 ou null,
-    "cultura_principal": "soja" ou null,
-    "finalidade_credito": "custeio" ou null (valores: custeio, investimento, comercializacao),
-    "valor_pretendido": 800000 ou null,
-    "banco_alvo": "Banco do Brasil" ou null,
-    "historico_credito": "resumo em 1 linha" ou null
+    "nome": string|null,
+    "cpf": string|null,
+    "telefone": string|null,
+    "estado_uf": string|null,
+    "municipio": string|null,
+    "fazenda_nome": string|null,
+    "fazenda_area_ha": number|null,
+    "cultura_principal": string|null,
+    "finalidade_credito": "custeio"|"investimento"|"comercializacao"|null,
+    "valor_pretendido": number|null,
+    "banco_alvo": string|null,
+    "historico_credito": string|null
   },
   "memoria_ia_adicionar": {
-    "chave_descritiva": "fato livre em 1 frase"
+    "<chave_snake_case>": "fato livre em 1 frase"
   }
 }
 
-Regras:
-- Se um campo nao foi mencionado na troca, use null (nunca invente).
-- memoria_ia_adicionar guarda fatos que nao cabem nos campos diretos (ex: irrigacao: "200 ha de pivo central"; experiencia_pronaf: "ja tomou 3x").
-- NAO devolva chaves extras fora do formato.`
+Regras importantes:
+- Campo não mencionado = null. Nunca chute.
+- memoria_ia_adicionar guarda fatos que não cabem nos campos diretos (ex: irrigacao: "200 ha de pivô central"; experiencia_pronaf: "já tomou 3 vezes").
+- historico_credito: resumo de 1 linha (ex: "Tomou 2 custeios no BB, último liquidado em 2024").
+- fazenda_area_ha e valor_pretendido são números puros (sem "ha", sem "R$").
+- NÃO devolva chaves fora deste formato.`
 
 export interface FatosExtraidos {
   campos_diretos: Partial<Record<keyof PerfilLeadCamposDiretos, unknown>>
   memoria_ia_adicionar: Record<string, string>
 }
 
-// Extrai fatos da ultima troca. Em caso de erro, retorna objeto vazio
-// (extracao e best-effort; nao pode quebrar a conversa principal).
 export async function extrairFatosDaTroca(params: {
   mensagemUser: string
   respostaIA: string
@@ -60,7 +70,13 @@ export async function extrairFatosDaTroca(params: {
     const res = await getClient().messages.create({
       model: MODEL,
       max_tokens: 512,
-      system: SYSTEM,
+      system: [
+        {
+          type: 'text',
+          text: SYSTEM_EXTRATOR,
+          cache_control: { type: 'ephemeral' },
+        },
+      ],
       messages: [
         {
           role: 'user',
@@ -72,7 +88,7 @@ export async function extrairFatosDaTroca(params: {
     if (!bloco || bloco.type !== 'text') return vazio()
     return parseJsonTolerante(bloco.text)
   } catch (err) {
-    console.error('[extrair-fatos] falhou (nao fatal):', err)
+    console.error('[extract-facts] falhou (não fatal):', err)
     return vazio()
   }
 }
@@ -82,11 +98,7 @@ function vazio(): FatosExtraidos {
 }
 
 function parseJsonTolerante(raw: string): FatosExtraidos {
-  // Alguns modelos envolvem o JSON em cercas ```json```. Tolera isso.
-  const limpo = raw
-    .replace(/```json\s*/gi, '')
-    .replace(/```/g, '')
-    .trim()
+  const limpo = raw.replace(/```json\s*/gi, '').replace(/```/g, '').trim()
   try {
     const parsed = JSON.parse(limpo)
     if (!parsed || typeof parsed !== 'object') return vazio()
@@ -105,7 +117,6 @@ function parseJsonTolerante(raw: string): FatosExtraidos {
   }
 }
 
-// Filtra e normaliza campos diretos. Aceita apenas null ou valor compativel.
 function sanitizarCamposDiretos(raw: Record<string, unknown>): FatosExtraidos['campos_diretos'] {
   const out: FatosExtraidos['campos_diretos'] = {}
   const stringFields: (keyof PerfilLeadCamposDiretos)[] = [

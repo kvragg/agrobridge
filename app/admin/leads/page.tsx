@@ -184,7 +184,7 @@ export default async function AdminLeadsPage({
       <section>
         <h1 className="text-2xl font-black text-gray-900">Leads</h1>
         <p className="mt-1 text-sm text-gray-500">
-          {leads.length} cadastrados · {totalFiltrados} filtrados
+          {leads.length} cadastrados · {totalFiltrados} após filtros
         </p>
       </section>
 
@@ -247,10 +247,10 @@ export default async function AdminLeadsPage({
             className="rounded-md border border-gray-300 px-3 py-2 text-sm"
           >
             <option value="">Todos</option>
-            <option value="sem_interacao">Sem interacao</option>
+            <option value="sem_interacao">Sem interação</option>
             <option value="entrevista_ativa">Entrevista em andamento</option>
-            <option value="mini_pronta">Mini-analise pronta</option>
-            <option value="dossie_gerado">Dossie gerado</option>
+            <option value="mini_pronta">Mini-análise pronta</option>
+            <option value="dossie_gerado">Dossiê gerado</option>
           </select>
         </div>
         <div className="flex gap-2">
@@ -279,8 +279,8 @@ export default async function AdminLeadsPage({
               <th className="px-3 py-2 text-left">Cultura</th>
               <th className="px-3 py-2 text-left">Plano</th>
               <th className="px-3 py-2 text-left">Status</th>
-              <th className="px-3 py-2 text-left">Cadastro</th>
-              <th className="px-3 py-2 text-left">Ultima interacao</th>
+              <th className="px-3 py-2 text-left">Cadastrado</th>
+              <th className="px-3 py-2 text-left">Última interação</th>
               <th className="px-3 py-2 text-left" />
             </tr>
           </thead>
@@ -332,7 +332,7 @@ export default async function AdminLeadsPage({
       {totalPaginas > 1 && (
         <div className="flex items-center justify-between text-xs text-gray-500">
           <span>
-            Pagina {paginaAtual} de {totalPaginas}
+            Página {paginaAtual} de {totalPaginas}
           </span>
           <div className="flex gap-2">
             {paginaAtual > 1 && (
@@ -348,7 +348,7 @@ export default async function AdminLeadsPage({
                 href={linkPagina({ ...sp, page: String(paginaAtual + 1) })}
                 className="rounded-md border border-gray-300 px-3 py-1 hover:bg-gray-100"
               >
-                Proxima →
+                Próxima →
               </Link>
             )}
           </div>
@@ -366,11 +366,11 @@ function ordemTier(t: Tier | null): number {
 }
 
 function statusLabel(l: LeadRow): string {
-  if (l.dossie_gerado) return 'Dossie pronto'
-  if (l.tier) return 'Pago · sem dossie'
-  if (l.mini_pronta) return 'Mini-analise pronta'
+  if (l.dossie_gerado) return 'Dossiê pronto'
+  if (l.tier) return 'Pago · sem dossiê'
+  if (l.mini_pronta) return 'Mini-análise pronta'
   if (l.perguntas > 0) return `Entrevista ${l.perguntas}/5`
-  return 'Sem interacao'
+  return 'Sem interação'
 }
 
 function formatData(iso: string): string {

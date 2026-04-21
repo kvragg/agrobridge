@@ -12,6 +12,11 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Playwright E2E (usa API de fixtures com nomes que colidem com
+    // regras de React Hooks) — lint roda via `playwright test` quando
+    // necessário.
+    "tests/e2e/**",
+    "playwright.config.ts",
   ]),
 ]);
 

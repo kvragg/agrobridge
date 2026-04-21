@@ -206,7 +206,7 @@ function renderUpsellFooter(doc: PDFDoc) {
 
   doc.font('Helvetica').fontSize(9.5).fillColor(INK_2)
   doc.text(
-    'O Dossiê Bancário Completo (R$ 297,99) inclui o checklist personalizado de documentos com passo a passo de obtenção, a defesa técnica de crédito redigida em linguagem de comitê e o PDF consolidado com seus documentos anexados — pronto para entregar ao gerente.',
+    'O Dossiê Bancário Completo (plano Prata) inclui o checklist personalizado de documentos com passo a passo de obtenção, a defesa técnica de crédito redigida em linguagem de comitê e o PDF consolidado com seus documentos anexados — pronto para entregar ao gerente. Confira o valor em /planos dentro da sua conta.',
     56,
     doc.y + 4,
     { width: width - 112, align: 'justify' }

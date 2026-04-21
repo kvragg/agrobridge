@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
   if (!temAcesso(tier, 'dossie')) {
     return Response.json(
       {
-        erro: 'Checklist completo faz parte do Dossiê Bancário Completo (R$ 297,99). Para destravar, faça o upgrade.',
+        erro: 'Checklist completo faz parte do Dossiê Bancário Completo (plano Prata). Para destravar, veja os planos disponíveis.',
         codigo: 'tier_insuficiente',
         tier_atual: tier ?? 'nenhum',
         tier_atual_nome: tier ? TIER_NOME[tier] : null,

@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { enviarPagamentoConfirmado } from '@/lib/email/resend'
 import { logAuditEvent } from '@/lib/audit'
 import type { Tier } from '@/lib/tier'
+import { tierParaPlano } from '@/lib/plano'
 
 export const runtime = 'nodejs'
 export const maxDuration = 30
@@ -189,11 +190,13 @@ export async function POST(request: NextRequest) {
   // Envia email de confirmação apenas na primeira vez (evita spam)
   if (row?.first_time && row.email) {
     try {
+      const planoLabel = tierParaPlano(tier)
       await enviarPagamentoConfirmado({
         to: row.email,
         nome: row.email.split('@')[0],
         valor: amountCents / 100,
         processoId,
+        tierNome: planoLabel === 'Free' ? undefined : planoLabel,
       })
     } catch (err) {
       console.error('[admin/reprocessar] falha email', err)
