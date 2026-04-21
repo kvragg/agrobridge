@@ -43,10 +43,12 @@ export function ReprocessarForm() {
         ok?: boolean
         motivo?: string
         erro?: string
+        detalhe?: string
       }
       if (!res.ok || !json.ok) {
         setEstado('erro')
-        setMensagem(json?.erro ?? json?.motivo ?? 'Falha ao reprocessar.')
+        const base = json?.erro ?? json?.motivo ?? 'Falha ao reprocessar.'
+        setMensagem(json?.detalhe ? `${base} — ${json.detalhe}` : base)
         return
       }
       setEstado('ok')

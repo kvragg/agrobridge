@@ -133,8 +133,30 @@ export async function POST(request: NextRequest) {
 
   if (error) {
     console.error('[admin/reprocessar] RPC falhou', error)
+    void logAuditEvent({
+      userId: admin.id,
+      eventType: 'pagamento_confirmado',
+      targetId: processoId,
+      request,
+      payload: {
+        source: 'admin_reprocessar',
+        para_email: email,
+        tier,
+        amount_cents: amountCents,
+        motivo_rpc: 'rpc_error',
+        erro: error.message,
+        erro_code: error.code ?? null,
+        erro_details: error.details ?? null,
+        erro_hint: error.hint ?? null,
+      },
+    })
     return NextResponse.json(
-      { erro: 'RPC falhou', detalhe: error.message },
+      {
+        erro: 'RPC falhou',
+        detalhe: error.message,
+        code: error.code ?? null,
+        hint: error.hint ?? null,
+      },
       { status: 500 }
     )
   }
