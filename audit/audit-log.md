@@ -83,3 +83,28 @@ Commit: wave 3 — LGPD Art. 18 (privacidade + exportar + excluir soft-delete)
 **Secrets:** ✅
 
 Commit: wave 4+5 — logger estruturado + upstash rate-limit adapter
+
+## [2026-04-21 03:10] Iteração 1 — Batch 5 (Wave 6)
+**Ação:** Testes unitários das superfícies críticas novas + robots.txt/sitemap.xml + varredura de auditoria UI (acessibilidade básica, idioma, metadata).
+**Arquivos:**
+- `tests/integration/safe-redirect.test.ts` (novo) — 7 casos cobrindo `sanitizarCaminhoInterno`: aceita caminhos internos (com query string), recusa URLs externas (http/https), protocolos perigosos (javascript/data), double-slash, backslash, CRLF injection, null/undefined/vazio com fallback customizado.
+- `tests/integration/logger-redact.test.ts` (novo) — 5 casos: redação automática de PII (email/senha/nome/cpf/cnpj/token/api_key); truncamento de strings >1000 chars terminando em '…'; emissão JSON uma-linha válida com ts/nivel; `capturarErroProducao` incluindo stack truncado; aceitação de erro como string.
+- `tests/integration/rate-limit-upstash.test.ts` (novo) — 4 casos: fallback in-memory sem env vars; pipeline Upstash com count ≤ max → ok + remaining correto; pipeline com count > max → 429 + retryAfterSeconds do PTTL; falha de rede → fallback com warn.
+- `app/robots.ts` (novo) — disallow crawl em `/api/`, `/dashboard`, `/entrevista`, `/checklist/`, `/planos`, `/conta`, `/auth/callback`, `/auth/confirmado`. Sitemap em `${base}/sitemap.xml`.
+- `app/sitemap.ts` (novo) — lista rotas verdadeiramente públicas (`/`, `/login`, `/cadastro`, `/resetar-senha`, `/privacidade`, `/termos`). `/planos` fica fora por ser gated (redireciona /login).
+
+**Auditoria UI (scan estático):**
+- `app/layout.tsx` já tem `<html lang="pt-BR">` ✅
+- Zero `<img>` sem `alt=` no repo ✅
+- Zero botões icon-only sem aria-label ✅
+- `next.config.ts` com CSP + HSTS + X-Frame-Options:DENY desde APEX-SEC ✅
+- Metadata global em layout ✅, rotas públicas com `export const metadata` ✅
+
+**Testes — execução:** Bloqueada por WDAC no `rolldown-binding.win32-x64-msvc.node` (issue local Windows, ambiente Paulo). Código dos tests passa typecheck, rodarão em CI ou após whitelist. Registrado em questions-for-paulo #9.
+
+**Build:** ✅ `/robots.txt` + `/sitemap.xml` aparecem como rotas estáticas
+**Typecheck:** ✅
+**Lint:** ✅ 11 warnings pré-existentes, sem regressão
+**Secrets:** ✅
+
+Commit: wave 6 — testes unitários superfícies novas + robots/sitemap + UI scan
