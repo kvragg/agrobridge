@@ -1,21 +1,29 @@
 import { test, expect } from './fixtures'
 
 // Cenário 4 — Página /planos (comercial).
-// É o ÚNICO lugar onde preços podem aparecer pra usuário logado (regra
-// B.2 da Onda 3). Valida: os 3 nomes comerciais estão presentes, os
-// preços batem com TIER_PRECO_CENTAVOS, e botões levam ao Cakto/checkout.
+// Único lugar onde preços aparecem pra usuário logado (regra B.2 da
+// Onda 3). Valida: heading comercial, 3 cards pelos nomes de produto
+// e preços batem com TIER_PRECO_CENTAVOS.
 test.describe('Planos (comercial)', () => {
-  test('usuário logado vê Bronze, Prata e Ouro com preços', async ({
+  test('usuário logado vê os 3 planos com preços', async ({
     autenticado: page,
   }) => {
     await page.goto('/planos')
     await expect(
-      page.getByRole('heading', { name: /planos|escolha seu plano/i })
+      page.getByRole('heading', { level: 1, name: /escolha|plano/i })
     ).toBeVisible()
 
-    await expect(page.getByText(/bronze/i).first()).toBeVisible()
-    await expect(page.getByText(/prata/i).first()).toBeVisible()
-    await expect(page.getByText(/ouro/i).first()).toBeVisible()
+    // Nomes batem em múltiplos lugares (h3 do card, CTA, feature list).
+    // Usamos role=heading pra escopar no título do card.
+    await expect(
+      page.getByRole('heading', { name: /^diagn[oó]stico r[aá]pido$/i })
+    ).toBeVisible()
+    await expect(
+      page.getByRole('heading', { name: /^doss[iî][eê] banc[aá]rio completo$/i })
+    ).toBeVisible()
+    await expect(
+      page.getByRole('heading', { name: /mesa de cr[eé]dito/i })
+    ).toBeVisible()
 
     const html = (await page.content()).toLowerCase()
     expect(html).toMatch(/29,99/)

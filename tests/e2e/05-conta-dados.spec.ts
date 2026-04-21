@@ -11,7 +11,7 @@ test.describe('Conta · LGPD', () => {
   }) => {
     await page.goto('/conta/dados')
     await expect(
-      page.getByRole('heading', { name: /meus dados/i })
+      page.getByRole('heading', { level: 1, name: /^meus dados$/i })
     ).toBeVisible()
 
     // Seção exportar
@@ -22,7 +22,7 @@ test.describe('Conta · LGPD', () => {
 
     // Seção excluir
     await expect(
-      page.getByRole('heading', { name: /excluir minha conta/i })
+      page.getByRole('heading', { level: 2, name: /excluir minha conta/i })
     ).toBeVisible()
 
     // Disclaimer fiscal CTN 5 anos (regra LGPD)
