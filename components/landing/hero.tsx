@@ -430,7 +430,7 @@ export function Hero() {
             <h1
               className="reveal"
               style={{
-                fontSize: "clamp(52px, 7.6vw, 104px)",
+                fontSize: "clamp(52px, 7.6vw, 128px)",
                 lineHeight: 0.93,
                 letterSpacing: "-0.048em",
                 fontWeight: 500,

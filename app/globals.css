@@ -194,6 +194,24 @@
   font-feature-settings: "tnum";
 }
 
+/* Container responsivo — cresce em monitores grandes sem esticar demais.
+   Padding lateral em clamp() (20–56px) já no inline style do <Container>. */
+.landing-root .landing-container {
+  max-width: 1280px;
+}
+@media (min-width: 1440px) {
+  .landing-root .landing-container { max-width: 1400px; }
+}
+@media (min-width: 1680px) {
+  .landing-root .landing-container { max-width: 1560px; }
+}
+@media (min-width: 1920px) {
+  .landing-root .landing-container { max-width: 1720px; }
+}
+@media (min-width: 2560px) {
+  .landing-root .landing-container { max-width: 1920px; }
+}
+
 .landing-root a {
   color: inherit;
   text-decoration: none;

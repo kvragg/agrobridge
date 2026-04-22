@@ -70,7 +70,7 @@ export function Solution() {
           <div className="reveal">
             <h2
               style={{
-                fontSize: "clamp(40px, 5.5vw, 74px)",
+                fontSize: "clamp(40px, 5.5vw, 88px)",
                 lineHeight: 0.96,
                 letterSpacing: "-0.04em",
                 fontWeight: 500,
@@ -79,7 +79,7 @@ export function Solution() {
                 color: "#fff",
               }}
             >
-              Um despachante
+              Sua mesa técnica
               <br />
               <span
                 style={{
@@ -89,7 +89,7 @@ export function Solution() {
                   backgroundClip: "text",
                 }}
               >
-                técnico digital.
+                digital de crédito.
               </span>
             </h2>
           </div>

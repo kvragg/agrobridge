@@ -11,8 +11,13 @@ type ContainerProps = {
 
 export const Container = ({ children, className = "", style }: ContainerProps) => (
   <div
-    className={className}
-    style={{ maxWidth: 1280, margin: "0 auto", padding: "0 32px", ...style }}
+    className={`landing-container ${className}`}
+    style={{
+      width: "100%",
+      marginInline: "auto",
+      paddingInline: "clamp(20px, 4vw, 56px)",
+      ...style,
+    }}
   >
     {children}
   </div>

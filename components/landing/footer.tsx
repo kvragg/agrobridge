@@ -105,8 +105,8 @@ export function Footer() {
                 marginTop: 18,
               }}
             >
-              Despachante inteligente de crédito rural. Entrevista, organização
-              e dossiê no padrão do banco.
+              Consultoria técnica em crédito rural. Entrevista, organização e
+              dossiê no padrão bancário.
             </p>
             <p
               className="mono"

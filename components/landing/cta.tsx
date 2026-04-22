@@ -111,7 +111,7 @@ export function CTA() {
               <Eyebrow>Janela da safra 25/26</Eyebrow>
               <h2
                 style={{
-                  fontSize: "clamp(44px, 6.5vw, 92px)",
+                  fontSize: "clamp(44px, 6.5vw, 112px)",
                   lineHeight: 0.96,
                   letterSpacing: "-0.048em",
                   fontWeight: 500,
