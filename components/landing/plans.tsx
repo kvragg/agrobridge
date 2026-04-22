@@ -42,7 +42,7 @@ const PLANS: Plan[] = [
     name: "Dossiê Bancário Completo",
     tagline: "O pedido pronto pra sentar na mesa do comitê.",
     desc:
-      "A entrega completa: dossiê institucional montado pela mesa técnica, no formato que o comitê espera ver.",
+      "A entrega completa: dossiê institucional montado pela consultoria sênior, no formato que o comitê espera ver.",
     features: [
       "Tudo do Diagnóstico Rápido",
       "Dossiê Bancário profissional em PDF",

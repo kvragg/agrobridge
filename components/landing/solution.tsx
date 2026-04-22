@@ -79,7 +79,7 @@ export function Solution() {
                 color: "#fff",
               }}
             >
-              Sua mesa técnica
+              Uma consultoria
               <br />
               <span
                 style={{
@@ -89,7 +89,7 @@ export function Solution() {
                   backgroundClip: "text",
                 }}
               >
-                digital de crédito.
+                sênior em crédito rural.
               </span>
             </h2>
           </div>

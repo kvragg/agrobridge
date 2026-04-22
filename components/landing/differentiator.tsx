@@ -179,7 +179,7 @@ export function Differentiator() {
                     color: "#fff",
                   }}
                 >
-                  Mesa técnica AgroBridge
+                  Consultoria sênior AgroBridge
                 </div>
                 <div
                   className="mono"
