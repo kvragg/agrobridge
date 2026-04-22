@@ -2,6 +2,53 @@
 
 import { Container, SectionLabel, GlassCard, useReveal } from "./primitives"
 
+function Credencial({ sigla, emissor }: { sigla: string; emissor: string }) {
+  return (
+    <div
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 8,
+        padding: "7px 11px",
+        background: "rgba(201,168,106,0.08)",
+        border: "1px solid rgba(201,168,106,0.25)",
+        borderRadius: 999,
+      }}
+    >
+      <span
+        style={{
+          fontSize: 12.5,
+          fontWeight: 500,
+          color: "#fff",
+          letterSpacing: "-0.005em",
+        }}
+      >
+        {sigla}
+      </span>
+      <span
+        style={{
+          width: 3,
+          height: 3,
+          borderRadius: "50%",
+          background: "var(--gold)",
+          opacity: 0.7,
+        }}
+      />
+      <span
+        className="mono"
+        style={{
+          fontSize: 10,
+          letterSpacing: "0.14em",
+          textTransform: "uppercase",
+          color: "var(--gold)",
+        }}
+      >
+        {emissor}
+      </span>
+    </div>
+  )
+}
+
 function DiffCard({
   tag,
   title,
@@ -122,10 +169,10 @@ export function Differentiator() {
                 maxWidth: 480,
               }}
             >
-              A AgroBridge foi construída por time sênior com mais de uma década
-              dentro das mesas de crédito rural dos maiores bancos do país.
-              Cada linha do MCR, cada critério de comitê, cada motivo silencioso
-              de reprovação — a gente conhece.
+              A AgroBridge é construída por quem passou 14 anos dentro do
+              Sistema Financeiro Nacional gerindo carteira Agro em banco
+              privado. Cada linha do MCR, cada critério de comitê, cada motivo
+              silencioso de reprovação — conhecido de dentro.
             </p>
             <p
               style={{
@@ -142,57 +189,102 @@ export function Differentiator() {
 
             <GlassCard
               glow="gold"
-              padding={22}
+              padding={28}
               hover={false}
-              style={{
-                marginTop: 36,
-                display: "flex",
-                gap: 16,
-                alignItems: "center",
-              }}
+              style={{ marginTop: 36 }}
             >
+              <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
+                <div
+                  style={{
+                    width: 56,
+                    height: 56,
+                    borderRadius: "50%",
+                    background:
+                      "linear-gradient(135deg, #c9a86a 0%, #8a6d2a 100%)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "#1a140a",
+                    fontFamily: "Geist",
+                    fontWeight: 600,
+                    fontSize: 20,
+                    flexShrink: 0,
+                    boxShadow: "0 0 30px rgba(201,168,106,0.3)",
+                  }}
+                >
+                  F
+                </div>
+                <div>
+                  <div
+                    style={{
+                      fontSize: 15,
+                      fontWeight: 500,
+                      color: "#fff",
+                      letterSpacing: "-0.01em",
+                    }}
+                  >
+                    Fundador AgroBridge
+                  </div>
+                  <div
+                    className="mono"
+                    style={{
+                      fontSize: 11,
+                      color: "var(--muted)",
+                      marginTop: 4,
+                      letterSpacing: "0.08em",
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    14 anos no SFN · Gestor de carteira Agro · Ex-banco privado
+                  </div>
+                </div>
+              </div>
+
               <div
                 style={{
-                  width: 56,
-                  height: 56,
-                  borderRadius: "50%",
-                  background:
-                    "linear-gradient(135deg, #c9a86a 0%, #8a6d2a 100%)",
+                  marginTop: 22,
+                  paddingTop: 22,
+                  borderTop: "1px solid var(--line)",
                   display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "#1a140a",
-                  fontFamily: "Geist",
-                  fontWeight: 600,
-                  fontSize: 20,
-                  flexShrink: 0,
-                  boxShadow: "0 0 30px rgba(201,168,106,0.3)",
+                  flexWrap: "wrap",
+                  gap: 8,
                 }}
               >
-                AB
+                <Credencial sigla="FBB-420" emissor="FEBRABAN" />
+                <Credencial sigla="CPA-20" emissor="ANBIMA" />
+                <Credencial sigla="Certificação" emissor="Rehagro" />
               </div>
-              <div>
-                <div
-                  style={{
-                    fontSize: 14.5,
-                    fontWeight: 500,
-                    color: "#fff",
-                  }}
-                >
-                  Consultoria sênior AgroBridge
-                </div>
-                <div
+
+              <div
+                style={{
+                  marginTop: 18,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                }}
+              >
+                <span
                   className="mono"
                   style={{
-                    fontSize: 11,
-                    color: "var(--muted)",
-                    marginTop: 4,
-                    letterSpacing: "0.08em",
+                    fontSize: 10,
+                    letterSpacing: "0.18em",
                     textTransform: "uppercase",
+                    color: "var(--gold)",
                   }}
                 >
-                  Analistas sênior · Crédito rural · 10+ anos
-                </div>
+                  Entrega
+                </span>
+                <span style={{ flex: 1, height: 1, background: "var(--line)" }} />
+                <span
+                  style={{
+                    fontSize: 13,
+                    fontWeight: 500,
+                    color: "#fff",
+                    letterSpacing: "-0.005em",
+                  }}
+                >
+                  100% digital
+                </span>
               </div>
             </GlassCard>
           </div>

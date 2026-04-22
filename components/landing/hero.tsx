@@ -15,14 +15,22 @@ import {
 type Msg = { role: "ai" | "me"; text: string }
 
 const MESSAGES: Msg[] = [
-  { role: "ai", text: "Olá, Carlos. Você é proprietário ou arrendatário da área?" },
-  { role: "me", text: "Arrendo 340 ha em Sorriso, MT." },
-  { role: "ai", text: "Cultura principal para a safra 25/26?" },
-  { role: "me", text: "Soja na área toda + milho segunda safra." },
   {
     role: "ai",
     text:
-      "Pelo MCR 3-2-1, custeio pode chegar a R$ 3.000/ha. Gerando checklist…",
+      "Olá, Carlos. Antes de começar — teve algum crédito recusado nos últimos 12 meses?",
+  },
+  { role: "me", text: "Sim, banco negou meu custeio em agosto." },
+  {
+    role: "ai",
+    text:
+      "Recusa por forma, não por mérito. A gente reenquadra. Quantos hectares e cultura?",
+  },
+  { role: "me", text: "Arrendo 340 ha em Sorriso, MT. Soja + milho safrinha." },
+  {
+    role: "ai",
+    text:
+      "Pelo MCR 3-2-1, você pleiteia até R$ 1,02M de custeio. Dossiê pronto em 72h.",
   },
 ]
 
@@ -454,7 +462,7 @@ export function Hero() {
                   fontWeight: 400,
                 }}
               >
-                Sem papel perdido,
+                Sem tempo perdido,
                 <br />
                 sem idas na agência.
               </span>
