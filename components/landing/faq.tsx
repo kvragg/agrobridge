@@ -1,12 +1,19 @@
 "use client"
 
 import { useState } from "react"
-import { Container, SectionLabel, Button, Icon } from "./primitives"
+import {
+  Container,
+  SectionLabel,
+  Button,
+  Icon,
+  GlassCard,
+  useReveal,
+} from "./primitives"
 
-const faqs = [
+const FAQS = [
   {
     q: "E se meu crédito for negado pelo banco?",
-    a: "Você recebe um laudo técnico com o motivo exato da negativa, o que o comitê apontou e um plano de ajuste. Em muitos casos a negativa é corrigível — documento reenviado, garantia reforçada, linha reenquadrada. O dossiê é vitalício: você reapresenta quantas vezes for necessário.",
+    a: "A gente te entrega um laudo técnico com o motivo exato da negativa, o que o banco apontou, e um plano de ajuste. Em muitos casos, a negativa é corrigível — documento reenviado, garantia reforçada, linha reenquadrada. E se o ajuste fizer sentido, você reapresenta sem pagar nada a mais.",
   },
   {
     q: "Funciona para área arrendada?",
@@ -18,7 +25,7 @@ const faqs = [
   },
   {
     q: "Quanto custa?",
-    a: "Três opções de pagamento único, sem mensalidade: Diagnóstico Rápido (R$ 29,99), Dossiê Bancário Completo (R$ 297) e Acesso à Mesa de Crédito com mentoria do fundador (R$ 699). Você cria a conta primeiro e escolhe o que faz mais sentido no seu momento.",
+    a: "O Diagnóstico (R$ 29,99) é a porta de entrada. A partir daí, Dossiê (R$ 297,99) entrega o documento institucional, e Mesa de Crédito (R$ 697,99) acompanha até a aprovação. Pagamento único em todos os planos — nenhuma mensalidade.",
   },
   {
     q: "Quais linhas de crédito vocês atendem?",
@@ -26,7 +33,7 @@ const faqs = [
   },
   {
     q: "Vocês atendem em qualquer banco?",
-    a: "Trabalhamos com os principais bancos que operam crédito rural no Brasil. A escolha do banco depende do seu perfil, da linha e da sua relação bancária existente. A gente te orienta onde tem mais chance de aprovar.",
+    a: "Trabalhamos com os principais bancos e cooperativas que operam crédito rural no Brasil. A escolha depende do seu perfil, da linha e da sua relação bancária existente. A gente te orienta onde tem mais chance de aprovar.",
   },
   {
     q: "Meus dados estão seguros?",
@@ -34,19 +41,22 @@ const faqs = [
   },
   {
     q: "Em quanto tempo meu dossiê fica pronto?",
-    a: "Entre 3 e 5 dias úteis, contados da entrega de toda a documentação. Se tiver pendência (CAR desatualizado, por exemplo), a gente te avisa antes para você agir em paralelo.",
+    a: "Entre 3 e 5 dias úteis, contados da entrega de toda a documentação. Se tiver pendência (CAR desatualizado, por exemplo), a gente te avisa antes pra você agir em paralelo.",
   },
 ]
 
 export function Faq() {
-  const [open, setOpen] = useState<number>(0)
+  useReveal()
+  const printMode =
+    typeof window !== "undefined" && window.location.search.includes("print")
+  const [open, setOpen] = useState<number>(printMode ? -2 : 0)
 
   return (
-    <section id="faq" style={{ padding: "120px 0", borderTop: "1px solid var(--line)" }}>
+    <section id="faq" style={{ padding: "140px 0", position: "relative" }}>
       <Container>
-        <SectionLabel num="06" label="Dúvidas que o produtor faz" />
+        <SectionLabel num="07" label="Dúvidas que o produtor faz" />
         <div
-          className="landing-two-col"
+          className="two-col"
           style={{
             display: "grid",
             gridTemplateColumns: "1fr 1.5fr",
@@ -54,15 +64,16 @@ export function Faq() {
             alignItems: "flex-start",
           }}
         >
-          <div>
+          <div className="reveal">
             <h2
               style={{
-                fontSize: "clamp(32px, 4.2vw, 52px)",
+                fontSize: "clamp(34px, 4.4vw, 54px)",
                 lineHeight: 1.0,
-                letterSpacing: "-0.03em",
+                letterSpacing: "-0.035em",
                 fontWeight: 500,
                 margin: 0,
                 textWrap: "balance",
+                color: "#fff",
               }}
             >
               Pergunte
@@ -71,40 +82,48 @@ export function Faq() {
             </h2>
             <p
               style={{
-                fontSize: 16,
-                lineHeight: 1.55,
+                fontSize: 15.5,
+                lineHeight: 1.6,
                 color: "var(--ink-2)",
                 marginTop: 24,
                 maxWidth: 320,
               }}
             >
-              Se sua dúvida não estiver aqui, manda direto no WhatsApp. Respondemos no mesmo dia.
+              Se sua dúvida não estiver aqui, manda direto no WhatsApp.
+              Respondemos no mesmo dia.
             </p>
-            <div style={{ marginTop: 24 }}>
-              <Button
-                variant="ghost"
-                size="md"
-                href="https://wa.me/5500000000000"
-                external
-              >
-                Falar no WhatsApp {Icon.arrow(14)}
-              </Button>
-            </div>
+            <Button
+              variant="ghostAccent"
+              size="md"
+              href="/cadastro"
+              style={{ marginTop: 24 }}
+            >
+              Começar agora {Icon.arrow(14)}
+            </Button>
           </div>
 
-          <div style={{ borderTop: "1px solid var(--line-2)" }}>
-            {faqs.map((f, i) => {
-              const isOpen = open === i
+          <GlassCard
+            glow="none"
+            padding={0}
+            hover={false}
+            className="reveal reveal-d1"
+          >
+            {FAQS.map((f, i) => {
+              const isOpen = open === -2 || open === i
               return (
                 <button
-                  key={f.q}
+                  key={i}
+                  type="button"
                   onClick={() => setOpen(isOpen ? -1 : i)}
                   style={{
                     display: "block",
                     width: "100%",
                     textAlign: "left",
-                    padding: "22px 0",
-                    borderBottom: "1px solid var(--line-2)",
+                    padding: "22px 24px",
+                    borderBottom:
+                      i < FAQS.length - 1 ? "1px solid var(--line)" : "none",
+                    background: isOpen ? "rgba(78,168,132,0.04)" : "transparent",
+                    transition: "background .25s",
                   }}
                 >
                   <div
@@ -117,27 +136,31 @@ export function Faq() {
                   >
                     <span
                       style={{
-                        fontSize: 18,
+                        fontSize: 17,
                         fontWeight: 500,
                         letterSpacing: "-0.01em",
-                        color: "var(--ink)",
+                        color: "#fff",
                       }}
                     >
                       {f.q}
                     </span>
                     <span
                       style={{
-                        width: 28,
-                        height: 28,
+                        width: 30,
+                        height: 30,
                         borderRadius: "50%",
                         border: "1px solid var(--line-2)",
+                        background: isOpen
+                          ? "rgba(78,168,132,0.15)"
+                          : "transparent",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        color: "var(--ink)",
+                        color: isOpen ? "var(--green)" : "var(--ink-2)",
                         flexShrink: 0,
                         transform: isOpen ? "rotate(45deg)" : "none",
-                        transition: "transform .25s",
+                        transition:
+                          "transform .25s, background .25s, color .25s",
                       }}
                     >
                       {Icon.plus(14)}
@@ -147,16 +170,16 @@ export function Faq() {
                     style={{
                       maxHeight: isOpen ? 600 : 0,
                       overflow: "hidden",
-                      transition: "max-height .35s ease, margin-top .25s",
+                      transition: "max-height .4s ease, margin-top .25s",
                       marginTop: isOpen ? 14 : 0,
                     }}
                   >
                     <p
                       style={{
                         margin: 0,
-                        fontSize: 15.5,
-                        lineHeight: 1.6,
-                        color: "var(--muted)",
+                        fontSize: 14.5,
+                        lineHeight: 1.65,
+                        color: "var(--ink-2)",
                         maxWidth: 640,
                       }}
                     >
@@ -166,9 +189,13 @@ export function Faq() {
                 </button>
               )
             })}
-          </div>
+          </GlassCard>
         </div>
       </Container>
+
+      <style>{`
+        @media (max-width: 960px){ .two-col{ grid-template-columns: 1fr !important; gap: 40px !important } }
+      `}</style>
     </section>
   )
 }

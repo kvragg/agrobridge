@@ -1,38 +1,46 @@
 "use client"
 
-import type { CSSProperties } from "react"
-import { Container, SectionLabel } from "./primitives"
+import { Container, SectionLabel, GlassCard, useReveal } from "./primitives"
 
-function DiffCard({ tag, title, body }: { tag: string; title: string; body: string }) {
-  const baseStyle: CSSProperties = {
-    padding: 28,
-    border: "1px solid var(--line-2)",
-    borderRadius: 14,
-    background: "var(--cream)",
-    transition: "all .25s",
-  }
+function DiffCard({
+  tag,
+  title,
+  body,
+  delay = 1,
+}: {
+  tag: string
+  title: string
+  body: string
+  delay?: number
+}) {
   return (
-    <div
-      style={baseStyle}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.borderColor = "var(--green)"
-        e.currentTarget.style.transform = "translateY(-2px)"
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.borderColor = "var(--line-2)"
-        e.currentTarget.style.transform = "none"
-      }}
+    <GlassCard
+      glow="green"
+      padding={28}
+      className={`reveal reveal-d${delay}`}
     >
       <div
         className="mono"
         style={{
           fontSize: 11,
-          letterSpacing: "0.14em",
+          letterSpacing: "0.18em",
           textTransform: "uppercase",
           color: "var(--green)",
-          marginBottom: 12,
+          marginBottom: 14,
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 8,
         }}
       >
+        <span
+          style={{
+            width: 6,
+            height: 6,
+            borderRadius: "50%",
+            background: "var(--green)",
+            boxShadow: "0 0 8px var(--green)",
+          }}
+        />
         {tag}
       </div>
       <h3
@@ -40,168 +48,170 @@ function DiffCard({ tag, title, body }: { tag: string; title: string; body: stri
           margin: 0,
           fontSize: 22,
           fontWeight: 500,
-          letterSpacing: "-0.015em",
+          letterSpacing: "-0.018em",
           lineHeight: 1.2,
+          color: "#fff",
         }}
       >
         {title}
       </h3>
-      <p style={{ margin: "12px 0 0", fontSize: 15, lineHeight: 1.55, color: "var(--muted)" }}>
+      <p
+        style={{
+          margin: "12px 0 0",
+          fontSize: 14.5,
+          lineHeight: 1.6,
+          color: "var(--muted)",
+        }}
+      >
         {body}
       </p>
-    </div>
+    </GlassCard>
   )
 }
 
 export function Differentiator() {
+  useReveal()
   return (
-    <section style={{ padding: "120px 0", borderTop: "1px solid var(--line)" }}>
-      <Container>
+    <section style={{ padding: "140px 0", position: "relative" }}>
+      <div
+        className="ambient"
+        style={{
+          position: "absolute",
+          inset: 0,
+          pointerEvents: "none",
+          zIndex: 0,
+          background:
+            "radial-gradient(50% 50% at 15% 80%, rgba(47,122,92,0.1), transparent 60%)",
+        }}
+      />
+      <Container style={{ position: "relative" }}>
         <SectionLabel num="03" label="Diferencial competitivo" />
         <div
-          className="landing-two-col"
+          className="two-col"
           style={{
             display: "grid",
             gridTemplateColumns: "1fr 1fr",
-            gap: 80,
+            gap: 72,
             alignItems: "flex-start",
           }}
         >
-          <div>
+          <div className="reveal">
             <h2
               style={{
-                fontSize: "clamp(34px, 4.4vw, 54px)",
+                fontSize: "clamp(36px, 4.6vw, 58px)",
                 lineHeight: 1.0,
-                letterSpacing: "-0.03em",
+                letterSpacing: "-0.035em",
                 fontWeight: 500,
                 margin: 0,
                 textWrap: "balance",
+                color: "#fff",
               }}
             >
-              Feito por quem
+              Construído por quem
               <br />
               <span style={{ color: "var(--muted)" }}>
-                decidiu crédito por dentro do banco.
+                decidia crédito por dentro do banco.
               </span>
             </h2>
             <p
               style={{
-                fontSize: 17,
-                lineHeight: 1.6,
+                fontSize: 16.5,
+                lineHeight: 1.65,
                 color: "var(--ink-2)",
                 marginTop: 28,
-                maxWidth: 460,
+                maxWidth: 480,
               }}
             >
-              A AgroBridge foi construída por um especialista com 14 anos no Sistema Financeiro
-              Nacional, formado dentro de um banco privado de grande porte. Começou na linha de
-              frente como caixa, escalou para carteira Agro III e chegou à gestão de agência
-              integral.
+              A AgroBridge foi construída por time sênior com mais de uma década
+              dentro das mesas de crédito rural dos maiores bancos do país.
+              Cada linha do MCR, cada critério de comitê, cada motivo silencioso
+              de reprovação — a gente conhece.
             </p>
             <p
               style={{
-                fontSize: 17,
-                lineHeight: 1.6,
+                fontSize: 16.5,
+                lineHeight: 1.65,
                 color: "var(--ink-2)",
-                marginTop: 18,
-                maxWidth: 460,
+                marginTop: 16,
+                maxWidth: 480,
               }}
             >
-              Isso não é atendimento — é tradução técnica entre a sua fazenda e o analista que
-              aprova (ou não) o seu dinheiro.
+              Não é atendimento — é tradução técnica entre a sua fazenda e o
+              comitê que aprova (ou não) o seu dinheiro.
             </p>
 
-            <div
+            <GlassCard
+              glow="gold"
+              padding={22}
+              hover={false}
               style={{
-                marginTop: 40,
-                padding: 24,
-                background: "var(--bg-2)",
-                border: "1px solid var(--line)",
-                borderRadius: 14,
+                marginTop: 36,
+                display: "flex",
+                gap: 16,
+                alignItems: "center",
               }}
             >
-              <div style={{ display: "flex", gap: 18, alignItems: "center" }}>
-                <div
-                  style={{
-                    width: 56,
-                    height: 56,
-                    borderRadius: "50%",
-                    background: "linear-gradient(135deg, #2a5a45 0%, #0f3d2e 100%)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: "#fff",
-                    fontWeight: 500,
-                    fontSize: 18,
-                    flexShrink: 0,
-                  }}
-                >
-                  F
-                </div>
-                <div>
-                  <div style={{ fontSize: 14.5, fontWeight: 500 }}>Fundador AgroBridge</div>
-                  <div
-                    className="mono"
-                    style={{
-                      fontSize: 11.5,
-                      color: "var(--muted)",
-                      marginTop: 2,
-                      letterSpacing: "0.04em",
-                    }}
-                  >
-                    [ 14 anos no SFN · gestor de carteira Agro · ex-banco privado ]
-                  </div>
-                </div>
-              </div>
               <div
                 style={{
-                  marginTop: 18,
+                  width: 56,
+                  height: 56,
+                  borderRadius: "50%",
+                  background:
+                    "linear-gradient(135deg, #c9a86a 0%, #8a6d2a 100%)",
                   display: "flex",
-                  gap: 6,
-                  flexWrap: "wrap",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "#1a140a",
+                  fontFamily: "Geist",
+                  fontWeight: 600,
+                  fontSize: 20,
+                  flexShrink: 0,
+                  boxShadow: "0 0 30px rgba(201,168,106,0.3)",
                 }}
               >
-                {[
-                  { tag: "FBB-420", src: "FEBRABAN" },
-                  { tag: "CPA-20", src: "ANBIMA" },
-                  { tag: "Rehagro", src: "Cooperativismo" },
-                ].map((c) => (
-                  <div
-                    key={c.tag}
-                    className="mono"
-                    style={{
-                      fontSize: 10.5,
-                      letterSpacing: "0.08em",
-                      textTransform: "uppercase",
-                      padding: "5px 10px",
-                      borderRadius: 999,
-                      background: "rgba(15,61,46,0.06)",
-                      border: "1px solid var(--line-2)",
-                      color: "var(--ink-2)",
-                      display: "inline-flex",
-                      gap: 6,
-                    }}
-                  >
-                    <span style={{ fontWeight: 600 }}>{c.tag}</span>
-                    <span style={{ color: "var(--muted)" }}>· {c.src}</span>
-                  </div>
-                ))}
+                AB
               </div>
-            </div>
+              <div>
+                <div
+                  style={{
+                    fontSize: 14.5,
+                    fontWeight: 500,
+                    color: "#fff",
+                  }}
+                >
+                  Mesa técnica AgroBridge
+                </div>
+                <div
+                  className="mono"
+                  style={{
+                    fontSize: 11,
+                    color: "var(--muted)",
+                    marginTop: 4,
+                    letterSpacing: "0.08em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Analistas sênior · Crédito rural · 10+ anos
+                </div>
+              </div>
+            </GlassCard>
           </div>
 
-          <div style={{ display: "grid", gap: 12 }}>
+          <div style={{ display: "grid", gap: 14 }}>
             <DiffCard
+              delay={1}
               tag="MCR dominado"
               title="Cada cultura, cada linha, cada limite."
-              body="Custeio, investimento, PRONAF, PRONAMP, FCO, BNDES, CPR, Moderfrota, Inovagro. A gente identifica qual linha serve pra você — e qual não enquadra."
+              body="Custeio, investimento, Pronamp, Pronaf, Moderfrota, Inovagro, ABC+. A gente sabe qual linha serve pra você — e qual não."
             />
             <DiffCard
+              delay={2}
               tag="Risco de reprovação"
               title="Identificado antes do banco ver."
-              body="Inconsistência em CAR, restrição no CPF, área não regularizada, faturamento inadequado pra linha — tudo apontado antes do envio."
+              body="Inconsistência em CAR, restrição no CPF, área não regularizada, faturamento inadequado — tudo apontado antes do envio."
             />
             <DiffCard
+              delay={3}
               tag="Linguagem de comitê"
               title="Seu dossiê fala a língua do analista."
               body="Não é um PDF bonito. É a informação no formato exato que o analista de crédito precisa pra defender seu pedido internamente."
@@ -209,6 +219,10 @@ export function Differentiator() {
           </div>
         </div>
       </Container>
+
+      <style>{`
+        @media (max-width: 960px){ .two-col{ grid-template-columns: 1fr !important; gap: 48px !important } }
+      `}</style>
     </section>
   )
 }

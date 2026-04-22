@@ -147,34 +147,46 @@
 }
 
 /* ==========================================================================
-   Landing page — design tokens (escopo restrito a .landing-root)
+   Landing page — dark premium tokens (escopo restrito a .landing-root)
    ========================================================================== */
 .landing-root {
-  --bg: #f7f5f0;
-  --bg-2: #efece4;
-  --ink: #0a0a0a;
-  --ink-2: #2a2a2a;
-  --muted: #6b6b64;
-  --line: #e3dfd4;
-  --line-2: #d6d1c3;
-  --green: #0f3d2e;
-  --green-2: #14513d;
-  --green-3: #1a6a4f;
-  --cream: #ffffff;
-  --gold: #c9a86a;
-  --danger: #b24a3a;
+  /* Deep graphite base — near-black com undertone frio */
+  --bg:        #070809;
+  --bg-1:      #0b0d0f;
+  --bg-2:      #111418;
+  --surface:   rgba(20, 24, 28, 0.55);
+  --surface-2: rgba(14, 17, 20, 0.72);
+
+  /* Tipografia */
+  --ink:       #f3f4f2;
+  --ink-2:     #c9ccc8;
+  --muted:     #7e8580;
+  --faint:     #4a4f4c;
+
+  /* Acentos — moss-tech green + gold */
+  --green:      #4ea884;
+  --green-2:    #2f7a5c;
+  --green-dim:  rgba(78, 168, 132, 0.22);
+  --green-glow: rgba(78, 168, 132, 0.35);
+  --gold:       #c9a86a;
+  --gold-dim:   rgba(201, 168, 106, 0.22);
+
+  /* Hairlines */
+  --line:       rgba(255, 255, 255, 0.06);
+  --line-2:     rgba(255, 255, 255, 0.10);
+  --line-green: rgba(78, 168, 132, 0.18);
+  --line-gold:  rgba(201, 168, 106, 0.18);
+
+  --danger: #d47158;
 
   background: var(--bg);
-  color: var(--ink-2);
+  color: var(--ink);
   font-family: var(--font-sans), "Geist", system-ui, sans-serif;
   font-feature-settings: "ss01", "cv11";
   letter-spacing: -0.005em;
-}
-
-.landing-root h1,
-.landing-root h2,
-.landing-root h3 {
-  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  position: relative;
 }
 
 .landing-root .mono {
@@ -199,15 +211,71 @@
   accent-color: var(--green);
 }
 
+.landing-root ::selection {
+  background: var(--green-dim);
+  color: #fff;
+}
+
+/* Reveal-on-scroll — animation com forwards pra re-renders não reiniciarem */
+.landing-root .reveal {
+  opacity: 0;
+  transform: translateY(24px);
+}
+@keyframes landing-revealIn {
+  to { opacity: 1; transform: none; }
+}
+.landing-root .reveal.in {
+  animation: landing-revealIn 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
+}
+.landing-root .reveal-d1.in { animation-delay: 0.06s; }
+.landing-root .reveal-d2.in { animation-delay: 0.14s; }
+.landing-root .reveal-d3.in { animation-delay: 0.22s; }
+.landing-root .reveal-d4.in { animation-delay: 0.30s; }
+@media (prefers-reduced-motion: reduce) {
+  .landing-root .reveal,
+  .landing-root .reveal.in {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+}
+
+/* Ambient noise starfield atrás das seções */
+.landing-root::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background-image:
+    radial-gradient(1px 1px at 30% 20%, rgba(255, 255, 255, 0.04), transparent 50%),
+    radial-gradient(1px 1px at 70% 80%, rgba(255, 255, 255, 0.03), transparent 50%),
+    radial-gradient(1px 1px at 15% 75%, rgba(255, 255, 255, 0.035), transparent 50%);
+  background-size: 700px 700px, 900px 900px, 600px 600px;
+  mix-blend-mode: screen;
+  opacity: 0.6;
+}
+
+/* Scrollbar customizada quando dentro do escopo da landing */
+.landing-root::-webkit-scrollbar { width: 10px; height: 10px; }
+.landing-root::-webkit-scrollbar-track { background: #0a0c0e; }
+.landing-root::-webkit-scrollbar-thumb { background: #1a1f23; border-radius: 10px; }
+.landing-root::-webkit-scrollbar-thumb:hover { background: #232a2f; }
+
+/* Animations reaproveitadas pelos componentes (mock entrevista, typing, fade) */
 @keyframes landing-pulse {
   0%, 100% { transform: scale(1); opacity: 1; }
   50% { transform: scale(1.3); opacity: 0.7; }
 }
 @keyframes landing-fadeUp {
   from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: none; }
+  to   { opacity: 1; transform: none; }
 }
 @keyframes landing-blink {
   0%, 80%, 100% { opacity: 0.3; }
   40% { opacity: 1; }
+}
+@keyframes landing-heroPan {
+  0%   { transform: translate3d(0, 0, 0) scale(1); }
+  100% { transform: translate3d(-3%, -2%, 0) scale(1.08); }
 }

@@ -1,9 +1,21 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Container, SectionLabel, Icon } from "./primitives"
+import {
+  Container,
+  SectionLabel,
+  Icon,
+  GlassCard,
+  useReveal,
+} from "./primitives"
 
-const steps = [
+type Phase = {
+  phase: string
+  duration: string
+  items: string[]
+}
+
+const STEPS: Phase[] = [
   {
     phase: "Entrevista",
     duration: "10 min",
@@ -48,53 +60,87 @@ const steps = [
 ]
 
 export function HowItWorks() {
+  useReveal()
   const [active, setActive] = useState(0)
   const [checked, setChecked] = useState<Record<string, boolean>>({})
+  const printMode =
+    typeof window !== "undefined" && window.location.search.includes("print")
 
   useEffect(() => {
+    if (printMode) {
+      queueMicrotask(() => {
+        const all: Record<string, boolean> = {}
+        STEPS.forEach((s, pi) =>
+          s.items.forEach((_, ii) => {
+            all[`${pi}-${ii}`] = true
+          }),
+        )
+        setChecked(all)
+        setActive(STEPS.length - 1)
+      })
+      return
+    }
     let phase = 0
     let item = 0
     let timer: ReturnType<typeof setTimeout>
+    const schedule = (ms: number, fn: () => void) => {
+      timer = setTimeout(fn, ms)
+    }
     const tick = () => {
       setChecked((prev) => ({ ...prev, [`${phase}-${item}`]: true }))
       item += 1
-      if (item >= steps[phase].items.length) {
+      if (item >= STEPS[phase].items.length) {
         item = 0
         phase += 1
-        if (phase >= steps.length) {
-          timer = setTimeout(() => {
+        if (phase >= STEPS.length) {
+          schedule(2000, () => {
             phase = 0
             item = 0
             setChecked({})
             setActive(0)
-            timer = setTimeout(tick, 600)
-          }, 2000)
+            schedule(600, tick)
+          })
           return
         }
         setActive(phase)
       }
-      timer = setTimeout(tick, 700)
+      schedule(700, tick)
     }
-    timer = setTimeout(tick, 500)
+    schedule(500, tick)
     return () => clearTimeout(timer)
-  }, [])
+  }, [printMode])
 
-  const totalItems = steps.reduce((a, s) => a + s.items.length, 0)
-  const doneCount = Object.values(checked).filter(Boolean).length
+  const totalItems = STEPS.reduce((a, s) => a + s.items.length, 0)
+  const doneCount = Object.keys(checked).filter((k) => checked[k]).length
 
   return (
-    <section id="fluxo" style={{ padding: "120px 0", borderTop: "1px solid var(--line)" }}>
-      <Container>
+    <section
+      id="fluxo"
+      style={{ padding: "140px 0", position: "relative" }}
+    >
+      <div
+        className="ambient"
+        style={{
+          position: "absolute",
+          inset: 0,
+          pointerEvents: "none",
+          zIndex: 0,
+          background:
+            "radial-gradient(60% 50% at 70% 40%, rgba(78,168,132,0.1), transparent 60%)",
+        }}
+      />
+      <Container style={{ position: "relative" }}>
         <SectionLabel num="04" label="Como funciona" />
-        <div style={{ maxWidth: 720, marginBottom: 64 }}>
+        <div className="reveal" style={{ maxWidth: 760, marginBottom: 56 }}>
           <h2
             style={{
-              fontSize: "clamp(34px, 4.6vw, 56px)",
+              fontSize: "clamp(36px, 4.8vw, 60px)",
               lineHeight: 1.0,
-              letterSpacing: "-0.03em",
+              letterSpacing: "-0.035em",
               fontWeight: 500,
               margin: 0,
               textWrap: "balance",
+              color: "#fff",
             }}
           >
             Seu dossiê sendo montado,
@@ -104,84 +150,112 @@ export function HowItWorks() {
         </div>
 
         <div
-          className="landing-how-grid"
+          className="how-grid"
           style={{
             display: "grid",
             gridTemplateColumns: "1fr 1.15fr",
-            gap: 48,
+            gap: 24,
             alignItems: "flex-start",
           }}
         >
-          <div style={{ display: "grid", gap: 0 }}>
-            {steps.map((s, i) => {
+          <GlassCard
+            glow="none"
+            padding={0}
+            hover={false}
+            className="reveal"
+          >
+            {STEPS.map((s, i) => {
               const isActive = i === active
               const isDone = i < active
               return (
                 <div
-                  key={s.phase}
+                  key={i}
                   style={{
                     display: "grid",
-                    gridTemplateColumns: "40px 1fr auto",
-                    padding: "22px 0",
+                    gridTemplateColumns: "52px 1fr auto",
+                    padding: "22px 24px",
                     gap: 16,
-                    alignItems: "flex-start",
-                    borderTop: "1px solid var(--line-2)",
-                    borderBottom: i === steps.length - 1 ? "1px solid var(--line-2)" : "none",
-                    opacity: isActive || isDone ? 1 : 0.5,
-                    transition: "opacity .3s",
+                    alignItems: "center",
+                    borderBottom:
+                      i < STEPS.length - 1 ? "1px solid var(--line)" : "none",
+                    opacity: isActive || isDone ? 1 : 0.55,
+                    transition: "opacity .3s, background .3s",
+                    background: isActive
+                      ? "rgba(78,168,132,0.05)"
+                      : "transparent",
                   }}
                 >
                   <div
-                    className="mono"
                     style={{
-                      width: 28,
-                      height: 28,
+                      width: 32,
+                      height: 32,
                       borderRadius: "50%",
-                      background: isDone ? "var(--green)" : isActive ? "var(--ink)" : "transparent",
-                      border: isDone || isActive ? "none" : "1px solid var(--line-2)",
-                      color: "#fff",
+                      background: isDone
+                        ? "linear-gradient(180deg,#5cbd95,#2f7a5c)"
+                        : isActive
+                        ? "rgba(255,255,255,0.08)"
+                        : "transparent",
+                      border: isDone ? "none" : "1px solid var(--line-2)",
+                      color: isDone ? "#07120d" : "var(--ink)",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
+                      fontFamily: "Geist Mono",
                       fontSize: 11,
-                      marginTop: 2,
+                      boxShadow: isDone
+                        ? "0 0 18px rgba(78,168,132,0.4)"
+                        : "none",
                     }}
                   >
                     {isDone ? Icon.check(14) : (i + 1).toString().padStart(2, "0")}
                   </div>
                   <div>
-                    <div style={{ fontSize: 19, fontWeight: 500, letterSpacing: "-0.01em" }}>
+                    <div
+                      style={{
+                        fontSize: 18,
+                        fontWeight: 500,
+                        letterSpacing: "-0.01em",
+                        color: "#fff",
+                      }}
+                    >
                       {s.phase}
                     </div>
-                    <div style={{ fontSize: 14, color: "var(--muted)", marginTop: 4 }}>
+                    <div
+                      style={{
+                        fontSize: 13.5,
+                        color: "var(--muted)",
+                        marginTop: 3,
+                      }}
+                    >
                       {s.items.length} itens · {s.duration}
                     </div>
                   </div>
                   <div
                     className="mono"
                     style={{
-                      fontSize: 11,
-                      color: "var(--muted)",
-                      letterSpacing: "0.08em",
-                      marginTop: 6,
+                      fontSize: 10.5,
+                      color: isActive ? "var(--green)" : "var(--muted)",
+                      letterSpacing: "0.14em",
+                      textTransform: "uppercase",
                     }}
                   >
-                    {isActive ? "em curso" : isDone ? "concluído" : "aguardando"}
+                    {isActive
+                      ? "em curso"
+                      : isDone
+                      ? "concluído"
+                      : "aguardando"}
                   </div>
                 </div>
               )
             })}
-          </div>
+          </GlassCard>
 
-          <div
-            style={{
-              background: "#fff",
-              border: "1px solid var(--line)",
-              borderRadius: 16,
-              overflow: "hidden",
-              boxShadow:
-                "0 1px 0 rgba(15,61,46,0.04), 0 30px 60px -30px rgba(15,61,46,0.18)",
-            }}
+          <GlassCard
+            glow="green"
+            padding={0}
+            hover={false}
+            className="reveal reveal-d1"
+            style={{ overflow: "hidden" }}
           >
             <div
               style={{
@@ -190,57 +264,77 @@ export function HowItWorks() {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
-                background: "#fbfaf6",
+                background: "rgba(0,0,0,0.2)",
               }}
             >
               <div
                 className="mono"
                 style={{
                   fontSize: 11,
-                  letterSpacing: "0.14em",
+                  letterSpacing: "0.18em",
                   textTransform: "uppercase",
                   color: "var(--muted)",
                 }}
               >
                 Dossiê em construção
               </div>
-              <div className="mono" style={{ fontSize: 12, color: "var(--ink)" }}>
+              <div
+                className="mono"
+                style={{ fontSize: 12, color: "var(--ink)" }}
+              >
                 {doneCount}/{totalItems}
               </div>
             </div>
 
-            <div style={{ padding: 22, display: "grid", gap: 22 }}>
-              {steps.map((s, pi) => (
-                <div key={s.phase}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+            <div style={{ padding: 22, display: "grid", gap: 20 }}>
+              {STEPS.map((s, pi) => (
+                <div key={pi}>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 10,
+                      marginBottom: 10,
+                    }}
+                  >
                     <div
                       className="mono"
                       style={{
                         fontSize: 10.5,
-                        letterSpacing: "0.14em",
+                        letterSpacing: "0.18em",
                         color: "var(--gold)",
                         textTransform: "uppercase",
                       }}
                     >
                       {s.phase}
                     </div>
-                    <div style={{ flex: 1, height: 1, background: "var(--line)" }} />
+                    <div
+                      style={{
+                        flex: 1,
+                        height: 1,
+                        background: "var(--line)",
+                      }}
+                    />
                   </div>
                   <div style={{ display: "grid", gap: 6 }}>
                     {s.items.map((it, ii) => {
                       const isChecked = !!checked[`${pi}-${ii}`]
                       return (
                         <div
-                          key={it}
+                          key={ii}
                           style={{
                             display: "flex",
                             alignItems: "center",
                             gap: 12,
                             padding: "9px 12px",
-                            background: isChecked ? "rgba(15,61,46,0.04)" : "transparent",
-                            border: `1px solid ${
-                              isChecked ? "rgba(15,61,46,0.12)" : "var(--line)"
-                            }`,
+                            background: isChecked
+                              ? "rgba(78,168,132,0.08)"
+                              : "rgba(255,255,255,0.02)",
+                            border:
+                              "1px solid " +
+                              (isChecked
+                                ? "rgba(78,168,132,0.22)"
+                                : "var(--line)"),
                             borderRadius: 8,
                             transition: "all .3s",
                           }}
@@ -250,14 +344,16 @@ export function HowItWorks() {
                               width: 18,
                               height: 18,
                               borderRadius: 5,
-                              background: isChecked ? "var(--green)" : "transparent",
-                              border: `1px solid ${
-                                isChecked ? "var(--green)" : "var(--line-2)"
-                              }`,
+                              background: isChecked
+                                ? "linear-gradient(180deg,#5cbd95,#2f7a5c)"
+                                : "transparent",
+                              border:
+                                "1px solid " +
+                                (isChecked ? "transparent" : "var(--line-2)"),
                               display: "flex",
                               alignItems: "center",
                               justifyContent: "center",
-                              color: "#fff",
+                              color: "#07120d",
                               flexShrink: 0,
                               transition: "all .3s",
                             }}
@@ -266,7 +362,7 @@ export function HowItWorks() {
                           </div>
                           <div
                             style={{
-                              fontSize: 14,
+                              fontSize: 13.5,
                               color: isChecked ? "var(--ink)" : "var(--muted)",
                               flex: 1,
                               transition: "color .3s",
@@ -278,8 +374,8 @@ export function HowItWorks() {
                             className="mono"
                             style={{
                               fontSize: 10.5,
-                              color: "var(--muted)",
-                              letterSpacing: "0.08em",
+                              color: isChecked ? "var(--green)" : "var(--faint)",
+                              letterSpacing: "0.1em",
                             }}
                           >
                             {isChecked ? "OK" : "—"}
@@ -296,23 +392,33 @@ export function HowItWorks() {
               style={{
                 padding: "14px 22px",
                 borderTop: "1px solid var(--line)",
-                background: "#fbfaf6",
+                background: "rgba(0,0,0,0.2)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
               }}
             >
-              <div className="mono" style={{ fontSize: 11, color: "var(--muted)" }}>
+              <div
+                className="mono"
+                style={{
+                  fontSize: 10.5,
+                  color: "var(--muted)",
+                  letterSpacing: "0.1em",
+                }}
+              >
                 AgroBridge · documento 01 de 01
               </div>
               <div
-                className="mono"
                 style={{
                   fontSize: 12,
                   display: "flex",
                   alignItems: "center",
                   gap: 6,
-                  color: doneCount === totalItems ? "var(--green)" : "var(--muted)",
+                  color:
+                    doneCount === totalItems
+                      ? "var(--green)"
+                      : "var(--muted)",
+                  fontFamily: "Geist Mono",
                 }}
               >
                 {doneCount === totalItems ? (
@@ -320,16 +426,16 @@ export function HowItWorks() {
                     {Icon.check(12)} pronto para o banco
                   </>
                 ) : (
-                  "gerando…"
+                  <>gerando…</>
                 )}
               </div>
             </div>
-          </div>
+          </GlassCard>
         </div>
       </Container>
 
       <style>{`
-        @media (max-width: 960px){ .landing-how-grid{ grid-template-columns: 1fr !important } }
+        @media (max-width: 1020px){ .how-grid{ grid-template-columns: 1fr !important } }
       `}</style>
     </section>
   )
