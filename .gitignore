@@ -44,3 +44,11 @@ next-env.d.ts
 
 # auditoria noturna — rascunhos não versionados
 audit/scratch/
+
+# Playwright — artefatos locais + auth state com credencial do E2E
+/playwright-report/
+/test-results/
+/tests/e2e/.auth/
+
+# Claude Code — estado local do agente (não versionar)
+.claude/scheduled_tasks.lock

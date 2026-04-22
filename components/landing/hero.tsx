@@ -1,17 +1,207 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Container, Eyebrow, Button, Icon, Logo } from "./primitives"
+import {
+  Container,
+  Eyebrow,
+  Button,
+  Icon,
+  Logo,
+  GlassCard,
+  GridLayer,
+  useReveal,
+} from "./primitives"
 
 type Msg = { role: "ai" | "me"; text: string }
 
-const messages: Msg[] = [
-  { role: "ai", text: "Olá, Carlos. Você é proprietário ou arrendatário da área?" },
-  { role: "me", text: "Arrendo 340 ha em Sorriso, MT." },
-  { role: "ai", text: "Cultura principal para a safra 25/26?" },
-  { role: "me", text: "Soja na área toda + milho segunda safra." },
-  { role: "ai", text: "Pelo MCR 3-2-1, custeio pode chegar a R$ 3.000/ha. Gerando seu checklist…" },
+const MESSAGES: Msg[] = [
+  {
+    role: "ai",
+    text:
+      "Olá, Carlos. Antes de começar — teve algum crédito recusado nos últimos 12 meses?",
+  },
+  { role: "me", text: "Sim, banco negou meu custeio em agosto." },
+  {
+    role: "ai",
+    text:
+      "Recusa por forma, não por mérito. A gente reenquadra. Quantos hectares e cultura?",
+  },
+  { role: "me", text: "Arrendo 340 ha em Sorriso, MT. Soja + milho safrinha." },
+  {
+    role: "ai",
+    text:
+      "Pelo MCR 3-2-1, você pleiteia até R$ 1,02M de custeio. Dossiê pronto em 72h.",
+  },
 ]
+
+function InterviewMock() {
+  const [visible, setVisible] = useState(1)
+  const [typing, setTyping] = useState(false)
+
+  useEffect(() => {
+    let i = 1
+    const tick = () => {
+      if (i >= MESSAGES.length) {
+        i = 1
+        setVisible(1)
+        return
+      }
+      setTyping(true)
+      setTimeout(() => {
+        setTyping(false)
+        i += 1
+        setVisible(i)
+      }, 850)
+    }
+    const iv = setInterval(tick, 2300)
+    return () => clearInterval(iv)
+  }, [])
+
+  return (
+    <GlassCard hover={false} padding={0} glow="green" style={{ overflow: "hidden" }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "12px 18px",
+          borderBottom: "1px solid var(--line)",
+          background:
+            "linear-gradient(180deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0) 100%)",
+        }}
+      >
+        <div style={{ display: "flex", gap: 5 }}>
+          {["#e85d4a", "#e7b844", "#5cbd95"].map((c, i) => (
+            <div
+              key={i}
+              style={{
+                width: 9,
+                height: 9,
+                borderRadius: "50%",
+                background: c,
+                opacity: 0.85,
+              }}
+            />
+          ))}
+        </div>
+        <div
+          className="mono"
+          style={{
+            fontSize: 10.5,
+            letterSpacing: "0.12em",
+            color: "var(--muted)",
+            textTransform: "uppercase",
+          }}
+        >
+          agrobridge.app · entrevista
+        </div>
+        <div
+          className="mono"
+          style={{
+            fontSize: 10.5,
+            color: "var(--green)",
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+          }}
+        >
+          <span
+            style={{
+              width: 6,
+              height: 6,
+              borderRadius: "50%",
+              background: "var(--green)",
+              boxShadow:
+                "0 0 8px var(--green), 0 0 0 3px rgba(78,168,132,0.18)",
+              animation: "landing-pulse 1.8s infinite",
+            }}
+          />
+          ao vivo
+        </div>
+      </div>
+
+      <div
+        style={{
+          padding: "22px 22px 10px",
+          display: "flex",
+          flexDirection: "column",
+          gap: 10,
+          minHeight: 340,
+        }}
+      >
+        {MESSAGES.slice(0, visible).map((m, i) => (
+          <Bubble key={i} msg={m} fresh={i === visible - 1} />
+        ))}
+        {typing && <Typing />}
+      </div>
+
+      <div
+        style={{
+          borderTop: "1px solid var(--line)",
+          background: "rgba(0,0,0,0.25)",
+          padding: "14px 18px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div
+            style={{
+              width: 30,
+              height: 30,
+              borderRadius: 9,
+              background: "linear-gradient(180deg,#5cbd95,#2f7a5c)",
+              color: "#07120d",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              boxShadow: "0 0 18px rgba(78,168,132,0.4)",
+            }}
+          >
+            {Icon.doc(14)}
+          </div>
+          <div>
+            <div
+              style={{
+                fontSize: 12.5,
+                fontWeight: 500,
+                letterSpacing: "-0.005em",
+                color: "var(--ink)",
+              }}
+            >
+              Dossiê Carlos · Soja 25/26
+            </div>
+            <div
+              className="mono"
+              style={{ fontSize: 10.5, color: "var(--muted)", marginTop: 1 }}
+            >
+              {Math.min(visible * 3, 12)}/12 · montando
+            </div>
+          </div>
+        </div>
+        <div
+          style={{
+            width: 110,
+            height: 3,
+            background: "rgba(255,255,255,0.08)",
+            borderRadius: 4,
+            overflow: "hidden",
+          }}
+        >
+          <div
+            style={{
+              width: `${Math.min((visible / MESSAGES.length) * 100, 100)}%`,
+              height: "100%",
+              background: "linear-gradient(90deg,#5cbd95,#c9a86a)",
+              transition: "width .6s ease",
+            }}
+          />
+        </div>
+      </div>
+    </GlassCard>
+  )
+}
 
 function Bubble({ msg, fresh }: { msg: Msg; fresh: boolean }) {
   const isAi = msg.role === "ai"
@@ -29,27 +219,28 @@ function Bubble({ msg, fresh }: { msg: Msg; fresh: boolean }) {
           style={{
             width: 24,
             height: 24,
-            borderRadius: 6,
-            background: "var(--green)",
+            borderRadius: 7,
+            background: "linear-gradient(180deg,#5cbd95,#2f7a5c)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             flexShrink: 0,
           }}
         >
-          <Logo size={13} color="#fff" />
+          <Logo size={13} color="#07120d" accent="#07120d" />
         </div>
       )}
       <div
         style={{
           maxWidth: "78%",
           padding: "9px 13px",
-          borderRadius: isAi ? "4px 13px 13px 13px" : "13px 4px 13px 13px",
-          background: isAi ? "var(--bg-2)" : "var(--green)",
-          color: isAi ? "var(--ink)" : "#fff",
+          borderRadius: isAi ? "6px 14px 14px 14px" : "14px 6px 14px 14px",
+          background: isAi ? "rgba(255,255,255,0.04)" : "rgba(78,168,132,0.14)",
+          color: isAi ? "var(--ink)" : "#eaf7f0",
           fontSize: 13.5,
           lineHeight: 1.5,
-          border: isAi ? "1px solid var(--line)" : "none",
+          border:
+            "1px solid " + (isAi ? "var(--line)" : "rgba(78,168,132,0.3)"),
           letterSpacing: "-0.003em",
         }}
       >
@@ -66,21 +257,21 @@ function Typing() {
         style={{
           width: 24,
           height: 24,
-          borderRadius: 6,
-          background: "var(--green)",
+          borderRadius: 7,
+          background: "linear-gradient(180deg,#5cbd95,#2f7a5c)",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
         }}
       >
-        <Logo size={13} color="#fff" />
+        <Logo size={13} color="#07120d" accent="#07120d" />
       </div>
       <div
         style={{
-          background: "var(--bg-2)",
+          background: "rgba(255,255,255,0.04)",
           border: "1px solid var(--line)",
           padding: "9px 13px",
-          borderRadius: "4px 13px 13px 13px",
+          borderRadius: "6px 14px 14px 14px",
           display: "flex",
           gap: 4,
         }}
@@ -102,165 +293,6 @@ function Typing() {
   )
 }
 
-function InterviewMock() {
-  const [visible, setVisible] = useState(1)
-  const [typing, setTyping] = useState(false)
-
-  useEffect(() => {
-    let i = 1
-    const iv = setInterval(() => {
-      if (i >= messages.length) {
-        i = 1
-        setVisible(1)
-        return
-      }
-      setTyping(true)
-      setTimeout(() => {
-        setTyping(false)
-        i += 1
-        setVisible(i)
-      }, 850)
-    }, 2300)
-    return () => clearInterval(iv)
-  }, [])
-
-  return (
-    <div
-      style={{
-        position: "relative",
-        background: "#fff",
-        border: "1px solid var(--line)",
-        borderRadius: 16,
-        boxShadow:
-          "0 1px 0 rgba(15,61,46,0.04),0 2px 4px rgba(10,10,10,0.02),0 12px 28px -12px rgba(15,61,46,0.12),0 40px 80px -40px rgba(15,61,46,0.25)",
-        overflow: "hidden",
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          padding: "12px 16px",
-          borderBottom: "1px solid var(--line)",
-          background: "linear-gradient(180deg, #fcfbf7 0%, #fbfaf6 100%)",
-        }}
-      >
-        <div style={{ display: "flex", gap: 5 }}>
-          {["#e85d4a", "#e7b844", "#2ea043"].map((c, i) => (
-            <div
-              key={i}
-              style={{ width: 9, height: 9, borderRadius: "50%", background: c, opacity: 0.85 }}
-            />
-          ))}
-        </div>
-        <div
-          className="mono"
-          style={{
-            fontSize: 10.5,
-            letterSpacing: "0.1em",
-            color: "var(--muted)",
-            textTransform: "uppercase",
-          }}
-        >
-          agrobridge.app · entrevista
-        </div>
-        <div
-          className="mono"
-          style={{
-            fontSize: 10.5,
-            color: "var(--green-3)",
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-          }}
-        >
-          <span
-            style={{
-              width: 6,
-              height: 6,
-              borderRadius: "50%",
-              background: "var(--green-3)",
-              boxShadow: "0 0 0 3px rgba(26,106,79,0.15)",
-              animation: "landing-pulse 1.8s infinite",
-            }}
-          />
-          ao vivo
-        </div>
-      </div>
-
-      <div
-        style={{
-          padding: "22px 22px 10px",
-          display: "flex",
-          flexDirection: "column",
-          gap: 10,
-          minHeight: 360,
-        }}
-      >
-        {messages.slice(0, visible).map((m, i) => (
-          <Bubble key={i} msg={m} fresh={i === visible - 1} />
-        ))}
-        {typing && <Typing />}
-      </div>
-
-      <div
-        style={{
-          borderTop: "1px solid var(--line)",
-          background: "#fbfaf6",
-          padding: "14px 16px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div
-            style={{
-              width: 28,
-              height: 28,
-              borderRadius: 8,
-              background: "var(--green)",
-              color: "#fff",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            {Icon.doc(14)}
-          </div>
-          <div>
-            <div style={{ fontSize: 12.5, fontWeight: 500, letterSpacing: "-0.005em" }}>
-              Dossiê Carlos · Soja 25/26
-            </div>
-            <div className="mono" style={{ fontSize: 10.5, color: "var(--muted)", marginTop: 1 }}>
-              {Math.min(visible * 3, 12)}/12 · montando
-            </div>
-          </div>
-        </div>
-        <div
-          style={{
-            width: 100,
-            height: 3,
-            background: "var(--bg-2)",
-            borderRadius: 4,
-            overflow: "hidden",
-          }}
-        >
-          <div
-            style={{
-              width: `${Math.min((visible / messages.length) * 100, 100)}%`,
-              height: "100%",
-              background: "var(--green)",
-              transition: "width .6s ease",
-            }}
-          />
-        </div>
-      </div>
-    </div>
-  )
-}
-
 function TrustStat({ k, v }: { k: string; v: string }) {
   return (
     <div>
@@ -268,10 +300,10 @@ function TrustStat({ k, v }: { k: string; v: string }) {
         className="mono"
         style={{
           fontSize: 10,
-          letterSpacing: "0.14em",
+          letterSpacing: "0.18em",
           textTransform: "uppercase",
           color: "var(--muted)",
-          marginBottom: 6,
+          marginBottom: 8,
         }}
       >
         {k}
@@ -291,91 +323,155 @@ function TrustStat({ k, v }: { k: string; v: string }) {
 }
 
 export function Hero() {
+  useReveal()
   return (
-    <section id="top" style={{ position: "relative", paddingTop: 56, paddingBottom: 140 }}>
+    <section
+      style={{
+        position: "relative",
+        minHeight: "100vh",
+        paddingTop: 120,
+        paddingBottom: 80,
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        overflow: "hidden",
+      }}
+    >
+      <div
+        className="hero-fallback"
+        style={{ position: "absolute", inset: 0, zIndex: 0, overflow: "hidden" }}
+      >
+        <div
+          style={{
+            position: "absolute",
+            inset: "-10%",
+            background:
+              "radial-gradient(42% 55% at 20% 35%, rgba(78,168,132,0.22), transparent 60%)," +
+              "radial-gradient(38% 50% at 85% 20%, rgba(201,168,106,0.14), transparent 60%)," +
+              "radial-gradient(55% 60% at 60% 90%, rgba(47,122,92,0.25), transparent 60%)," +
+              "linear-gradient(180deg, #0a1512 0%, #070809 50%, #0a0e0c 100%)",
+            animation: "landing-heroPan 24s ease-in-out infinite alternate",
+          }}
+        />
+        <svg
+          style={{
+            position: "absolute",
+            inset: 0,
+            width: "100%",
+            height: "100%",
+            opacity: 0.15,
+          }}
+          preserveAspectRatio="none"
+          viewBox="0 0 1200 800"
+        >
+          {Array.from({ length: 26 }).map((_, i) => (
+            <path
+              key={i}
+              d={`M 0 ${520 + i * 22} Q 600 ${490 + i * 22 - i * 2} 1200 ${
+                520 + i * 22 + i * 1.2
+              }`}
+              stroke={i < 10 ? "rgba(201,168,106,0.5)" : "rgba(78,168,132,0.5)"}
+              strokeWidth={0.6}
+              fill="none"
+            />
+          ))}
+        </svg>
+      </div>
+
       <div
         style={{
           position: "absolute",
           inset: 0,
-          zIndex: 0,
+          zIndex: 1,
           pointerEvents: "none",
           background:
-            "radial-gradient(55% 70% at 88% 12%, rgba(15,61,46,0.07), transparent 60%),radial-gradient(40% 50% at 8% 0%, rgba(201,168,106,0.10), transparent 70%)",
+            "linear-gradient(180deg, rgba(7,8,9,0.45) 0%, rgba(7,8,9,0.7) 50%, rgba(7,8,9,0.95) 100%)",
         }}
       />
       <div
         style={{
           position: "absolute",
           inset: 0,
-          zIndex: 0,
+          zIndex: 1,
           pointerEvents: "none",
-          opacity: 0.35,
-          backgroundImage:
-            "linear-gradient(rgba(15,61,46,0.04) 1px, transparent 1px),linear-gradient(90deg, rgba(15,61,46,0.04) 1px, transparent 1px)",
-          backgroundSize: "72px 72px",
-          maskImage: "radial-gradient(ellipse at 50% 30%, black 20%, transparent 70%)",
-          WebkitMaskImage: "radial-gradient(ellipse at 50% 30%, black 20%, transparent 70%)",
+          background:
+            "radial-gradient(80% 80% at 50% 40%, transparent 40%, rgba(0,0,0,0.6) 100%)",
         }}
       />
+      <GridLayer size={80} opacity={0.04} mask="ellipse at 50% 40%" />
 
-      <Container style={{ position: "relative" }}>
+      <Container style={{ position: "relative", zIndex: 2 }}>
         <div
+          className="reveal"
           style={{
             display: "flex",
             alignItems: "center",
             gap: 14,
-            paddingBottom: 40,
-            borderBottom: "1px solid var(--line)",
-            marginBottom: 48,
+            marginBottom: 40,
           }}
         >
-          <Eyebrow>Safra 25/26 · 14 anos dentro da mesa</Eyebrow>
-          <div style={{ flex: 1 }} />
+          <Eyebrow>Crédito rural · Safra 25/26</Eyebrow>
+          <div style={{ flex: 1, height: 1, background: "var(--line)" }} />
           <span
             className="mono"
             style={{
               fontSize: 10.5,
               color: "var(--muted)",
-              letterSpacing: "0.12em",
+              letterSpacing: "0.14em",
               textTransform: "uppercase",
             }}
           >
-            Inteligência bancária · por dentro
+            Brasil · v1.0 · abril 2026
           </span>
         </div>
 
         <div
-          className="landing-hero-grid"
+          className="hero-grid"
           style={{
             display: "grid",
             gridTemplateColumns: "minmax(0, 1.1fr) minmax(0, 0.9fr)",
-            gap: 80,
+            gap: 72,
             alignItems: "center",
           }}
         >
           <div>
             <h1
+              className="reveal"
               style={{
-                fontSize: "clamp(44px, 6.6vw, 84px)",
-                lineHeight: 0.96,
-                letterSpacing: "-0.045em",
+                fontSize: "clamp(52px, 7.6vw, 128px)",
+                lineHeight: 0.93,
+                letterSpacing: "-0.048em",
                 fontWeight: 500,
                 margin: "0 0 28px",
                 textWrap: "balance",
+                color: "#fff",
+                textShadow: "0 2px 40px rgba(0,0,0,0.6)",
               }}
             >
-              O banco não nega
+              Crédito rural
               <br />
-              <span style={{ color: "var(--muted)", fontWeight: 400 }}>
-                o seu crédito.
+              aprovado.
+              <br />
+              <span
+                style={{
+                  color: "transparent",
+                  background:
+                    "linear-gradient(180deg, #9ea29d 0%, #5d625e 100%)",
+                  WebkitBackgroundClip: "text",
+                  backgroundClip: "text",
+                  fontWeight: 400,
+                }}
+              >
+                Sem tempo perdido,
                 <br />
-                Nega o seu papel.
+                sem idas na agência.
               </span>
             </h1>
             <p
+              className="reveal reveal-d1"
               style={{
                 fontSize: 19,
-                lineHeight: 1.5,
+                lineHeight: 1.55,
                 color: "var(--ink-2)",
                 maxWidth: 520,
                 margin: 0,
@@ -383,19 +479,30 @@ export function Hero() {
                 letterSpacing: "-0.005em",
               }}
             >
-              Cada semana sem o dossiê pronto é insumo mais caro e janela menor. Em 10 minutos de
-              entrevista a IA entende o seu caso, monta o checklist exato e prepara um dossiê no
-              formato que o banco aprova — escrito por quem aprovou crédito por 14 anos.
+              A AgroBridge faz a entrevista, monta o checklist e entrega um dossiê
+              que o banco aprova — no padrão técnico que o comitê de crédito
+              rural espera ver.
             </p>
 
-            <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 40 }}>
-              <Button size="lg" variant="primary" href="/cadastro">
-                Iniciar diagnóstico gratuito {Icon.arrow(15)}
+            <div
+              className="reveal reveal-d2"
+              style={{
+                display: "flex",
+                gap: 10,
+                flexWrap: "wrap",
+                marginTop: 40,
+              }}
+            >
+              <Button size="lg" variant="accent" href="/cadastro">
+                Iniciar análise gratuita {Icon.arrow(15)}
+              </Button>
+              <Button size="lg" variant="ghost" href="#fluxo">
+                {Icon.play(13)} Ver como funciona
               </Button>
             </div>
 
             <div
-              className="landing-trust-strip"
+              className="reveal reveal-d3 trust-strip"
               style={{
                 marginTop: 56,
                 paddingTop: 28,
@@ -405,30 +512,35 @@ export function Hero() {
                 gap: 24,
               }}
             >
-              <TrustStat k="Experiência" v="14 anos no SFN" />
-              <TrustStat k="Certificações" v="FEBRABAN · ANBIMA" />
-              <TrustStat k="Entrega" v="100% digital" />
+              <TrustStat k="MCR" v="Domínio completo" />
+              <TrustStat k="Resposta" v="Em 24 horas" />
+              <TrustStat k="Custo" v="Zero até aprovar" />
             </div>
           </div>
 
-          <div style={{ position: "relative" }}>
+          <div
+            className="reveal reveal-d2"
+            style={{ position: "relative" }}
+          >
             <InterviewMock />
             <div
               className="mono"
               style={{
                 position: "absolute",
-                top: -16,
-                right: -12,
-                background: "var(--ink)",
-                color: "#fff",
-                padding: "7px 12px",
+                top: -14,
+                right: -8,
+                background: "rgba(7,8,9,0.92)",
+                color: "var(--gold)",
+                padding: "8px 14px",
                 borderRadius: 999,
                 fontSize: 10.5,
                 display: "flex",
                 alignItems: "center",
                 gap: 8,
-                letterSpacing: "0.08em",
+                letterSpacing: "0.12em",
                 textTransform: "uppercase",
+                border: "1px solid var(--line-gold)",
+                boxShadow: "0 0 30px rgba(201,168,106,0.2)",
               }}
             >
               <span
@@ -437,21 +549,54 @@ export function Hero() {
                   height: 6,
                   borderRadius: "50%",
                   background: "var(--gold)",
-                  boxShadow: "0 0 0 2px rgba(201,168,106,0.25)",
+                  boxShadow: "0 0 8px var(--gold)",
                 }}
               />
               simulação
             </div>
           </div>
         </div>
+
+        <div
+          className="reveal reveal-d4"
+          style={{
+            position: "absolute",
+            left: "50%",
+            bottom: -40,
+            transform: "translateX(-50%)",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 8,
+            color: "var(--muted)",
+          }}
+        >
+          <div
+            className="mono"
+            style={{
+              fontSize: 10,
+              letterSpacing: "0.2em",
+              textTransform: "uppercase",
+            }}
+          >
+            scroll
+          </div>
+          <div
+            style={{
+              width: 1,
+              height: 36,
+              background: "linear-gradient(180deg, var(--muted), transparent)",
+            }}
+          />
+        </div>
       </Container>
 
       <style>{`
-        @media (max-width: 900px){
-          .landing-hero-grid{ grid-template-columns: 1fr !important; gap: 56px !important }
+        @media (max-width: 960px){
+          .hero-grid{ grid-template-columns: 1fr !important; gap: 56px !important }
         }
         @media (max-width: 520px){
-          .landing-trust-strip{ grid-template-columns: 1fr 1fr !important }
+          .trust-strip{ grid-template-columns: 1fr 1fr !important }
         }
       `}</style>
     </section>
