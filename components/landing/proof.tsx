@@ -15,11 +15,26 @@ const STATS = [
   { k: "Projetos instruídos", v: "em piloto", tag: "placeholder honesto" },
   { k: "Domínio do MCR", v: "Cap. 1–16", tag: "técnico" },
   { k: "Tempo médio de dossiê", v: "3–5 dias", tag: "previsão atual" },
-  { k: "Custo para você", v: "R$ 0 até aprovar", tag: "sem mensalidade" },
+  { k: "Custo para você", v: "A partir de R$ 29,99", tag: "pagamento único" },
 ]
 
-const GARANTIAS = ["Hipoteca rural", "Penhor da safra", "Aval"] as const
-const CULTURAS = ["Soja", "Milho", "Café", "Pecuária"] as const
+const GARANTIAS = [
+  "Hipoteca rural",
+  "Alienação fiduciária simples",
+  "Alienação fiduciária guarda-chuva",
+  "Penhor da safra",
+  "Aval",
+] as const
+const CULTURAS = [
+  "Soja",
+  "Milho",
+  "Café",
+  "Cana",
+  "Algodão",
+  "Citros",
+  "Pecuária de corte",
+  "Pecuária de leite",
+] as const
 
 type Garantia = (typeof GARANTIAS)[number]
 type Cultura = (typeof CULTURAS)[number]
@@ -134,9 +149,14 @@ export function Proof() {
     let s = 60
     if (valor > 2000) s -= 15
     if (valor < 500) s += 10
-    if (garantia === "Hipoteca rural") s += 18
-    if (garantia === "Aval") s -= 10
+    if (garantia === "Alienação fiduciária guarda-chuva") s += 20
+    else if (garantia === "Alienação fiduciária simples") s += 16
+    else if (garantia === "Hipoteca rural") s += 14
+    else if (garantia === "Aval") s -= 10
     if (cultura === "Soja" || cultura === "Milho") s += 12
+    else if (cultura === "Algodão") s += 10
+    else if (cultura === "Cana") s += 8
+    else if (cultura === "Citros") s += 5
     return Math.max(35, Math.min(94, s))
   }, [valor, garantia, cultura])
 
@@ -354,11 +374,16 @@ export function Proof() {
 
               <div style={{ marginTop: 28, display: "grid", gap: 10 }}>
                 <ReadRow
-                  ok={garantia === "Hipoteca rural"}
+                  ok={garantia !== "Aval"}
                   label="Garantia compatível com comitê"
                 />
                 <ReadRow
-                  ok={cultura === "Soja" || cultura === "Milho"}
+                  ok={
+                    cultura === "Soja" ||
+                    cultura === "Milho" ||
+                    cultura === "Algodão" ||
+                    cultura === "Cana"
+                  }
                   label="Cultura alinhada ao MCR"
                 />
                 <ReadRow ok={valor <= 2000} label="Valor dentro do teto da linha" />

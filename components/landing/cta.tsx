@@ -144,8 +144,8 @@ export function CTA() {
                   letterSpacing: "-0.005em",
                 }}
               >
-                Comece agora. Análise inicial gratuita. Se a gente não ver
-                chance real de aprovação, a gente te fala — e não cobra nada.
+                Comece agora. A IA te mostra onde você está e o caminho mais
+                curto pra o seu dossiê chegar no comitê com cara de aprovado.
               </p>
 
               <div
@@ -159,8 +159,8 @@ export function CTA() {
                 <Button size="lg" variant="accent" href="/cadastro">
                   Iniciar análise gratuita {Icon.arrow(15)}
                 </Button>
-                <Button size="lg" variant="ghost" href="#faq">
-                  Falar com especialista
+                <Button size="lg" variant="ghost" href="#planos">
+                  Ver planos e preços
                 </Button>
               </div>
 

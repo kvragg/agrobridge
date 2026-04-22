@@ -514,7 +514,7 @@ export function Hero() {
             >
               <TrustStat k="MCR" v="Domínio completo" />
               <TrustStat k="Resposta" v="Em 24 horas" />
-              <TrustStat k="Custo" v="Zero até aprovar" />
+              <TrustStat k="Custo" v="Pagamento único" />
             </div>
           </div>
 
