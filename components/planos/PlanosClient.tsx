@@ -10,6 +10,10 @@ import {
   GlassCard,
   GridLayer,
 } from "@/components/landing/primitives"
+import {
+  JornadaFluxograma,
+  type JornadaTierKey,
+} from "@/components/dashboard/JornadaFluxograma"
 
 // URLs Cakto — checkout externo, redirect (não iframe).
 // Cakto propaga `?ref=<processo_id>` da URL para o webhook.
@@ -212,6 +216,17 @@ export default function PlanosClient({
               você leva o pedido pronto pra mesa e segue com a sua safra.
             </p>
           </div>
+        </div>
+
+        {/* Jornada Free → Ouro — contexto visual antes dos cards de preço */}
+        <div style={{ marginBottom: 56 }}>
+          <JornadaFluxograma
+            tierAtual={tierLabel(tierAtual) as JornadaTierKey}
+            variant="full"
+            heading="Sua jornada, do Free ao Ouro."
+            sub="Cada plano é o próximo passo lógico. Você só paga quando quer avançar — sem mensalidade, sem fidelidade."
+            linkToPlanos={false}
+          />
         </div>
 
         <div

@@ -149,7 +149,35 @@ export function AppSidebar({ mobileOpen, onClose }: AppSidebarProps) {
         })}
       </ul>
 
-      <div style={{ height: 1, background: "var(--line)", margin: "16px 0 12px" }} />
+      <div style={{ height: 1, background: "var(--line)", margin: "16px 0 10px" }} />
+
+      <Link
+        href="/como-funciona"
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 12,
+          padding: "10px 12px",
+          borderRadius: 10,
+          fontSize: 13.5,
+          color: "var(--ink-2)",
+          textDecoration: "none",
+          marginBottom: 4,
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.background = "rgba(255,255,255,0.04)"
+          e.currentTarget.style.color = "var(--ink)"
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.background = "transparent"
+          e.currentTarget.style.color = "var(--ink-2)"
+        }}
+      >
+        <span style={{ color: "var(--muted)", display: "inline-flex", flexShrink: 0 }}>
+          {Icon.spark(16)}
+        </span>
+        Como funciona
+      </Link>
 
       <button
         type="button"
