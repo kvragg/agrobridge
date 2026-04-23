@@ -48,9 +48,16 @@ function carregarSystemBase(): string {
 // Monta o texto do segundo bloco (contexto dinâmico deste lead).
 // Mantido aqui — e não em chat.ts — pra deixar claro que ESSE pedaço
 // NÃO deve ir para o cache.
+const FREEMIUM_LIMITE = 5
+
 export function montarContextoLead(perfil: PerfilLead | null): string {
   if (!perfil) {
-    return '## Contexto do lead\n\nAinda não conhecemos este lead. Faça abertura limpa pedindo nome + região + atividade.'
+    return [
+      '## Contexto do lead',
+      '',
+      'Lead NOVO — ainda não sabemos nada. Estamos no TURNO 1 do Free (5 turnos no total).',
+      'Faça a abertura do Turno 1 conforme o system prompt: autoridade empática, pergunta ampla agrupando nome + região + atividade + área + objetivo + motivação por trás.',
+    ].join('\n')
   }
 
   const linhas: string[] = ['## Contexto do lead']
@@ -83,8 +90,31 @@ export function montarContextoLead(perfil: PerfilLead | null): string {
     }
   }
 
+  // Posição do lead na sequência de 5 turnos do Free. Ajuda a IA a
+  // saber se tá no começo, no meio ou no fechamento — e a aplicar o
+  // gancho estratégico certo no turno 5.
+  const turnosUsados = perfil.perguntas_respondidas_gratis
+  const proximoTurno = Math.min(turnosUsados + 1, FREEMIUM_LIMITE)
+  linhas.push('')
+  linhas.push('## Posição na sequência Free')
+  linhas.push(`- Turnos já usados: ${turnosUsados}/${FREEMIUM_LIMITE}`)
+  linhas.push(`- Próximo turno a executar: T${proximoTurno}/${FREEMIUM_LIMITE}`)
+  if (proximoTurno === 1) {
+    linhas.push('- Estratégia: abertura ampla com autoridade empática.')
+  } else if (proximoTurno === 2) {
+    linhas.push('- Estratégia: operação + histórico bancário (sem julgamento, permissão explícita).')
+  } else if (proximoTurno === 3) {
+    linhas.push('- Estratégia: saúde financeira (endividamento, garantias, reciprocidade). Gatilho de escassez.')
+  } else if (proximoTurno === 4) {
+    linhas.push('- Estratégia: documentos + ambiental + tópicos sensíveis (PEP, processos, embargos, mídia). Devolva mini-diagnóstico parcial.')
+  } else if (proximoTurno === 5) {
+    linhas.push('- Estratégia: ÚLTIMO TURNO — colete valor exato/prazo/projetista e FECHE com o gancho de entrega da análise completa. NÃO mencione nomes de planos (a mini-análise faz).')
+  } else {
+    linhas.push('- Lead já passou dos 5 turnos do Free (ou é pagante). Continue em modo consultor completo, sem gatilhos de fechamento.')
+  }
+
   linhas.push(
-    '\nSe é o primeiro turno da sessão e você já conhece o nome ou a fazenda, cumprimente com contexto. Não pergunte de novo o que já está acima.'
+    '\nSe já conhece o nome/fazenda e é o primeiro turno da sessão de hoje, cumprimente com contexto curto. Não repita pergunta que já está acima.'
   )
 
   return linhas.join('\n')

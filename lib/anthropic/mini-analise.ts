@@ -10,6 +10,7 @@ import {
   tipoGenericoInstituicao,
   type FinalidadeCredito,
 } from '@/lib/mcr'
+import { createAdminClient } from '@/lib/supabase/admin'
 import type { PerfilLead } from '@/types/perfil-lead'
 import { MODEL, CACHE_EPHEMERAL } from './model'
 
@@ -23,20 +24,42 @@ function getClient(): Anthropic {
   return _client
 }
 
-const SYSTEM = `Voce e consultor senior em credito rural no Brasil. Vai escrever uma analise curta (2 a 3 paragrafos, 180-260 palavras) para um lead que ainda nao pagou o AgroBridge.
+const SYSTEM = `Você é a IA do AgroBridge, consultora sênior em crédito rural no Brasil (14 anos dentro do SFN, gestora de carteira Agro ex-banco privado, conhece o MCR a fundo e, mais raro, conhece o que os bancos NÃO dizem em voz alta — risco de imagem, PEP, mídia negativa, processos, embargos).
 
-REGRAS:
-- NUNCA cite nome comercial de banco ou cooperativa (nem BB, Sicredi, Caixa, etc.). Use sempre "o banco", "a cooperativa", "o banco alvo", "o credor".
-- NAO prometa aprovacao nem negue: "sujeito a analise", "em condicoes favoraveis", "historicamente".
-- Tom: pratico, direto, de quem conhece o MCR de verdade. Sem floreios.
-- Se nao houver dado confiavel sobre banco ou linha, seja cauteloso e generico.
+Você acabou de terminar os 5 turnos gratuitos com o lead. Agora precisa entregar a mini-análise estratégica — o documento que vai fazer ele desejar o próximo passo.
 
-ESTRUTURA OBRIGATORIA:
-1) Paragrafo 1 — Linha de credito sugerida + justificativa em 1 linha + faixa de taxa aproximada 2026 com ressalva.
-2) Paragrafo 2 — Comportamento tipico do banco/cooperativa alvo (generico) + 2-3 documentos criticos que o lead precisa preparar.
-3) Paragrafo 3 (ou final do 2) — CTA natural: "Pra eu redigir a defesa tecnica e montar o roteiro de comite, escolha um plano abaixo."
+REGRAS DURAS (violação = falha de produto):
+- NUNCA cite nome comercial de banco ou cooperativa (BB, Caixa, Sicredi, Sicoob, Bradesco, Itaú, BNB, Basa etc.). Use "o banco", "a cooperativa", "o credor", "a instituição".
+- NUNCA prometa aprovação nem negue. Linguagem permitida: "probabilidade alta/média/baixa em condições favoráveis", "sujeito à análise de comitê", "historicamente".
+- Tom: brutalmente sutil. Verdade com caminho de saída. Esperançosa mas nunca prometedora.
+- Tudo qualitativo — nada de percentual numérico.
+- Português do Brasil, números com separador (R$ 850.000,00).
 
-Escreva em portugues do Brasil. Numeros com separador: R$ 850.000,00.`
+ESTRUTURA OBRIGATÓRIA (180 a 300 palavras total):
+
+**1) Diagnóstico (2-3 linhas):**
+O que joga a favor + o que trava + faixa qualitativa de probabilidade ("probabilidade alta / média / baixa em condições favoráveis"). Seja específico com os dados do lead.
+
+**2) Linha MCR provável (1 parágrafo curto):**
+Nome da linha sugerida + por que ela cabe + faixa de taxa aproximada 2026 com ressalva "sujeito às condições do credor".
+
+**3) Comportamento do credor alvo (1 parágrafo):**
+Como esse tipo de instituição historicamente olha o perfil dele. Ponto de atenção principal.
+
+**4) Caminho de ação — 3 movimentos que mais sobem a probabilidade:**
+Lista curta, ordenada por impacto. Cada item: 1 linha com a ação + ganho estimado qualitativo.
+
+**5) Fechamento estratégico — CTA pro plano Ouro (sutil mas específico):**
+
+Este é o momento de fisgar. Construa assim:
+
+> "O próximo passo natural pro seu caso é a **consultoria particular AgroBridge (plano Ouro, R$ 697,99)**. Nela eu trabalho ao seu lado pra levantar todo o checklist documental, monto o dossiê completo em PDF com histórico, defesa técnica, registrato e prova de não-restrição, e cuido dos pontos sensíveis que o banco pesquisa mas raramente comenta — risco de imagem, PEP, mídia negativa, processos, embargos ambientais. Quando o banco chamar pra comitê, você entra preparado. Se precisar de projetista, agrônomo ou estudo de limites, indico pessoalmente dentro da consultoria. **Tem vagas limitadas a 6 por mês.** [VAGAS_STATUS]"
+>
+> "Se não couber agora, tem dois degraus antes: o **Prata (R$ 297,99)** monta o dossiê com o checklist rural completo, mas sem mim na mesa do comitê. O **Bronze (R$ 29,99)** entrega um diagnóstico estendido e a coleta dos documentos pessoais — é a porta de entrada pra quem ainda está amadurecendo a operação."
+
+ADAPTE o argumento do Ouro ao perfil específico: cite 1-2 pontos do caso dele que justificam ESTE plano (ex: "com PEP declarado, você PRECISA de alguém na mesa pra defender"; "com 120% de endividamento, a rolagem tem que ser desenhada — o Prata não cobre isso").
+
+NÃO use bullets ou markdown pesado — é um texto de consultoria, não slide.`
 
 interface ContextoMini {
   nome: string
@@ -99,32 +122,77 @@ function montarContexto(perfil: PerfilLead): ContextoMini {
   }
 }
 
+// Busca status atual das vagas Ouro (view `vagas_mentoria_mes_corrente`)
+// pra compor o gatilho de escassez no CTA da mini-análise. Silencia
+// erro — se falhar, fallback genérico.
+async function lerVagasOuroStatus(): Promise<string> {
+  try {
+    const admin = createAdminClient()
+    const { data, error } = await admin
+      .from('vagas_mentoria_mes_corrente')
+      .select('disponiveis')
+      .maybeSingle()
+    if (error || !data) return 'Consulte a disponibilidade em /planos.'
+    const n = (data as { disponiveis?: number }).disponiveis ?? null
+    if (n === null || n === undefined) return 'Consulte a disponibilidade em /planos.'
+    if (n <= 0) return 'Este mês as 6 vagas de consultoria Ouro já foram preenchidas — entra em lista de espera.'
+    if (n === 1) return 'Resta apenas 1 vaga neste mês.'
+    if (n <= 2) return `Restam ${n} vagas neste mês.`
+    return `Ainda há ${n} vagas abertas neste mês.`
+  } catch {
+    return 'Consulte a disponibilidade em /planos.'
+  }
+}
+
 // Gera a mini-analise. Lanca em caso de falha da API — o caller decide
 // se trata (em geral: grava indicativo de falha e permite retry).
 export async function gerarMiniAnalise(perfil: PerfilLead): Promise<string> {
   const ctx = montarContexto(perfil)
+  const vagasStatus = await lerVagasOuroStatus()
 
-  const user = `Dados do lead ate agora:
+  // Fatos "sensíveis" capturados nos turnos 3 e 4 — vão como pistas
+  // pra IA customizar o argumento do Ouro. Ficam na memoria_ia.
+  const mem = perfil.memoria_ia ?? {}
+  const pistasSensiveis: string[] = []
+  const chavesRelevantes = [
+    'pep',
+    'processo_banco',
+    'embargo_ambiental',
+    'midia_negativa',
+    'endividamento',
+    'inventario',
+    'car_pendente',
+    'sem_projetista',
+    'historico_recusa',
+  ]
+  for (const k of chavesRelevantes) {
+    const v = (mem as Record<string, unknown>)[k]
+    if (typeof v === 'string' && v.trim()) pistasSensiveis.push(`- ${k}: ${v.trim()}`)
+  }
+
+  const user = `Dados do lead até aqui:
 - Nome: ${ctx.nome}
 - Fazenda: ${ctx.fazenda_resumo}
 - Atividade: ${ctx.cultura}
-- Finalidade do credito: ${ctx.finalidade ?? 'ainda nao informada'}
-- Valor pretendido: ${ctx.valor ? `R$ ${ctx.valor.toLocaleString('pt-BR')}` : 'ainda nao informado'}
+- Finalidade do crédito: ${ctx.finalidade ?? 'ainda não informada'}
+- Valor pretendido: ${ctx.valor ? `R$ ${ctx.valor.toLocaleString('pt-BR')}` : 'ainda não informado'}
 
 Shortlist MCR de linhas candidatas:
 ${ctx.linhas_sugeridas}
 
-Perfil tipico do credor alvo (generico, sem citar marca):
+Perfil típico do credor alvo (genérico, sem citar marca):
 ${ctx.perfil_banco}
 
-Documentos criticos mapeados para o perfil:
+Documentos críticos mapeados para o perfil:
 ${ctx.documentos_criticos}
 
-Escreva a mini-analise agora seguindo a estrutura obrigatoria.`
+${pistasSensiveis.length ? `Pistas sensíveis capturadas nos turnos (use pra justificar ESPECIFICAMENTE por que o Ouro cabe neste caso):\n${pistasSensiveis.join('\n')}\n\n` : ''}No CTA do Ouro, substitua o placeholder [VAGAS_STATUS] por: "${vagasStatus}"
+
+Escreva a mini-análise agora seguindo a estrutura obrigatória. O CTA pro Ouro precisa citar 1-2 pontos específicos do caso deste lead como justificativa.`
 
   const res = await getClient().messages.create({
     model: MODEL,
-    max_tokens: 900,
+    max_tokens: 1200,
     system: [
       {
         type: 'text',
