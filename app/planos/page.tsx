@@ -42,6 +42,7 @@ export default async function PlanosPage() {
       nome={nome}
       processoId={processoAtivo?.id ?? null}
       tierAtual={plano.tier}
+      userId={user.id}
     />
   )
 }

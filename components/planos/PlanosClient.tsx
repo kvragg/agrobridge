@@ -117,10 +117,12 @@ export default function PlanosClient({
   nome,
   processoId,
   tierAtual,
+  userId,
 }: {
   nome: string
   processoId: string | null
   tierAtual: Tier | null
+  userId?: string | null
 }) {
   const [vagasMentoria, setVagasMentoria] = useState<VagasMentoriaApi | null>(
     null,
@@ -148,6 +150,7 @@ export default function PlanosClient({
       nome={nome}
       tier={tierLabel(tierAtual)}
       containerStyle={{ maxWidth: 1280 }}
+      userId={userId}
     >
       <div style={{ position: "relative", padding: "16px 0 32px" }}>
         <div

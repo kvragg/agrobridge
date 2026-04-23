@@ -1,15 +1,41 @@
 "use client"
 
+import { usePathname } from "next/navigation"
 import { useState, type ReactNode } from "react"
 import { Container } from "@/components/landing/primitives"
 import { Topbar, type TopbarTier } from "./Topbar"
 import { AppSidebar } from "./AppSidebar"
+import { WidgetIAProvider } from "@/components/widget-ia/WidgetIAProvider"
+import { WidgetIA, type WidgetIATier } from "@/components/widget-ia/WidgetIA"
 
 /**
  * Layout B — shell autenticado. Sidebar fixa à esquerda no desktop,
- * drawer no mobile. Topbar no topo com avatar/menu.
- * Aplica o tema dark premium via .landing-root (tokens CSS).
+ * drawer no mobile. Topbar no topo com avatar/menu. Widget IA
+ * flutuante no canto inferior direito (oposto ao menu), visível em
+ * todas as rotas exceto /entrevista (onde já existe chat da tela) e
+ * /checklist/[id] (onde o foco é upload de docs).
  */
+
+// Rotas onde o widget fica escondido (chat ou upload da tela domina)
+const ROTAS_SEM_WIDGET: ReadonlyArray<string> = [
+  "/entrevista",
+  "/entrevista/nova",
+]
+function rotaSemWidget(pathname: string): boolean {
+  if (ROTAS_SEM_WIDGET.includes(pathname)) return true
+  // /entrevista/[id] e /checklist/[id] ficam sem widget (4b)
+  if (pathname.startsWith("/entrevista/")) return true
+  if (pathname.startsWith("/checklist/")) return true
+  return false
+}
+
+function tierToWidget(tier?: TopbarTier): WidgetIATier {
+  if (tier === "Bronze") return "Bronze"
+  if (tier === "Prata") return "Prata"
+  if (tier === "Ouro") return "Ouro"
+  return "free"
+}
+
 export function DashboardShell({
   children,
   nome,
@@ -17,6 +43,7 @@ export function DashboardShell({
   tier,
   center,
   containerStyle,
+  userId,
 }: {
   children: ReactNode
   nome?: string | null
@@ -24,8 +51,12 @@ export function DashboardShell({
   tier?: TopbarTier
   center?: ReactNode
   containerStyle?: React.CSSProperties
+  /** ID do usuário pra localStorage do widget (auto-open diário). */
+  userId?: string | null
 }) {
   const [mobileOpen, setMobileOpen] = useState(false)
+  const pathname = usePathname() ?? "/"
+  const widgetEscondido = rotaSemWidget(pathname)
 
   return (
     <div
@@ -57,6 +88,17 @@ export function DashboardShell({
           <Container style={containerStyle}>{children}</Container>
         </main>
       </div>
+
+      <WidgetIAProvider
+        userId={userId ?? null}
+        autoOpenDiario={!widgetEscondido}
+      >
+        <WidgetIA
+          tier={tierToWidget(tier)}
+          nomeCurto={nome ?? undefined}
+          hidden={widgetEscondido}
+        />
+      </WidgetIAProvider>
 
       <style>{`
         @media (max-width: 960px) {

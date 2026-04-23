@@ -32,6 +32,7 @@ export default async function ContaDadosPage() {
       nome={nome}
       email={user.email ?? ''}
       plano={plano.plano}
+      userId={user.id}
     />
   )
 }
