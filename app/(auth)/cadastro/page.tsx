@@ -4,9 +4,11 @@ import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
-import { CheckCircle, Eye, EyeOff, Mail } from "lucide-react"
-import { Alert } from "@/components/ui/alert"
 import { validarSenha } from "@/lib/validation"
+import { AuthSplit } from "@/components/shell/AuthSplit"
+import { FormField } from "@/components/shell/FormField"
+import { Alert } from "@/components/shell/Alert"
+import { Button, Icon } from "@/components/landing/primitives"
 
 export default function CadastroPage() {
   const router = useRouter()
@@ -22,7 +24,6 @@ export default function CadastroPage() {
   const [sucessoReenvio, setSucessoReenvio] = useState(false)
   const [reenviando, setReenviando] = useState(false)
   const [carregando, setCarregando] = useState(false)
-  const [mostrarSenha, setMostrarSenha] = useState(false)
   const [confirmado, setConfirmado] = useState(false)
 
   async function handleSubmit(e: React.FormEvent) {
@@ -59,16 +60,16 @@ export default function CadastroPage() {
       const data = await res.json()
 
       if (!res.ok) {
-        if (res.status === 429) {
-          setErro(data?.erro ?? "Muitas tentativas. Aguarde alguns minutos.")
-        } else {
-          setErro(data?.erro ?? "Erro ao criar conta.")
-        }
+        setErro(
+          data?.erro ??
+            (res.status === 429
+              ? "Muitas tentativas. Aguarde alguns minutos."
+              : "Erro ao criar conta."),
+        )
         return
       }
 
       if (data.temSessao) {
-        // Confirmação desabilitada → recarregar para pegar cookies
         await supabase.auth.getUser()
         router.push("/planos")
         router.refresh()
@@ -85,6 +86,7 @@ export default function CadastroPage() {
   async function handleReenviar() {
     setReenviando(true)
     setSucessoReenvio(false)
+    setErro("")
     const origin = typeof window !== "undefined" ? window.location.origin : ""
     try {
       const res = await fetch("/api/auth/resend", {
@@ -92,8 +94,9 @@ export default function CadastroPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, origin }),
       })
-      if (res.ok) setSucessoReenvio(true)
-      else {
+      if (res.ok) {
+        setSucessoReenvio(true)
+      } else {
         const data = await res.json().catch(() => ({}))
         setErro(data?.erro ?? "Não foi possível reenviar o e-mail.")
       }
@@ -104,278 +107,308 @@ export default function CadastroPage() {
     }
   }
 
+  // Estado pós-signup — anti-enumeração: exibido sempre, independe
+  // do e-mail existir ou não.
   if (confirmado) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#f0fdf4] to-[#f9fafb] px-4">
-        <div className="w-full max-w-md text-center">
-          <div className="mb-6 flex justify-center">
-            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-green-100">
-              <CheckCircle className="h-10 w-10 text-[#16a34a]" />
-            </div>
+      <AuthSplit glow="gold" maxWidth={480}>
+        <div style={{ textAlign: "center" }}>
+          <div
+            style={{
+              width: 72,
+              height: 72,
+              borderRadius: "50%",
+              background:
+                "linear-gradient(135deg, rgba(201,168,106,0.22) 0%, rgba(201,168,106,0.08) 100%)",
+              border: "1px solid rgba(201,168,106,0.35)",
+              color: "var(--gold)",
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              margin: "0 auto 20px",
+              boxShadow: "0 0 40px rgba(201,168,106,0.25)",
+            }}
+          >
+            {Icon.mail(32)}
           </div>
-          <h1 className="mb-3 text-2xl font-black text-gray-900">
+          <h1
+            style={{
+              margin: "0 0 8px",
+              fontSize: 26,
+              fontWeight: 500,
+              letterSpacing: "-0.02em",
+              color: "var(--ink)",
+            }}
+          >
             Confirme seu e-mail
           </h1>
-          <p className="mb-2 text-gray-600">
+          <p
+            style={{
+              margin: "0 0 4px",
+              fontSize: 14.5,
+              color: "var(--ink-2)",
+              lineHeight: 1.6,
+            }}
+          >
             Enviamos um link de confirmação para:
           </p>
-          <p className="mb-6 font-semibold text-[#166534]">{email}</p>
-          <p className="mb-4 text-sm text-gray-500">
+          <p
+            style={{
+              margin: "0 0 20px",
+              fontSize: 15,
+              fontWeight: 500,
+              color: "var(--green)",
+              wordBreak: "break-all",
+            }}
+          >
+            {email}
+          </p>
+          <p
+            style={{
+              margin: "0 0 20px",
+              fontSize: 13.5,
+              color: "var(--muted)",
+              lineHeight: 1.55,
+            }}
+          >
             Clique no link do e-mail para ativar sua conta. Se você já se
-            cadastrou antes, basta entrar.
+            cadastrou antes, basta fazer login.
           </p>
 
-          <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-left text-sm text-amber-800">
-            <p className="font-semibold">Não recebeu em alguns minutos?</p>
-            <p className="mt-1">
-              Verifique também sua caixa de <strong>spam</strong> ou{" "}
-              <strong>promoções</strong>. O remetente é{" "}
-              <em>no-reply / AgroBridge</em>.
-            </p>
-          </div>
-
           {sucessoReenvio && (
-            <Alert variante="sucesso" className="mb-4 !py-2">
-              Link de confirmação reenviado. Verifique sua caixa de entrada e
-              spam.
+            <Alert variant="success">
+              Link de confirmação reenviado. Verifique também o spam.
             </Alert>
           )}
-          {erro && (
-            <Alert variante="erro" className="mb-4 !py-2">
-              {erro}
-            </Alert>
-          )}
+          {erro && <Alert variant="error">{erro}</Alert>}
 
-          <div className="flex flex-col gap-2 sm:flex-row">
-            <button
-              type="button"
+          <div
+            style={{
+              display: "flex",
+              gap: 10,
+              marginTop: 20,
+              flexWrap: "wrap",
+              justifyContent: "center",
+            }}
+          >
+            <Button
+              variant="ghost"
+              size="md"
               onClick={handleReenviar}
-              disabled={reenviando}
-              className="min-h-[48px] flex-1 rounded-xl border border-[#166534]/30 bg-white px-4 py-3 text-sm font-semibold text-[#166534] transition-colors hover:bg-green-50 disabled:opacity-60"
+              style={{ flex: 1, minWidth: 160 }}
             >
-              {reenviando ? "Reenviando..." : "Reenviar confirmação"}
-            </button>
-            <Link
+              {reenviando ? "Reenviando…" : "Reenviar confirmação"}
+            </Button>
+            <Button
+              variant="accent"
+              size="md"
               href="/login"
-              className="inline-flex min-h-[48px] flex-1 items-center justify-center rounded-xl bg-[#166534] px-4 py-3 text-sm font-bold text-white transition-colors hover:bg-[#14532d]"
+              style={{ flex: 1, minWidth: 160 }}
             >
-              Fazer login
-            </Link>
+              Fazer login {Icon.arrow(14)}
+            </Button>
           </div>
         </div>
-      </main>
+      </AuthSplit>
     )
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#f0fdf4] to-[#f9fafb] px-4 py-12">
-      <div className="w-full max-w-md">
-        {/* Logo */}
-        <div className="mb-8 text-center">
-          <Link href="/" className="text-2xl font-black tracking-tight">
-            <span className="text-[#166534]">Agro</span>
-            <span className="text-gray-900">Bridge</span>
-          </Link>
-          <p className="mt-2 text-sm text-gray-500">
-            Crie sua conta. A entrevista começa logo depois.
-          </p>
-        </div>
-
-        <div className="rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
-          <h1 className="mb-6 text-xl font-bold text-gray-900">
-            Criar minha conta
-          </h1>
-
-          <form onSubmit={handleSubmit} className="space-y-4" noValidate>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="col-span-2">
-                <label className="mb-1.5 block text-sm font-medium text-gray-700">
-                  Nome completo
-                </label>
-                <input
-                  type="text"
-                  value={nome}
-                  onChange={(e) => setNome(e.target.value)}
-                  required
-                  autoComplete="name"
-                  placeholder="João da Silva"
-                  className="min-h-[44px] w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-base text-gray-900 placeholder-gray-400 outline-none transition focus:border-[#166534] focus:ring-2 focus:ring-[#166534]/20 sm:text-sm"
-                />
-              </div>
-
-              <div className="col-span-2 sm:col-span-1">
-                <label className="mb-1.5 block text-sm font-medium text-gray-700">
-                  WhatsApp
-                </label>
-                <input
-                  type="tel"
-                  value={whatsapp}
-                  onChange={(e) => setWhatsapp(e.target.value)}
-                  required
-                  autoComplete="tel"
-                  placeholder="(67) 99999-9999"
-                  className="min-h-[44px] w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-base text-gray-900 placeholder-gray-400 outline-none transition focus:border-[#166534] focus:ring-2 focus:ring-[#166534]/20 sm:text-sm"
-                />
-              </div>
-
-              <div className="col-span-2 sm:col-span-1">
-                <label className="mb-1.5 block text-sm font-medium text-gray-700">
-                  E-mail
-                </label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  autoComplete="email"
-                  placeholder="joao@exemplo.com"
-                  className="min-h-[44px] w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-base text-gray-900 placeholder-gray-400 outline-none transition focus:border-[#166534] focus:ring-2 focus:ring-[#166534]/20 sm:text-sm"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-gray-700">
-                Senha
-              </label>
-              <div className="relative">
-                <input
-                  type={mostrarSenha ? "text" : "password"}
-                  value={senha}
-                  onChange={(e) => setSenha(e.target.value)}
-                  required
-                  minLength={8}
-                  autoComplete="new-password"
-                  placeholder="8+ caracteres, 1 número, 1 maiúscula"
-                  className="min-h-[44px] w-full rounded-lg border border-gray-300 px-3.5 py-2.5 pr-12 text-base text-gray-900 placeholder-gray-400 outline-none transition focus:border-[#166534] focus:ring-2 focus:ring-[#166534]/20 sm:text-sm"
-                />
-                <button
-                  type="button"
-                  aria-label={mostrarSenha ? "Ocultar senha" : "Mostrar senha"}
-                  onClick={() => setMostrarSenha(!mostrarSenha)}
-                  className="absolute right-1 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center text-gray-400 hover:text-gray-600"
-                >
-                  {mostrarSenha ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
-                </button>
-              </div>
-              <p className="mt-1.5 text-xs text-gray-400">
-                Mínimo 8 caracteres, com ao menos 1 número e 1 letra maiúscula.
-              </p>
-            </div>
-
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-gray-700">
-                Confirmar senha
-              </label>
-              <input
-                type="password"
-                value={confirmarSenha}
-                onChange={(e) => setConfirmarSenha(e.target.value)}
-                required
-                autoComplete="new-password"
-                placeholder="Repita a senha"
-                className={`min-h-[44px] w-full rounded-lg border px-3.5 py-2.5 text-base text-gray-900 placeholder-gray-400 outline-none transition focus:ring-2 sm:text-sm ${
-                  confirmarSenha && confirmarSenha !== senha
-                    ? "border-red-300 focus:border-red-400 focus:ring-red-200"
-                    : "border-gray-300 focus:border-[#166534] focus:ring-[#166534]/20"
-                }`}
-              />
-            </div>
-
-            {/* Checkbox termos — reescrito para corrigir bug de toggle ao clicar nos links */}
-            <div className="flex items-start gap-3 pt-1">
-              <input
-                id="termos"
-                type="checkbox"
-                checked={aceitouTermos}
-                onChange={(e) => setAceitouTermos(e.target.checked)}
-                required
-                className="mt-0.5 h-4 w-4 flex-shrink-0 cursor-pointer rounded border-gray-300 accent-[#166534]"
-              />
-              <div className="text-sm text-gray-600">
-                <label htmlFor="termos" className="cursor-pointer select-none">
-                  Li e aceito os
-                </label>{" "}
-                <Link
-                  href="/termos"
-                  target="_blank"
-                  rel="noopener"
-                  className="font-medium text-[#166534] hover:underline"
-                >
-                  Termos de Uso
-                </Link>{" "}
-                e a{" "}
-                <Link
-                  href="/privacidade"
-                  target="_blank"
-                  rel="noopener"
-                  className="font-medium text-[#166534] hover:underline"
-                >
-                  Política de Privacidade
-                </Link>
-                .
-              </div>
-            </div>
-
-            {erro && <Alert variante="erro">{erro}</Alert>}
-
-            <div className="flex items-start gap-2 rounded-lg bg-green-50 px-3.5 py-2.5 text-xs text-green-800">
-              <Mail className="mt-0.5 h-4 w-4 flex-shrink-0 text-[#166534]" />
-              <p>
-                Após o cadastro, enviaremos um link de confirmação por e-mail.{" "}
-                <strong>Verifique também sua caixa de spam.</strong>
-              </p>
-            </div>
-
-            <button
-              type="submit"
-              disabled={carregando || !aceitouTermos}
-              className="mt-2 min-h-[48px] w-full rounded-xl bg-[#166534] px-4 py-3 text-sm font-bold text-white transition-colors hover:bg-[#14532d] disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {carregando ? (
-                <span className="flex items-center justify-center gap-2">
-                  <svg
-                    className="h-4 w-4 animate-spin"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    />
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                    />
-                  </svg>
-                  Criando conta...
-                </span>
-              ) : (
-                "Criar minha conta"
-              )}
-            </button>
-          </form>
-        </div>
-
-        <p className="mt-6 text-center text-sm text-gray-500">
-          Já tenho conta —{" "}
-          <Link
-            href="/login"
-            className="font-medium text-[#166534] hover:underline"
-          >
-            Fazer login
-          </Link>
+    <AuthSplit glow="green" maxWidth={520}>
+      <div style={{ marginBottom: 24 }}>
+        <h1
+          style={{
+            margin: 0,
+            fontSize: 28,
+            fontWeight: 500,
+            letterSpacing: "-0.02em",
+            color: "var(--ink)",
+          }}
+        >
+          Criar conta
+        </h1>
+        <p
+          style={{
+            margin: "8px 0 0",
+            fontSize: 14.5,
+            color: "var(--ink-2)",
+            lineHeight: 1.55,
+          }}
+        >
+          A entrevista com a IA começa logo depois. Gratuita, ~10 min.
         </p>
       </div>
-    </main>
+
+      <form onSubmit={handleSubmit} noValidate>
+        <FormField
+          label="Nome completo"
+          value={nome}
+          onChange={(e) => setNome(e.target.value)}
+          required
+          autoComplete="name"
+          placeholder="João da Silva"
+        />
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: 12,
+          }}
+          className="cadastro-row"
+        >
+          <FormField
+            label="WhatsApp"
+            type="tel"
+            value={whatsapp}
+            onChange={(e) => setWhatsapp(e.target.value)}
+            required
+            autoComplete="tel"
+            placeholder="(67) 99999-9999"
+          />
+          <FormField
+            label="E-mail"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            autoComplete="email"
+            placeholder="joao@exemplo.com"
+          />
+        </div>
+
+        <FormField
+          label="Senha"
+          passwordToggle
+          value={senha}
+          onChange={(e) => setSenha(e.target.value)}
+          required
+          minLength={8}
+          autoComplete="new-password"
+          placeholder="8+ caracteres, 1 número, 1 maiúscula"
+          hint="Mínimo 8 caracteres, com ao menos 1 número e 1 letra maiúscula."
+        />
+
+        <FormField
+          label="Confirmar senha"
+          type="password"
+          value={confirmarSenha}
+          onChange={(e) => setConfirmarSenha(e.target.value)}
+          required
+          autoComplete="new-password"
+          placeholder="Repita a senha"
+          error={
+            confirmarSenha && confirmarSenha !== senha
+              ? "As senhas não coincidem."
+              : undefined
+          }
+        />
+
+        <label
+          htmlFor="termos"
+          style={{
+            display: "flex",
+            alignItems: "flex-start",
+            gap: 10,
+            padding: "12px 0",
+            fontSize: 13.5,
+            color: "var(--ink-2)",
+            cursor: "pointer",
+            userSelect: "none",
+            lineHeight: 1.55,
+          }}
+        >
+          <input
+            id="termos"
+            type="checkbox"
+            checked={aceitouTermos}
+            onChange={(e) => setAceitouTermos(e.target.checked)}
+            required
+            style={{
+              marginTop: 3,
+              width: 16,
+              height: 16,
+              accentColor: "var(--green)",
+              flexShrink: 0,
+              cursor: "pointer",
+            }}
+          />
+          <span>
+            Li e aceito os{" "}
+            <Link
+              href="/termos"
+              target="_blank"
+              rel="noopener"
+              style={{ color: "var(--green)", textDecoration: "underline" }}
+            >
+              Termos de Uso
+            </Link>{" "}
+            e a{" "}
+            <Link
+              href="/privacidade"
+              target="_blank"
+              rel="noopener"
+              style={{ color: "var(--green)", textDecoration: "underline" }}
+            >
+              Política de Privacidade
+            </Link>
+            .
+          </span>
+        </label>
+
+        {erro && <Alert variant="error">{erro}</Alert>}
+
+        <Button
+          variant="accent"
+          size="lg"
+          type="submit"
+          style={{
+            width: "100%",
+            marginTop: 16,
+            opacity: carregando || !aceitouTermos ? 0.6 : 1,
+            cursor: carregando || !aceitouTermos ? "not-allowed" : "pointer",
+          }}
+        >
+          {carregando ? (
+            <>
+              {Icon.spinner(15)} Criando conta…
+            </>
+          ) : (
+            <>
+              Criar conta {Icon.arrow(15)}
+            </>
+          )}
+        </Button>
+      </form>
+
+      <div
+        style={{
+          marginTop: 20,
+          paddingTop: 20,
+          borderTop: "1px solid var(--line)",
+          textAlign: "center",
+          fontSize: 13.5,
+          color: "var(--muted)",
+        }}
+      >
+        Já tem conta?{" "}
+        <Link
+          href="/login"
+          style={{
+            color: "var(--green)",
+            textDecoration: "none",
+            fontWeight: 500,
+          }}
+        >
+          Fazer login
+        </Link>
+      </div>
+
+      <style>{`
+        @media (max-width: 520px) {
+          .cadastro-row { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
+    </AuthSplit>
   )
 }

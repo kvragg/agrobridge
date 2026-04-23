@@ -407,6 +407,63 @@ export const Icon = {
       />
     </svg>
   ),
+  eye: (s = 16) => (
+    <svg width={s} height={s} viewBox="0 0 16 16" fill="none">
+      <path
+        d="M1 8s2.5-5 7-5 7 5 7 5-2.5 5-7 5-7-5-7-5Z"
+        stroke="currentColor"
+        strokeWidth="1.3"
+      />
+      <circle cx="8" cy="8" r="2.2" stroke="currentColor" strokeWidth="1.3" />
+    </svg>
+  ),
+  eyeOff: (s = 16) => (
+    <svg width={s} height={s} viewBox="0 0 16 16" fill="none">
+      <path
+        d="M2 2l12 12M6.5 6.5a2 2 0 002.8 2.8M4 4C2.5 5.2 1 8 1 8s2.5 5 7 5c1.4 0 2.7-.4 3.7-1M9 3.1c4.2.4 6 4.9 6 4.9s-.8 1.5-2 2.8"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinecap="round"
+      />
+    </svg>
+  ),
+  mail: (s = 16) => (
+    <svg width={s} height={s} viewBox="0 0 16 16" fill="none">
+      <rect x="2" y="3" width="12" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.4" />
+      <path d="m2 5 6 4 6-4" stroke="currentColor" strokeWidth="1.4" />
+    </svg>
+  ),
+  user: (s = 16) => (
+    <svg width={s} height={s} viewBox="0 0 16 16" fill="none">
+      <circle cx="8" cy="6" r="3" stroke="currentColor" strokeWidth="1.4" />
+      <path d="M2 14c1-3 3.5-4 6-4s5 1 6 4" stroke="currentColor" strokeWidth="1.4" />
+    </svg>
+  ),
+  chevron: (s = 16) => (
+    <svg width={s} height={s} viewBox="0 0 16 16" fill="none">
+      <path d="m4 6 4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  ),
+  spinner: (s = 16) => (
+    <svg
+      width={s}
+      height={s}
+      viewBox="0 0 16 16"
+      fill="none"
+      style={{ animation: "landing-spin 0.8s linear infinite" }}
+    >
+      <circle
+        cx="8"
+        cy="8"
+        r="6"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeDasharray="28"
+        strokeDashoffset="10"
+      />
+    </svg>
+  ),
 }
 
 // AgroBridge mark v2 — arch + wheat keystone
