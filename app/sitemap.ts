@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next'
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const base = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://agrobridge.app'
+  const base = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://agrobridge.space'
   const agora = new Date()
 
   return [
@@ -40,6 +40,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: agora,
       changeFrequency: 'monthly',
       priority: 0.5,
+    },
+    {
+      url: `${base}/como-funciona`,
+      lastModified: agora,
+      changeFrequency: 'monthly',
+      priority: 0.7,
     },
   ]
 }

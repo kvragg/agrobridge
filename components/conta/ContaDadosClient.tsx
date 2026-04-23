@@ -69,6 +69,7 @@ export default function ContaDadosClient({
 
       <div style={{ display: "grid", gap: 20 }}>
         <ExportarBlock />
+        <SimulacoesBlock />
         <ExcluirBlock email={email} />
       </div>
 
@@ -210,6 +211,111 @@ function ExportarBlock() {
                   Baixar JSON {Icon.arrow(14)}
                 </>
               )}
+            </Button>
+          </div>
+        </div>
+      </div>
+    </GlassCard>
+  )
+}
+
+function SimulacoesBlock() {
+  const [estado, setEstado] = useState<"idle" | "limpando" | "ok" | "erro">(
+    "idle",
+  )
+  const [mensagem, setMensagem] = useState<string | null>(null)
+
+  async function limpar() {
+    if (
+      !confirm(
+        "Excluir TODO o histórico de simulações? Essa ação não pode ser desfeita.",
+      )
+    ) {
+      return
+    }
+    setEstado("limpando")
+    setMensagem(null)
+    try {
+      const res = await fetch("/api/simulador/historico", { method: "DELETE" })
+      const json = (await res.json().catch(() => ({}))) as {
+        ok?: boolean
+        removidas?: number
+        erro?: string
+      }
+      if (res.ok) {
+        setEstado("ok")
+        setMensagem(
+          `${json.removidas ?? 0} simulação${(json.removidas ?? 0) === 1 ? "" : "ões"} excluída${(json.removidas ?? 0) === 1 ? "" : "s"}.`,
+        )
+      } else {
+        setEstado("erro")
+        setMensagem(json.erro ?? "Falha ao excluir.")
+      }
+    } catch {
+      setEstado("erro")
+      setMensagem("Falha de rede.")
+    }
+  }
+
+  return (
+    <GlassCard glow="green" padding={28} hover={false}>
+      <div style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
+        <div
+          style={{
+            width: 44,
+            height: 44,
+            borderRadius: 12,
+            background: "rgba(78,168,132,0.12)",
+            border: "1px solid rgba(78,168,132,0.25)",
+            color: "var(--green)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexShrink: 0,
+          }}
+        >
+          {Icon.spark(20)}
+        </div>
+        <div style={{ flex: 1 }}>
+          <h2
+            style={{
+              margin: 0,
+              fontSize: 20,
+              fontWeight: 500,
+              letterSpacing: "-0.015em",
+              color: "#fff",
+            }}
+          >
+            Histórico de simulações
+          </h2>
+          <p
+            style={{
+              margin: "8px 0 0",
+              fontSize: 14,
+              lineHeight: 1.6,
+              color: "var(--ink-2)",
+            }}
+          >
+            Limpa todas as simulações que você salvou no Simulador. Não
+            afeta entrevistas, checklist ou dossiê.
+          </p>
+
+          {mensagem && (
+            <Alert variant={estado === "ok" ? "success" : "error"}>
+              {mensagem}
+            </Alert>
+          )}
+
+          <div style={{ marginTop: 16 }}>
+            <Button
+              variant="ghost"
+              size="md"
+              onClick={limpar}
+              disabled={estado === "limpando"}
+            >
+              {estado === "limpando"
+                ? "Limpando…"
+                : "Limpar histórico de simulações"}
             </Button>
           </div>
         </div>

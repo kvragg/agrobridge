@@ -17,7 +17,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { realMimeType } from '@/lib/file-sniff'
-import { rateLimitIA } from '@/lib/rate-limit'
+import { rateLimitIARemoto } from '@/lib/rate-limit-upstash'
 import { getPlanoAtual } from '@/lib/plano'
 import { logAuditEvent } from '@/lib/audit'
 import { NextRequest } from 'next/server'
@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
 
   // Rate-limit separado do chat (canal distinto) — evita um user
   // bombardear uploads e zerar chat quota.
-  const rl = rateLimitIA({
+  const rl = await rateLimitIARemoto({
     userId: user.id,
     plano: plano.plano,
     canal: 'upload',

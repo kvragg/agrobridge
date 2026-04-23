@@ -18,6 +18,22 @@ const eslintConfig = defineConfig([
     "tests/e2e/**",
     "playwright.config.ts",
   ]),
+  {
+    rules: {
+      // Convenção: prefixo `_` marca variável intencionalmente não usada
+      // (callbacks com assinatura fixa, stubs, testes). Não bloquear
+      // lint nesses casos.
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          caughtErrorsIgnorePattern: "^_",
+          destructuredArrayIgnorePattern: "^_",
+        },
+      ],
+    },
+  },
 ]);
 
 export default eslintConfig;

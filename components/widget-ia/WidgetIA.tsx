@@ -135,6 +135,7 @@ function ChatPanel({
   nomeCurto?: string
   onClose: () => void
 }) {
+  const widget = useWidgetIA()
   const [mensagens, setMensagens] = useState<Mensagem[]>([])
   const [texto, setTexto] = useState("")
   const [enviando, setEnviando] = useState(false)
@@ -145,6 +146,20 @@ function ChatPanel({
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Consome notificação proativa ao abrir o panel — guarda localmente
+  // pra renderizar no header da thread (acima da saudação) e marca
+  // como consumida no provider.
+  const [notif, setNotif] = useState<typeof widget.notificacaoPendente>(null)
+  useEffect(() => {
+    if (widget.notificacaoPendente) {
+      setNotif(widget.notificacaoPendente)
+      widget.consumirNotificacao()
+    }
+    // só roda no mount; notificação de novas simulações precisa de
+    // novo open do panel pra aparecer (UX intencional)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // Carrega histórico ao abrir (só 1 vez)
   useEffect(() => {
@@ -450,7 +465,14 @@ function ChatPanel({
             gap: 12,
           }}
         >
-          {saudacao && historicoCarregado && (
+          {/* Notificação proativa — simulação salva. Aparece SEMPRE
+              que o panel abre com notificação pendente, mesmo se já
+              tem histórico. */}
+          {notif && notif.tipo === "simulacao_salva" && (
+            <NotifSimulacao notif={notif} nomeCurto={nomeCurto} />
+          )}
+
+          {saudacao && historicoCarregado && !notif && (
             <div
               style={{
                 padding: 16,
@@ -782,6 +804,91 @@ function TypingDots() {
             }}
           />
         ))}
+      </div>
+    </div>
+  )
+}
+
+function NotifSimulacao({
+  notif,
+  nomeCurto,
+}: {
+  notif: NonNullable<ReturnType<typeof useWidgetIA>["notificacaoPendente"]>
+  nomeCurto?: string
+}) {
+  if (notif.tipo !== "simulacao_salva") return null
+  const cor =
+    notif.faixa === "alta"
+      ? "var(--green)"
+      : notif.faixa === "media"
+      ? "var(--gold)"
+      : "var(--danger)"
+
+  const linha1 = `${nomeCurto ? `${nomeCurto}, vi ` : "Vi "}sua simulação${notif.cultura ? ` de ${notif.cultura}` : ""} agora.`
+  const linha2 =
+    notif.faixa === "alta"
+      ? `Score ${notif.score}/100 — leitura forte. Quer que eu mostre como blindar pra chegar em 90+?`
+      : notif.faixa === "media"
+      ? `Score ${notif.score}/100 — tá no caminho. Quer ver quais 2 ações sobem mais rápido?`
+      : `Score ${notif.score}/100 — vamos destravar. Posso te apontar onde tá o gargalo agora?`
+
+  return (
+    <div
+      style={{
+        padding: 16,
+        borderRadius: 12,
+        background: `linear-gradient(135deg, ${
+          notif.faixa === "alta"
+            ? "rgba(78,168,132,0.14)"
+            : notif.faixa === "media"
+            ? "rgba(201,168,106,0.14)"
+            : "rgba(212,113,88,0.14)"
+        } 0%, rgba(255,255,255,0.04) 100%)`,
+        border: `1px solid ${cor}`,
+      }}
+    >
+      <div
+        className="mono"
+        style={{
+          fontSize: 10,
+          letterSpacing: "0.18em",
+          textTransform: "uppercase",
+          color: cor,
+          marginBottom: 8,
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 8,
+        }}
+      >
+        <span
+          style={{
+            width: 6,
+            height: 6,
+            borderRadius: "50%",
+            background: cor,
+            boxShadow: `0 0 8px ${cor}`,
+          }}
+        />
+        Simulação salva · IA notou
+      </div>
+      <div
+        style={{
+          fontSize: 14,
+          lineHeight: 1.55,
+          color: "var(--ink)",
+          marginBottom: 6,
+        }}
+      >
+        {linha1}
+      </div>
+      <div
+        style={{
+          fontSize: 13.5,
+          lineHeight: 1.55,
+          color: "var(--ink-2)",
+        }}
+      >
+        {linha2}
       </div>
     </div>
   )

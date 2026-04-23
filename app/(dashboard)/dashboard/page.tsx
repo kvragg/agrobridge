@@ -23,7 +23,7 @@ export default async function DashboardPage() {
 
   const admin = createAdminClient()
 
-  const [{ data: perfilRaw }, plano, { data: processosRaw }] = await Promise.all([
+  const [{ data: perfilRaw }, plano, { data: processosRaw }, { data: ultimaSimRaw }] = await Promise.all([
     admin.from("perfis_lead").select("*").eq("user_id", user.id).maybeSingle(),
     getPlanoAtual(),
     admin
@@ -32,10 +32,27 @@ export default async function DashboardPage() {
       .eq("user_id", user.id)
       .is("deleted_at", null)
       .order("created_at", { ascending: false }),
+    // Última simulação (pra alimentar KPI score). RLS permite admin
+    // acessar; mas pra coerência usamos admin client direto e filtramos
+    // por user_id.
+    admin
+      .from("simulacoes")
+      .select("score, cultura, valor_pretendido, created_at")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
   ])
 
   const perfil = (perfilRaw ?? null) as PerfilLead | null
   const processos = (processosRaw ?? []) as ProcessoResumo[]
+  const ultimaSimulacao = ultimaSimRaw
+    ? {
+        score: ultimaSimRaw.score as number,
+        cultura: ultimaSimRaw.cultura as string,
+        created_at: ultimaSimRaw.created_at as string,
+      }
+    : null
   const nomeCurto =
     perfil?.nome?.split(" ")[0] ??
     (user.user_metadata?.nome as string | undefined)?.split(" ")[0] ??
@@ -47,6 +64,7 @@ export default async function DashboardPage() {
       perfil={perfil}
       processos={processos}
       nomeCurto={nomeCurto}
+      ultimaSimulacao={ultimaSimulacao}
     />
   )
 }

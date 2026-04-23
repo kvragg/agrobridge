@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { criarStreamEntrevista, HAIKU_MODEL } from '@/lib/anthropic/haiku'
 import type { MensagemChat } from '@/lib/anthropic/haiku'
-import { rateLimit } from '@/lib/rate-limit'
+import { rateLimitRemoto } from '@/lib/rate-limit-upstash'
 import { NextRequest } from 'next/server'
 
 function detalharErroAnthropic(err: unknown): {
@@ -47,9 +47,6 @@ const JSON_FENCE_START = '```json'
 const JSON_FENCE_END = '```'
 
 export async function POST(request: NextRequest) {
-  console.log(
-    `[api/entrevista] POST iniciado — modelo=${HAIKU_MODEL}, key_presente=${!!process.env.ANTHROPIC_API_KEY}`
-  )
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -58,7 +55,7 @@ export async function POST(request: NextRequest) {
   }
 
   // Rate-limit IA por usuário — protege saldo Anthropic. 60 turnos/h cobre UX real.
-  const limite = rateLimit(`ia:entrevista:${user.id}`, 60, 60 * 60 * 1000)
+  const limite = await rateLimitRemoto(`ia:entrevista:${user.id}`, 60, 60 * 60 * 1000)
   if (!limite.ok) {
     return new Response('Muitas mensagens. Aguarde alguns minutos.', {
       status: 429,

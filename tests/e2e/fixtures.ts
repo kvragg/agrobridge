@@ -1,7 +1,7 @@
 import { test as base, expect, type Page } from '@playwright/test'
 
 export const TEST_EMAIL =
-  process.env.E2E_TEST_EMAIL ?? 'e2e-teste@agrobridge.app'
+  process.env.E2E_TEST_EMAIL ?? 'e2e-teste@agrobridge.space'
 export const TEST_PASSWORD =
   process.env.E2E_TEST_PASSWORD ?? 'Senh@E2E-Teste-2026'
 

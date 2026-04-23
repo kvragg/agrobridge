@@ -1,9 +1,14 @@
+import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { getAdminUser } from '@/lib/admin-auth'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
+
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+}
 
 const ABAS = [
   { href: '/admin/dashboard', label: 'Dashboard' },

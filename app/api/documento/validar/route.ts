@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { validarDocumento } from '@/lib/anthropic/validador'
 import { logAuditEvent } from '@/lib/audit'
 import { realMimeType } from '@/lib/file-sniff'
-import { rateLimit } from '@/lib/rate-limit'
+import { rateLimitRemoto } from '@/lib/rate-limit-upstash'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
   }
 
   // Rate-limit IA por usuário — protege saldo Anthropic contra abuso.
-  const limite = rateLimit(`ia:validar:${user.id}`, 30, 60 * 60 * 1000)
+  const limite = await rateLimitRemoto(`ia:validar:${user.id}`, 30, 60 * 60 * 1000)
   if (!limite.ok) {
     return Response.json(
       { erro: 'Limite de validações por hora atingido. Tente novamente mais tarde.' },

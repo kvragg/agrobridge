@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
   }
   const destino = body.to?.trim() || admin.email
   const siteUrl =
-    process.env.NEXT_PUBLIC_SITE_URL ?? 'https://agrobridge.app'
+    process.env.NEXT_PUBLIC_SITE_URL ?? 'https://agrobridge.space'
   const processoFake = '00000000-0000-0000-0000-000000000000'
   const nomeFake = '[TESTE] Produtor Rural'
 

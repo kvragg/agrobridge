@@ -4,7 +4,8 @@ import { montarDossiePDF } from '@/lib/dossie/pdf'
 import { calcularCompletude } from '@/lib/dossie/status'
 import { enviarDossiePronto } from '@/lib/email/resend'
 import { logAuditEvent } from '@/lib/audit'
-import { rateLimit } from '@/lib/rate-limit'
+import { rateLimitRemoto } from '@/lib/rate-limit-upstash'
+import { capturarErroProducao } from '@/lib/logger'
 import { lerTier, temAcesso, TIER_NOME } from '@/lib/tier'
 import type { PerfilEntrevista } from '@/types/entrevista'
 import { NextRequest } from 'next/server'
@@ -45,7 +46,7 @@ export async function POST(request: NextRequest) {
 
   // Rate-limit IA por usuário — dossiê é a operação mais cara
   // (Sonnet + PDF + Storage). 5/h cobre uso normal e barra abuso.
-  const limite = rateLimit(`ia:dossie:${user.id}`, 5, 60 * 60 * 1000)
+  const limite = await rateLimitRemoto(`ia:dossie:${user.id}`, 5, 60 * 60 * 1000)
   if (!limite.ok) {
     return Response.json(
       { erro: 'Limite de gerações de dossiê por hora atingido. Tente novamente em uma hora.' },
@@ -135,7 +136,11 @@ export async function POST(request: NextRequest) {
     { p_processo_id: processoId }
   )
   if (lockErr) {
-    console.error('[api/dossie] RPC iniciar_geracao_dossie falhou', lockErr)
+    capturarErroProducao(lockErr, {
+      modulo: 'dossie',
+      userId: user.id,
+      extra: { rpc: 'iniciar_geracao_dossie', processoId },
+    })
     return Response.json({ erro: 'Falha ao iniciar geração' }, { status: 500 })
   }
   const lockRow = (Array.isArray(lockData) ? lockData[0] : lockData) as
@@ -170,7 +175,11 @@ export async function POST(request: NextRequest) {
         }
         const status = e.status
         const msg = e.error?.message ?? e.message ?? String(err)
-        console.error('[api/dossie] erro Sonnet laudo', status, msg, err)
+        capturarErroProducao(err, {
+          modulo: 'dossie',
+          userId: user.id,
+          extra: { etapa: 'sonnet_laudo', status: status ?? 0, msg: msg.slice(0, 200) },
+        })
         let curta = 'Falha ao gerar laudo. Tente novamente em alguns segundos.'
         if (status === 401) curta = 'Chave da API inválida ou ausente no servidor.'
         else if (status === 400 && /credit balance/i.test(msg))
@@ -199,7 +208,11 @@ export async function POST(request: NextRequest) {
         laudoMd,
       })
     } catch (err) {
-      console.error('[api/dossie] falha ao montar PDF', err)
+      capturarErroProducao(err, {
+        modulo: 'dossie',
+        userId: user.id,
+        extra: { etapa: 'montar_pdf', processoId },
+      })
       await supabase.rpc('abortar_geracao_dossie', { p_processo_id: processoId })
       return Response.json({ erro: 'Erro ao montar PDF do dossiê' }, { status: 500 })
     }
@@ -213,7 +226,11 @@ export async function POST(request: NextRequest) {
         upsert: true,
       })
     if (uploadErr) {
-      console.error('[api/dossie] upload falhou', uploadErr)
+      capturarErroProducao(uploadErr, {
+        modulo: 'dossie',
+        userId: user.id,
+        extra: { etapa: 'upload_storage', processoId },
+      })
       await supabase.rpc('abortar_geracao_dossie', { p_processo_id: processoId })
       return Response.json({ erro: 'Falha ao salvar dossiê' }, { status: 500 })
     }
@@ -224,7 +241,11 @@ export async function POST(request: NextRequest) {
       { p_processo_id: processoId, p_laudo_md: laudoMd }
     )
     if (finErr) {
-      console.error('[api/dossie] RPC finalizar_geracao_dossie falhou', finErr)
+      capturarErroProducao(finErr, {
+        modulo: 'dossie',
+        userId: user.id,
+        extra: { rpc: 'finalizar_geracao_dossie', processoId },
+      })
       await supabase.rpc('abortar_geracao_dossie', { p_processo_id: processoId })
       return Response.json({ erro: 'Falha ao finalizar dossiê' }, { status: 500 })
     }
@@ -240,7 +261,11 @@ export async function POST(request: NextRequest) {
       try {
         await enviarDossiePronto({ to: user.email, nome, processoId })
       } catch (err) {
-        console.error('[api/dossie] falha email dossiê pronto', err)
+        capturarErroProducao(err, {
+          modulo: 'dossie',
+          userId: user.id,
+          extra: { etapa: 'email_dossie_pronto' },
+        })
       }
 
       // Audit (E4): registra apenas na PRIMEIRA geração — replays de
@@ -263,7 +288,11 @@ export async function POST(request: NextRequest) {
     })
   } catch (err) {
     // Salvaguarda: qualquer exceção não prevista também libera o lock.
-    console.error('[api/dossie] erro inesperado', err)
+    capturarErroProducao(err, {
+      modulo: 'dossie',
+      userId: user.id,
+      extra: { etapa: 'erro_inesperado', processoId },
+    })
     await supabase.rpc('abortar_geracao_dossie', { p_processo_id: processoId })
     return Response.json({ erro: 'Erro inesperado ao gerar dossiê' }, { status: 500 })
   }

@@ -12,6 +12,15 @@ import {
 
 type WidgetState = "closed" | "minimized" | "open"
 
+/** Notificação proativa que a IA mostra ao abrir o widget. */
+export interface NotificacaoProativa {
+  tipo: "simulacao_salva"
+  score: number
+  faixa: "baixa" | "media" | "alta"
+  cultura?: string
+  timestamp: number
+}
+
 interface WidgetIAContextValue {
   state: WidgetState
   open: () => void
@@ -23,6 +32,12 @@ interface WidgetIAContextValue {
   /** Usado pela integração com simulação salva na Fase C. */
   pulse: () => void
   pulsing: boolean
+  /** Notificação proativa pendente (some quando widget abre e exibe). */
+  notificacaoPendente: NotificacaoProativa | null
+  /** Disparado por outras telas (ex: SimuladorClient após salvar). */
+  notificarSimulacaoSalva: (params: { score: number; cultura?: string }) => void
+  /** Consome a notificação (chamado pelo WidgetIA depois de exibir). */
+  consumirNotificacao: () => void
 }
 
 const Ctx = createContext<WidgetIAContextValue | null>(null)
@@ -56,6 +71,8 @@ export function WidgetIAProvider({
 }) {
   const [state, setState] = useState<WidgetState>("closed")
   const [pulsing, setPulsing] = useState(false)
+  const [notificacaoPendente, setNotificacaoPendente] =
+    useState<NotificacaoProativa | null>(null)
 
   // Auto-open no primeiro login do dia (per-user via localStorage)
   useEffect(() => {
@@ -120,6 +137,29 @@ export function WidgetIAProvider({
     return () => clearTimeout(t)
   }, [])
 
+  const notificarSimulacaoSalva = useCallback(
+    ({ score, cultura }: { score: number; cultura?: string }) => {
+      const faixa: NotificacaoProativa["faixa"] =
+        score >= 70 ? "alta" : score >= 50 ? "media" : "baixa"
+      setNotificacaoPendente({
+        tipo: "simulacao_salva",
+        score,
+        faixa,
+        cultura,
+        timestamp: Date.now(),
+      })
+      // Pulse no FAB pra atrair atenção (sem abrir automático — user
+      // mantém controle).
+      setPulsing(true)
+      setTimeout(() => setPulsing(false), PULSE_MS * 2)
+    },
+    [],
+  )
+
+  const consumirNotificacao = useCallback(() => {
+    setNotificacaoPendente(null)
+  }, [])
+
   const value = useMemo<WidgetIAContextValue>(
     () => ({
       state,
@@ -130,8 +170,23 @@ export function WidgetIAProvider({
       markInteracted,
       pulse,
       pulsing,
+      notificacaoPendente,
+      notificarSimulacaoSalva,
+      consumirNotificacao,
     }),
-    [state, open, close, minimize, toggle, markInteracted, pulse, pulsing],
+    [
+      state,
+      open,
+      close,
+      minimize,
+      toggle,
+      markInteracted,
+      pulse,
+      pulsing,
+      notificacaoPendente,
+      notificarSimulacaoSalva,
+      consumirNotificacao,
+    ],
   )
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>

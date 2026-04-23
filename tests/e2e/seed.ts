@@ -11,7 +11,7 @@ import { createClient } from '@supabase/supabase-js'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
 const SERVICE_ROLE = process.env.SUPABASE_SERVICE_ROLE_KEY
-const EMAIL = process.env.E2E_TEST_EMAIL ?? 'e2e-teste@agrobridge.app'
+const EMAIL = process.env.E2E_TEST_EMAIL ?? 'e2e-teste@agrobridge.space'
 const PASSWORD = process.env.E2E_TEST_PASSWORD ?? 'Senh@E2E-Teste-2026'
 
 async function main() {

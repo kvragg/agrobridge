@@ -1,0 +1,11 @@
+import type { Metadata } from "next"
+import type { ReactNode } from "react"
+
+export const metadata: Metadata = {
+  title: "Autenticação",
+  robots: { index: false, follow: false },
+}
+
+export default function AuthSegmentLayout({ children }: { children: ReactNode }) {
+  return <>{children}</>
+}

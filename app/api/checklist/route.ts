@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { gerarChecklist, SONNET_MODEL } from '@/lib/anthropic/sonnet'
-import { rateLimit } from '@/lib/rate-limit'
+import { rateLimitRemoto } from '@/lib/rate-limit-upstash'
 import { lerTier, temAcesso, TIER_NOME } from '@/lib/tier'
 import type { PerfilEntrevista } from '@/types/entrevista'
 import { NextRequest } from 'next/server'
@@ -10,9 +10,6 @@ export const runtime = 'nodejs'
 export const maxDuration = 90
 
 export async function POST(request: NextRequest) {
-  console.log(
-    `[api/checklist] POST iniciado — modelo=${SONNET_MODEL}, key_presente=${!!process.env.ANTHROPIC_API_KEY}`
-  )
   const supabase = await createClient()
   const {
     data: { user },
@@ -24,7 +21,7 @@ export async function POST(request: NextRequest) {
 
   // Rate-limit IA por usuário — checklist tem cache, mas re-gerações
   // forçadas ou processos múltiplos não devem queimar Sonnet sem teto.
-  const limite = rateLimit(`ia:checklist:${user.id}`, 10, 60 * 60 * 1000)
+  const limite = await rateLimitRemoto(`ia:checklist:${user.id}`, 10, 60 * 60 * 1000)
   if (!limite.ok) {
     return Response.json(
       { erro: 'Limite de gerações por hora atingido. Aguarde alguns minutos.' },
