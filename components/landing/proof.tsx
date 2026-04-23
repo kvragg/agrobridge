@@ -1,6 +1,12 @@
 "use client"
 
-import { useMemo, useState, type ReactNode } from "react"
+// Antes: simulador interativo (a v1 do prompt original).
+// Agora: SimuladorLoop não-interativo (BLOCO 6 do prompt do simulador) —
+// inputs mudam sozinhos em loop, score reage com animação CountUp,
+// CTA leva pro cadastro/simulador.
+
+import Link from "next/link"
+import { useEffect, useMemo, useRef, useState } from "react"
 import {
   Container,
   SectionLabel,
@@ -10,113 +16,469 @@ import {
   GlassCard,
   useReveal,
 } from "./primitives"
+import { simular } from "@/lib/simulator/engine"
+import { CONJUNTURA_ATUAL } from "@/lib/simulator/data/conjuntura"
+import type { SimulatorInput, Faixa } from "@/lib/simulator/types"
 
-const STATS = [
-  { k: "Projetos instruídos", v: "em piloto", tag: "placeholder honesto" },
-  { k: "Domínio do MCR", v: "Cap. 1–16", tag: "técnico" },
-  { k: "Tempo médio de dossiê", v: "3–5 dias", tag: "previsão atual" },
-  { k: "Custo para você", v: "A partir de R$ 29,99", tag: "pagamento único" },
+// 5 cenários pré-definidos pra cicar no loop. Cada um pinta um perfil
+// realista de produtor com nota diferente — pra hipnotizar o lead.
+const CENARIOS: { rotulo: string; input: SimulatorInput }[] = [
+  {
+    rotulo: "Soja MT · cadastro pronto",
+    input: {
+      valor_pretendido: 1_200_000,
+      cultura: "soja",
+      finalidade: "custeio",
+      porte: "grande",
+      uf: "MT",
+      garantias: ["alienacao_fiduciaria_rural", "cpr_f_registrada"],
+      relacao_terra: "proprio",
+      aval_tipo: "nenhum",
+      cadastro_nivel: "padrao_agrobridge",
+      historico_scr: "limpo",
+      endividamento_pct: 30,
+      car: "regular_averbado",
+      tem_seguro_agricola: true,
+      reciprocidade_bancaria: "forte",
+      cpf_cnpj_regular: true,
+      imovel_em_inventario: false,
+      arrendamento_com_anuencia: true,
+      itr_em_dia: true,
+      ir_em_dia: true,
+    },
+  },
+  {
+    rotulo: "Pecuária GO · arrendado + aval",
+    input: {
+      valor_pretendido: 680_000,
+      cultura: "pecuaria_corte",
+      finalidade: "investimento",
+      porte: "medio",
+      uf: "GO",
+      garantias: ["hipoteca_1grau", "alienacao_maquinas"],
+      relacao_terra: "totalmente_arrendado",
+      aval_tipo: "amplo_amparo_patrimonial",
+      cadastro_nivel: "atualizado_incompleto",
+      historico_scr: "restricao_encerrada",
+      endividamento_pct: 55,
+      car: "regular_averbado",
+      tem_seguro_agricola: false,
+      reciprocidade_bancaria: "media",
+      cpf_cnpj_regular: true,
+      imovel_em_inventario: false,
+      arrendamento_com_anuencia: true,
+      itr_em_dia: true,
+      ir_em_dia: true,
+    },
+  },
+  {
+    rotulo: "Café MG · tradicional",
+    input: {
+      valor_pretendido: 480_000,
+      cultura: "cafe_arabica",
+      finalidade: "custeio",
+      porte: "medio",
+      uf: "MG",
+      garantias: ["hipoteca_1grau"],
+      relacao_terra: "proprio",
+      aval_tipo: "nenhum",
+      cadastro_nivel: "atualizado_incompleto",
+      historico_scr: "limpo",
+      endividamento_pct: 40,
+      car: "regular_averbado",
+      tem_seguro_agricola: true,
+      reciprocidade_bancaria: "forte",
+      cpf_cnpj_regular: true,
+      imovel_em_inventario: false,
+      arrendamento_com_anuencia: true,
+      itr_em_dia: true,
+      ir_em_dia: true,
+    },
+  },
+  {
+    rotulo: "Avicultura SP · integradora AAA",
+    input: {
+      valor_pretendido: 2_500_000,
+      cultura: "avicultura_corte",
+      finalidade: "investimento",
+      porte: "grande",
+      uf: "SP",
+      garantias: ["cessao_creditorios_aaa", "alienacao_fiduciaria_rural"],
+      relacao_terra: "proprio",
+      aval_tipo: "nenhum",
+      cadastro_nivel: "padrao_agrobridge",
+      historico_scr: "limpo",
+      endividamento_pct: 25,
+      car: "regular_averbado",
+      tem_seguro_agricola: true,
+      reciprocidade_bancaria: "forte",
+      cpf_cnpj_regular: true,
+      imovel_em_inventario: false,
+      arrendamento_com_anuencia: true,
+      itr_em_dia: true,
+      ir_em_dia: true,
+    },
+  },
+  {
+    rotulo: "Pequeno PR · Pronaf + CAF",
+    input: {
+      valor_pretendido: 120_000,
+      cultura: "feijao",
+      finalidade: "custeio",
+      porte: "pequeno",
+      uf: "PR",
+      garantias: ["penhor_safra_com_seguro", "aval_amplo_patrimonio"],
+      relacao_terra: "proprio",
+      aval_tipo: "amplo_amparo_patrimonial",
+      cadastro_nivel: "atualizado_incompleto",
+      historico_scr: "primeira_operacao",
+      endividamento_pct: 15,
+      car: "regular_averbado",
+      tem_seguro_agricola: true,
+      reciprocidade_bancaria: "forte",
+      cpf_cnpj_regular: true,
+      imovel_em_inventario: false,
+      arrendamento_com_anuencia: true,
+      tem_dap_caf: true,
+      itr_em_dia: true,
+      ir_em_dia: true,
+    },
+  },
 ]
 
-const GARANTIAS = [
-  "Hipoteca rural",
-  "Alienação fiduciária simples",
-  "Alienação fiduciária guarda-chuva",
-  "Penhor da safra",
-  "Aval",
-] as const
-const CULTURAS = [
-  "Soja",
-  "Milho",
-  "Café",
-  "Cana",
-  "Algodão",
-  "Citros",
-  "Pecuária de corte",
-  "Pecuária de leite",
-] as const
+const FAIXA_LABEL: Record<Faixa, string> = {
+  muito_baixa: "Muito baixa",
+  baixa: "Baixa",
+  media: "Probabilidade média",
+  alta: "Alta probabilidade",
+  muito_alta: "Muito alta",
+}
 
-type Garantia = (typeof GARANTIAS)[number]
-type Cultura = (typeof CULTURAS)[number]
+const FAIXA_COR: Record<Faixa, string> = {
+  muito_baixa: "var(--danger)",
+  baixa: "var(--danger)",
+  media: "var(--gold)",
+  alta: "var(--green)",
+  muito_alta: "var(--green)",
+}
 
-function Field({ label, children }: { label: string; children: ReactNode }) {
+export function Proof() {
+  useReveal()
+  const [idx, setIdx] = useState(0)
+  const [scoreAnim, setScoreAnim] = useState(0)
+  const animRef = useRef<number | null>(null)
+
+  const cenarioAtual = CENARIOS[idx]
+  const resultado = useMemo(
+    () => simular(cenarioAtual.input, CONJUNTURA_ATUAL),
+    [cenarioAtual],
+  )
+  const cor = FAIXA_COR[resultado.faixa]
+
+  // CountUp animado pro score
+  useEffect(() => {
+    const inicio = scoreAnim
+    const fim = resultado.score
+    const duracao = 700
+    const t0 = performance.now()
+
+    function step(now: number) {
+      const t = Math.min(1, (now - t0) / duracao)
+      const eased = 1 - Math.pow(1 - t, 3) // ease-out cubic
+      const v = Math.round(inicio + (fim - inicio) * eased)
+      setScoreAnim(v)
+      if (t < 1) animRef.current = requestAnimationFrame(step)
+    }
+    animRef.current = requestAnimationFrame(step)
+    return () => {
+      if (animRef.current) cancelAnimationFrame(animRef.current)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resultado.score])
+
+  // Cicla cenários a cada 3.5s
+  useEffect(() => {
+    const iv = setInterval(() => {
+      setIdx((i) => (i + 1) % CENARIOS.length)
+    }, 3500)
+    return () => clearInterval(iv)
+  }, [])
+
   return (
-    <label style={{ display: "block" }}>
+    <section style={{ padding: "140px 0", position: "relative" }}>
       <div
-        className="mono"
+        className="ambient"
         style={{
-          fontSize: 10.5,
-          letterSpacing: "0.18em",
-          textTransform: "uppercase",
-          color: "var(--muted)",
-          marginBottom: 10,
+          position: "absolute",
+          inset: 0,
+          pointerEvents: "none",
+          zIndex: 0,
+          background:
+            "radial-gradient(40% 60% at 85% 30%, rgba(78,168,132,0.10), transparent 60%)",
         }}
-      >
-        {label}
-      </div>
-      {children}
-    </label>
+      />
+      <Container style={{ position: "relative" }}>
+        <SectionLabel num="05" label="Veja sua leitura antes do banco" />
+
+        <div
+          className="proof-header"
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: 56,
+            marginBottom: 48,
+            alignItems: "flex-end",
+          }}
+        >
+          <div className="reveal">
+            <h2
+              style={{
+                fontSize: "clamp(36px, 4.6vw, 56px)",
+                lineHeight: 1.0,
+                letterSpacing: "-0.035em",
+                fontWeight: 500,
+                margin: 0,
+                textWrap: "balance",
+                color: "#fff",
+              }}
+            >
+              A mesma leitura
+              <br />
+              <span
+                style={{
+                  color: "transparent",
+                  background:
+                    "linear-gradient(90deg,#5cbd95,#c9a86a)",
+                  WebkitBackgroundClip: "text",
+                  backgroundClip: "text",
+                }}
+              >
+                que o comitê faz.
+              </span>
+            </h2>
+          </div>
+          <div className="reveal reveal-d1">
+            <p
+              style={{
+                fontSize: 16.5,
+                lineHeight: 1.65,
+                color: "var(--ink-2)",
+                margin: 0,
+                maxWidth: 480,
+              }}
+            >
+              Descubra sua nota de viabilidade antes de entrar no banco. O
+              motor lê seu cenário e mostra exatamente o que aumenta — e o
+              que reduz — sua chance de aprovação.
+            </p>
+          </div>
+        </div>
+
+        <GlassCard glow="green" padding={0} hover={false} className="reveal reveal-d2">
+          <div
+            className="proof-grid"
+            style={{ display: "grid", gridTemplateColumns: "1fr 1fr" }}
+          >
+            {/* Esquerda — cenário animado */}
+            <div
+              className="proof-left"
+              style={{
+                padding: 36,
+                borderRight: "1px solid var(--line)",
+                position: "relative",
+                minHeight: 360,
+              }}
+            >
+              <Eyebrow>Cenário ao vivo · {cenarioAtual.rotulo}</Eyebrow>
+
+              <div style={{ marginTop: 24, display: "grid", gap: 14 }}>
+                <Row
+                  label="Cultura"
+                  valor={resultado.linha_mcr_provavel ?? "—"}
+                />
+                <Row
+                  label="Valor pretendido"
+                  valor={`R$ ${cenarioAtual.input.valor_pretendido.toLocaleString("pt-BR")}`}
+                />
+                <Row
+                  label="Cadastro"
+                  valor={cenarioAtual.input.cadastro_nivel === "padrao_agrobridge" ? "Padrão AgroBridge" : "Atualizado incompleto"}
+                />
+                <Row
+                  label="Garantias"
+                  valor={`${cenarioAtual.input.garantias.length} ${cenarioAtual.input.garantias.length === 1 ? "selecionada" : "selecionadas"}`}
+                />
+                <Row
+                  label="Histórico SCR"
+                  valor={cenarioAtual.input.historico_scr === "limpo" ? "Limpo" : "Em recuperação"}
+                />
+              </div>
+
+              {/* Indicadores dos cenários */}
+              <div
+                style={{
+                  marginTop: 32,
+                  display: "flex",
+                  gap: 6,
+                  alignItems: "center",
+                }}
+              >
+                {CENARIOS.map((_, i) => (
+                  <span
+                    key={i}
+                    style={{
+                      width: i === idx ? 24 : 6,
+                      height: 6,
+                      borderRadius: 999,
+                      background:
+                        i === idx ? "var(--green)" : "var(--line-2)",
+                      transition: "all .3s",
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Direita — score + faixa */}
+            <div
+              className="proof-right"
+              style={{ padding: 36, position: "relative" }}
+            >
+              <Eyebrow color={cor} dot={cor}>
+                Leitura AgroBridge
+              </Eyebrow>
+
+              <div
+                style={{
+                  marginTop: 24,
+                  display: "flex",
+                  alignItems: "baseline",
+                  gap: 12,
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: 96,
+                    fontWeight: 500,
+                    letterSpacing: "-0.045em",
+                    lineHeight: 1,
+                    color: "transparent",
+                    background: `linear-gradient(180deg, #fff 0%, ${cor} 100%)`,
+                    WebkitBackgroundClip: "text",
+                    backgroundClip: "text",
+                    fontVariantNumeric: "tabular-nums",
+                  }}
+                >
+                  {scoreAnim}
+                </div>
+                <div className="mono" style={{ fontSize: 13, color: "var(--muted)" }}>
+                  / 100
+                </div>
+              </div>
+              <div
+                style={{
+                  fontSize: 18,
+                  color: cor,
+                  fontWeight: 500,
+                  marginTop: 8,
+                }}
+              >
+                {FAIXA_LABEL[resultado.faixa]}
+              </div>
+
+              <div
+                style={{
+                  marginTop: 24,
+                  height: 6,
+                  background: "rgba(255,255,255,0.06)",
+                  borderRadius: 4,
+                  overflow: "hidden",
+                }}
+              >
+                <div
+                  style={{
+                    width: `${resultado.score}%`,
+                    height: "100%",
+                    background: `linear-gradient(90deg, ${cor}, ${cor === "var(--green)" ? "var(--gold)" : cor})`,
+                    boxShadow: `0 0 14px ${cor}`,
+                    transition: "all .6s ease",
+                  }}
+                />
+              </div>
+
+              <div style={{ marginTop: 24, display: "grid", gap: 8 }}>
+                <Check ok={resultado.score >= 50} label="Garantia compatível com comitê" />
+                <Check ok={cenarioAtual.input.historico_scr === "limpo" || cenarioAtual.input.historico_scr === "restricao_encerrada"} label="Histórico SCR aceitável" />
+                <Check ok={cenarioAtual.input.car === "regular_averbado"} label="CAR regular" />
+                <Check ok={cenarioAtual.input.endividamento_pct < 100} label="Endividamento sob controle" />
+              </div>
+
+              <div style={{ marginTop: 32 }}>
+                <Button variant="accent" size="md" href="/cadastro">
+                  Fazer minha simulação grátis {Icon.arrow(14)}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </GlassCard>
+      </Container>
+
+      <style>{`
+        @media (max-width: 1020px) {
+          .proof-header { grid-template-columns: 1fr !important; gap: 24px !important; align-items: flex-start !important; }
+          .proof-grid { grid-template-columns: 1fr !important; }
+          .proof-left { border-right: none !important; border-bottom: 1px solid var(--line); }
+        }
+      `}</style>
+    </section>
   )
 }
 
-function Segmented<T extends string>({
-  options,
-  value,
-  onChange,
-}: {
-  options: readonly T[]
-  value: T
-  onChange: (v: T) => void
-}) {
+function Row({ label, valor }: { label: string; valor: string }) {
   return (
     <div
       style={{
-        display: "inline-flex",
-        flexWrap: "wrap",
-        gap: 4,
-        padding: 4,
-        background: "rgba(0,0,0,0.35)",
-        borderRadius: 999,
-        border: "1px solid var(--line)",
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "baseline",
+        gap: 12,
+        padding: "10px 0",
+        borderBottom: "1px solid var(--line)",
       }}
     >
-      {options.map((o) => {
-        const active = o === value
-        return (
-          <button
-            key={o}
-            onClick={() => onChange(o)}
-            style={{
-              padding: "7px 14px",
-              borderRadius: 999,
-              fontSize: 12.5,
-              background: active
-                ? "rgba(78,168,132,0.22)"
-                : "transparent",
-              color: active ? "#fff" : "var(--muted)",
-              border: active
-                ? "1px solid rgba(78,168,132,0.4)"
-                : "1px solid transparent",
-              fontFamily: "Geist",
-              transition: "all .2s",
-            }}
-          >
-            {o}
-          </button>
-        )
-      })}
+      <span
+        className="mono"
+        style={{
+          fontSize: 10.5,
+          letterSpacing: "0.16em",
+          textTransform: "uppercase",
+          color: "var(--muted)",
+        }}
+      >
+        {label}
+      </span>
+      <span
+        style={{
+          fontSize: 13.5,
+          color: "var(--ink)",
+          letterSpacing: "-0.005em",
+          textAlign: "right",
+        }}
+      >
+        {valor}
+      </span>
     </div>
   )
 }
 
-function ReadRow({ ok, label }: { ok: boolean; label: string }) {
+function Check({ ok, label }: { ok: boolean; label: string }) {
   return (
     <div
       style={{
         display: "flex",
         alignItems: "center",
         gap: 10,
-        fontSize: 14,
+        fontSize: 13.5,
         color: ok ? "var(--ink)" : "var(--muted)",
       }}
     >
@@ -136,280 +498,5 @@ function ReadRow({ ok, label }: { ok: boolean; label: string }) {
       </div>
       {label}
     </div>
-  )
-}
-
-export function Proof() {
-  useReveal()
-  const [valor, setValor] = useState(850)
-  const [garantia, setGarantia] = useState<Garantia>("Hipoteca rural")
-  const [cultura, setCultura] = useState<Cultura>("Soja")
-
-  const score = useMemo(() => {
-    let s = 60
-    if (valor > 2000) s -= 15
-    if (valor < 500) s += 10
-    if (garantia === "Alienação fiduciária guarda-chuva") s += 20
-    else if (garantia === "Alienação fiduciária simples") s += 16
-    else if (garantia === "Hipoteca rural") s += 14
-    else if (garantia === "Aval") s -= 10
-    if (cultura === "Soja" || cultura === "Milho") s += 12
-    else if (cultura === "Algodão") s += 10
-    else if (cultura === "Cana") s += 8
-    else if (cultura === "Citros") s += 5
-    return Math.max(35, Math.min(94, s))
-  }, [valor, garantia, cultura])
-
-  const status =
-    score >= 75
-      ? "Alta probabilidade"
-      : score >= 55
-      ? "Probabilidade média"
-      : "Requer ajustes"
-  const statusColor =
-    score >= 75
-      ? "var(--green)"
-      : score >= 55
-      ? "var(--gold)"
-      : "var(--danger)"
-
-  return (
-    <section style={{ padding: "140px 0", position: "relative" }}>
-      <div
-        className="ambient"
-        style={{
-          position: "absolute",
-          inset: 0,
-          pointerEvents: "none",
-          zIndex: 0,
-          background:
-            "radial-gradient(40% 60% at 85% 30%, rgba(78,168,132,0.08), transparent 60%)",
-        }}
-      />
-      <Container style={{ position: "relative" }}>
-        <SectionLabel num="05" label="Prova e credibilidade" />
-
-        <div
-          className="stat-strip"
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(4, 1fr)",
-            gap: 16,
-            marginBottom: 56,
-          }}
-        >
-          {STATS.map((s, i) => (
-            <GlassCard
-              key={i}
-              glow={i === 3 ? "gold" : "none"}
-              padding={24}
-              className={`reveal reveal-d${i + 1}`}
-            >
-              <div
-                className="mono"
-                style={{
-                  fontSize: 10.5,
-                  letterSpacing: "0.18em",
-                  color: "var(--muted)",
-                  textTransform: "uppercase",
-                  marginBottom: 16,
-                }}
-              >
-                {s.k}
-              </div>
-              <div
-                style={{
-                  fontSize: 24,
-                  fontWeight: 500,
-                  letterSpacing: "-0.02em",
-                  lineHeight: 1.1,
-                  color: "#fff",
-                }}
-              >
-                {s.v}
-              </div>
-              <div
-                className="mono"
-                style={{
-                  fontSize: 10.5,
-                  color: "var(--faint)",
-                  marginTop: 12,
-                  letterSpacing: "0.08em",
-                }}
-              >
-                [ {s.tag} ]
-              </div>
-            </GlassCard>
-          ))}
-        </div>
-
-        <GlassCard glow="green" padding={0} hover={false} className="reveal">
-          <div
-            className="sim-grid"
-            style={{ display: "grid", gridTemplateColumns: "1fr 1fr" }}
-          >
-            <div
-              className="sim-left"
-              style={{ padding: 40, borderRight: "1px solid var(--line)" }}
-            >
-              <Eyebrow>Simulação preliminar</Eyebrow>
-              <h3
-                style={{
-                  fontSize: 28,
-                  fontWeight: 500,
-                  letterSpacing: "-0.02em",
-                  margin: "16px 0 8px",
-                  lineHeight: 1.15,
-                  color: "#fff",
-                }}
-              >
-                Dá pra ter uma leitura antes de começar.
-              </h3>
-              <p
-                style={{
-                  color: "var(--muted)",
-                  fontSize: 14.5,
-                  lineHeight: 1.6,
-                  margin: 0,
-                  maxWidth: 380,
-                }}
-              >
-                Não é resposta do banco — é a leitura técnica do AgroBridge,
-                baseada no que o comitê olha primeiro.
-              </p>
-
-              <div style={{ marginTop: 32, display: "grid", gap: 22 }}>
-                <Field
-                  label={`Valor pretendido · R$ ${valor.toLocaleString(
-                    "pt-BR",
-                  )} mil`}
-                >
-                  <input
-                    type="range"
-                    min="100"
-                    max="3000"
-                    step="50"
-                    value={valor}
-                    onChange={(e) => setValor(+e.target.value)}
-                    style={{ width: "100%", accentColor: "var(--green)" }}
-                  />
-                </Field>
-                <Field label="Garantia principal">
-                  <Segmented
-                    options={GARANTIAS}
-                    value={garantia}
-                    onChange={setGarantia}
-                  />
-                </Field>
-                <Field label="Cultura">
-                  <Segmented
-                    options={CULTURAS}
-                    value={cultura}
-                    onChange={setCultura}
-                  />
-                </Field>
-              </div>
-            </div>
-
-            <div className="sim-right" style={{ padding: 40, position: "relative" }}>
-              <Eyebrow color={statusColor} dot={statusColor}>
-                Leitura AgroBridge
-              </Eyebrow>
-              <div style={{ marginTop: 20 }}>
-                <div style={{ display: "flex", alignItems: "baseline", gap: 12 }}>
-                  <div
-                    style={{
-                      fontSize: 96,
-                      fontWeight: 500,
-                      letterSpacing: "-0.045em",
-                      lineHeight: 1,
-                      color: "transparent",
-                      background: `linear-gradient(180deg, #fff 0%, ${statusColor} 100%)`,
-                      WebkitBackgroundClip: "text",
-                      backgroundClip: "text",
-                    }}
-                  >
-                    {score}
-                  </div>
-                  <div
-                    className="mono"
-                    style={{ fontSize: 13, color: "var(--muted)" }}
-                  >
-                    / 100
-                  </div>
-                </div>
-                <div
-                  style={{
-                    fontSize: 18,
-                    color: statusColor,
-                    fontWeight: 500,
-                    marginTop: 8,
-                  }}
-                >
-                  {status}
-                </div>
-              </div>
-
-              <div
-                style={{
-                  marginTop: 32,
-                  height: 6,
-                  background: "rgba(255,255,255,0.06)",
-                  borderRadius: 4,
-                  overflow: "hidden",
-                }}
-              >
-                <div
-                  style={{
-                    width: `${score}%`,
-                    height: "100%",
-                    background: `linear-gradient(90deg, ${statusColor}, ${
-                      statusColor === "var(--green)" ? "var(--gold)" : statusColor
-                    })`,
-                    boxShadow: `0 0 14px ${statusColor}`,
-                    transition: "all .35s",
-                  }}
-                />
-              </div>
-
-              <div style={{ marginTop: 28, display: "grid", gap: 10 }}>
-                <ReadRow
-                  ok={garantia !== "Aval"}
-                  label="Garantia compatível com comitê"
-                />
-                <ReadRow
-                  ok={
-                    cultura === "Soja" ||
-                    cultura === "Milho" ||
-                    cultura === "Algodão" ||
-                    cultura === "Cana"
-                  }
-                  label="Cultura alinhada ao MCR"
-                />
-                <ReadRow ok={valor <= 2000} label="Valor dentro do teto da linha" />
-                <ReadRow ok={true} label="Perfil elegível para análise completa" />
-              </div>
-
-              <div style={{ marginTop: 32 }}>
-                <Button variant="accent" size="md" href="/cadastro">
-                  Continuar com meu caso real {Icon.arrow(14)}
-                </Button>
-              </div>
-            </div>
-          </div>
-        </GlassCard>
-      </Container>
-
-      <style>{`
-        @media (max-width: 1020px){
-          .stat-strip{ grid-template-columns: repeat(2, 1fr) !important }
-          .sim-grid{ grid-template-columns: 1fr !important }
-          .sim-left{ border-right: none !important; border-bottom: 1px solid var(--line) }
-        }
-        @media (max-width: 560px){
-          .stat-strip{ grid-template-columns: 1fr !important }
-        }
-      `}</style>
-    </section>
   )
 }

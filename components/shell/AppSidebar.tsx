@@ -37,9 +37,27 @@ const MAIN_ITEMS: NavItem[] = [
     activePrefix: "/checklist",
   },
   {
+    href: "/simulador",
+    label: "Simulador",
+    icon: Icon.spark(16),
+    activePrefix: "/simulador",
+  },
+  {
+    href: "/simulador/comparar",
+    label: "Comparar",
+    icon: Icon.layout(16),
+    activePrefix: "/simulador/comparar",
+  },
+  {
+    href: "/simulador/historico",
+    label: "Histórico",
+    icon: Icon.doc(16),
+    activePrefix: "/simulador/historico",
+  },
+  {
     href: "/planos",
     label: "Planos",
-    icon: Icon.spark(16),
+    icon: Icon.bank(16),
     activePrefix: "/planos",
   },
   {
@@ -90,6 +108,17 @@ export function AppSidebar({ mobileOpen, onClose }: AppSidebarProps) {
   function isActive(item: NavItem): boolean {
     const prefix = item.activePrefix ?? item.href
     if (pathname === item.href) return true
+    // Match exato: outro item da lista tem prefix mais específico que
+    // também bate? Se sim, este aqui não ganha. Evita "Simulador" e
+    // "Comparar" ficarem ambos highlighted em /simulador/comparar.
+    const haPrefixMaisEspecifico = MAIN_ITEMS.some(
+      (other) =>
+        other !== item &&
+        (other.activePrefix ?? other.href).startsWith(prefix + "/") &&
+        (pathname.startsWith((other.activePrefix ?? other.href) + "/") ||
+          pathname === (other.activePrefix ?? other.href)),
+    )
+    if (haPrefixMaisEspecifico) return false
     return pathname.startsWith(prefix + "/") || pathname === prefix
   }
 
