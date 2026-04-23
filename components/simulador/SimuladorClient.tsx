@@ -9,7 +9,7 @@ import {
 } from "@/components/landing/primitives"
 import { Alert } from "@/components/shell/Alert"
 import { simular } from "@/lib/simulator/engine"
-import { CULTURAS } from "@/lib/simulator/data/culturas"
+import { CULTURAS, getCultura } from "@/lib/simulator/data/culturas"
 import { GARANTIAS } from "@/lib/simulator/data/garantias"
 import { CADASTRO_NIVEIS } from "@/lib/simulator/data/cadastro-niveis"
 import { CONJUNTURA_ATUAL } from "@/lib/simulator/data/conjuntura"
@@ -19,6 +19,7 @@ import type {
   Faixa,
 } from "@/lib/simulator/types"
 import { SimuladorRadar } from "./SimuladorRadar"
+import { useWidgetIA } from "@/components/widget-ia/WidgetIAProvider"
 
 const UF_LIST = [
   "AC","AL","AP","AM","BA","CE","DF","ES","GO",
@@ -78,6 +79,7 @@ export function SimuladorClient({
   const [salvando, setSalvando] = useState(false)
   const [salvoSucesso, setSalvoSucesso] = useState(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const widget = useWidgetIA()
 
   // Debounce dos inputs pra rodar simular() suavemente
   useEffect(() => {
@@ -132,6 +134,10 @@ export function SimuladorClient({
       if (res.ok) {
         setSalvoSucesso(true)
         setTimeout(() => setSalvoSucesso(false), 4000)
+        widget.notificarSimulacaoSalva({
+          score: resultado.score,
+          cultura: getCultura(debounced.cultura)?.nome,
+        })
       }
     } finally {
       setSalvando(false)

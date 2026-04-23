@@ -83,11 +83,17 @@ export function DashboardView({
   perfil,
   processos,
   nomeCurto,
+  ultimaSimulacao,
 }: {
   plano: string
   perfil: PerfilLead | null
   processos: ProcessoResumo[]
   nomeCurto: string
+  ultimaSimulacao?: {
+    score: number
+    cultura: string
+    created_at: string
+  } | null
 }) {
   const isFree = plano === "Free"
   const perguntas = perfil?.perguntas_respondidas_gratis ?? 0
@@ -204,6 +210,31 @@ export function DashboardView({
     },
   ]
 
+  // ── 5º KPI — Score AgroBridge da última simulação ──
+  if (ultimaSimulacao) {
+    const faixaCurta =
+      ultimaSimulacao.score >= 85
+        ? "muito alta"
+        : ultimaSimulacao.score >= 70
+        ? "alta"
+        : ultimaSimulacao.score >= 50
+        ? "média"
+        : ultimaSimulacao.score >= 30
+        ? "baixa"
+        : "muito baixa"
+    const dataFmt = new Date(ultimaSimulacao.created_at).toLocaleDateString(
+      "pt-BR",
+      { day: "2-digit", month: "2-digit" },
+    )
+    kpis.push({
+      label: "Score AgroBridge",
+      valor: `${ultimaSimulacao.score}/100`,
+      hint: `${faixaCurta} · ${dataFmt}`,
+      icon: Icon.spark(14),
+      accent: ultimaSimulacao.score >= 70 ? "green" : "gold",
+    })
+  }
+
   const mostrarKPIs = kpis.some((k) => k.valor)
   const jaInteragiu = perguntas > 0 || miniPronta || !!ultimoProcesso
 
@@ -238,7 +269,34 @@ export function DashboardView({
       {jaInteragiu && <DashboardPipeline fases={fases} />}
 
       {/* KPIs — só se tiver algum valor */}
-      {mostrarKPIs && <ProdutorKPIs kpis={kpis} />}
+      {mostrarKPIs && (
+        <div>
+          <ProdutorKPIs kpis={kpis} />
+          {ultimaSimulacao && (
+            <div
+              style={{
+                marginTop: 10,
+                display: "flex",
+                justifyContent: "flex-end",
+              }}
+            >
+              <a
+                href="/simulador/historico"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  fontSize: 12,
+                  color: "var(--green)",
+                  textDecoration: "none",
+                }}
+              >
+                Ver evolução do score {Icon.arrow(11)}
+              </a>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Documentos strip — só no tier pago com checklist */}
       {ultimoProcesso && checklistGerado && (
