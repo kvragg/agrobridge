@@ -11,8 +11,7 @@ import {
   type FinalidadeCredito,
 } from '@/lib/mcr'
 import type { PerfilLead } from '@/types/perfil-lead'
-
-const SONNET = 'claude-sonnet-4-6' as const
+import { MODEL, CACHE_EPHEMERAL } from './model'
 
 let _client: Anthropic | null = null
 function getClient(): Anthropic {
@@ -124,14 +123,20 @@ ${ctx.documentos_criticos}
 Escreva a mini-analise agora seguindo a estrutura obrigatoria.`
 
   const res = await getClient().messages.create({
-    model: SONNET,
+    model: MODEL,
     max_tokens: 900,
-    system: SYSTEM,
+    system: [
+      {
+        type: 'text',
+        text: SYSTEM,
+        cache_control: CACHE_EPHEMERAL,
+      },
+    ],
     messages: [{ role: 'user', content: user }],
   })
   const bloco = res.content[0]
   if (!bloco || bloco.type !== 'text') {
-    throw new Error('Resposta inesperada do Sonnet')
+    throw new Error('Resposta inesperada do modelo')
   }
   return bloco.text.trim()
 }

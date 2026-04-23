@@ -66,14 +66,21 @@ export async function POST(request: NextRequest) {
     return Response.json({ erro: 'Arquivo não encontrado no storage' }, { status: 404 })
   }
 
-  // Limite de tamanho para validação (evita estourar contexto do modelo)
-  const MAX_BYTES = 8 * 1024 * 1024 // 8MB
-  if (fileBlob.size > MAX_BYTES) {
+  // Limite dinâmico:
+  //   - Storage aceita até 100MB (setado no bucket via migration)
+  //   - Validação automática pela IA vai até 20MB (limite do contexto
+  //     útil do Claude Vision — acima disso retorna 413 "pendente de
+  //     validação manual" sem bloquear o upload)
+  const MAX_BYTES_VALIDACAO = 20 * 1024 * 1024 // 20MB
+  if (fileBlob.size > MAX_BYTES_VALIDACAO) {
     return Response.json(
       {
-        erro: 'Arquivo grande demais para validação automática (>8MB). Envie uma versão reduzida ou prossiga sem validar.',
+        ok: true,
+        validacao_status: 'pendente_manual',
+        aviso:
+          'Arquivo armazenado. Maior que 20MB — validação automática não foi possível. O time técnico revisa manualmente.',
       },
-      { status: 413 }
+      { status: 202 } // Accepted, não validado
     )
   }
 

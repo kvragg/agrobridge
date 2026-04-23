@@ -1,18 +1,21 @@
 // Server-only — nunca importar de client components (expõe ANTHROPIC_API_KEY).
+// Nome "haiku" é legado — o modelo agora é Sonnet 4.6 pra toda a entrevista.
+// Mantido como arquivo de compatibilidade até refactor completo (2026-Q3).
 import Anthropic from '@anthropic-ai/sdk'
 import fs from 'fs'
 import path from 'path'
+import { MODEL, CACHE_EPHEMERAL } from './model'
 
-// Carregado uma vez no startup do servidor
+// System prompt carregado 1x no startup
 const SYSTEM_PROMPT = fs.readFileSync(
   path.join(process.cwd(), 'prompts', 'entrevista-system.md'),
-  'utf-8'
+  'utf-8',
 )
 
-// ID canônico (dated) — aliases não-datados podem não resolver em todas as regiões
-export const HAIKU_MODEL = 'claude-haiku-4-5-20251001' as const
+// Alias retrocompatível — código legado importa HAIKU_MODEL.
+// Aponta pro Sonnet 4.6 agora (uniformização 2026-04-22).
+export const HAIKU_MODEL = MODEL
 
-// Cliente reutilizável — instanciado uma vez por worker
 let _client: Anthropic | null = null
 
 function getClient(): Anthropic {
@@ -32,14 +35,21 @@ export interface MensagemChat {
 }
 
 /**
- * Cria um stream de texto com o Haiku para a entrevista.
- * Retorna o stream do SDK Anthropic para ser consumido via SSE.
+ * Stream de texto com Sonnet 4.6 para a entrevista.
+ * System prompt é cacheado ephemeral — cortam ~80% do custo em rodadas
+ * repetidas do mesmo usuário dentro da janela de 5 min do cache.
  */
 export function criarStreamEntrevista(historico: MensagemChat[]) {
   return getClient().messages.stream({
-    model: HAIKU_MODEL,
+    model: MODEL,
     max_tokens: 1024,
-    system: SYSTEM_PROMPT,
+    system: [
+      {
+        type: 'text',
+        text: SYSTEM_PROMPT,
+        cache_control: CACHE_EPHEMERAL,
+      },
+    ],
     messages: historico,
   })
 }

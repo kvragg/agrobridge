@@ -19,6 +19,7 @@ export type AuditEventType =
   | 'mini_analise_gerada'
   | 'gate_freemium_ativado'
   | 'chat_mensagem'
+  | 'upload_via_widget'
   | 'admin_debug_email'
 
 interface LogParams {

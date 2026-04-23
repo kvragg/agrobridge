@@ -38,6 +38,7 @@ export default async function DashboardLayout({
       nome={nome}
       email={user.email ?? null}
       tier={planoToTier(plano.plano)}
+      userId={user.id}
     >
       {children}
     </DashboardShell>

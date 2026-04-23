@@ -3,14 +3,15 @@ import Anthropic from '@anthropic-ai/sdk'
 import fs from 'fs'
 import path from 'path'
 import type { PerfilEntrevista } from '@/types/entrevista'
+import { MODEL, CACHE_EPHEMERAL } from './model'
 
-// Carregado uma vez no startup do servidor
 const SYSTEM_PROMPT = fs.readFileSync(
   path.join(process.cwd(), 'prompts', 'checklist-system.md'),
-  'utf-8'
+  'utf-8',
 )
 
-export const SONNET_MODEL = 'claude-sonnet-4-6' as const
+// Alias retrocompatível pra código legado.
+export const SONNET_MODEL = MODEL
 
 let _client: Anthropic | null = null
 
@@ -26,14 +27,20 @@ function getClient(): Anthropic {
 }
 
 /**
- * Gera o checklist completo a partir do JSON de perfil da entrevista.
- * Retorna o texto markdown com o checklist priorizado.
+ * Gera o checklist completo a partir do JSON de perfil.
+ * System prompt cacheado ephemeral.
  */
 export async function gerarChecklist(perfil: PerfilEntrevista): Promise<string> {
   const response = await getClient().messages.create({
-    model: SONNET_MODEL,
+    model: MODEL,
     max_tokens: 4096,
-    system: SYSTEM_PROMPT,
+    system: [
+      {
+        type: 'text',
+        text: SYSTEM_PROMPT,
+        cache_control: CACHE_EPHEMERAL,
+      },
+    ],
     messages: [
       {
         role: 'user',
@@ -44,7 +51,7 @@ export async function gerarChecklist(perfil: PerfilEntrevista): Promise<string> 
 
   const bloco = response.content[0]
   if (bloco.type !== 'text') {
-    throw new Error('Resposta inesperada do Sonnet')
+    throw new Error('Resposta inesperada do modelo')
   }
   return bloco.text
 }

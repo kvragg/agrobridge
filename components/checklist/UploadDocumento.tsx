@@ -43,9 +43,14 @@ interface UploadDocumentoProps {
   nomeDocumento: string
 }
 
-const MAX_MB = 10
-const TIPOS_ACEITOS = ['application/pdf', 'image/jpeg', 'image/png']
-const EXT_ACEITAS = /\.(pdf|jpe?g|png)$/i
+const MAX_MB = 100
+const TIPOS_ACEITOS = [
+  'application/pdf',
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+]
+const EXT_ACEITAS = /\.(pdf|jpe?g|png|webp)$/i
 
 export default function UploadDocumento({
   processoId,

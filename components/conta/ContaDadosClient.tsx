@@ -25,10 +25,12 @@ export default function ContaDadosClient({
   nome,
   email,
   plano,
+  userId,
 }: {
   nome: string
   email: string
   plano: PlanoComercial
+  userId?: string | null
 }) {
   return (
     <DashboardShell
@@ -36,6 +38,7 @@ export default function ContaDadosClient({
       email={email}
       tier={tierToTopbar(plano)}
       containerStyle={{ maxWidth: 820 }}
+      userId={userId}
     >
       <div style={{ marginBottom: 40 }}>
         <Eyebrow>LGPD · Art. 18</Eyebrow>

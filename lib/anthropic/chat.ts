@@ -8,8 +8,11 @@ import 'server-only'
 import Anthropic from '@anthropic-ai/sdk'
 import type { PerfilLead } from '@/types/perfil-lead'
 import { buildSystemBlocks } from '@/lib/ai/system-prompt'
+import { MODEL } from './model'
 
-export const HAIKU_MODEL = 'claude-haiku-4-5-20251001' as const
+// Alias retrocompatível — todo código que importa HAIKU_MODEL recebe
+// Sonnet 4.6 agora (uniformização 2026-04-22).
+export const HAIKU_MODEL = MODEL
 
 let _client: Anthropic | null = null
 
@@ -38,7 +41,7 @@ export function criarStreamChat(params: {
   historico: MensagemChat[]
 }) {
   return getClient().messages.stream({
-    model: HAIKU_MODEL,
+    model: MODEL,
     max_tokens: 1024,
     system: buildSystemBlocks(params.perfil),
     messages: params.historico,
@@ -60,7 +63,7 @@ export function detalharErroAnthropic(err: unknown): {
     const msg = e.error?.message ?? e.message ?? String(err)
     let curta = msg
     if (status === 401) curta = 'chave da API invalida ou ausente.'
-    else if (status === 404) curta = `modelo nao encontrado (${HAIKU_MODEL}).`
+    else if (status === 404) curta = `modelo nao encontrado (${MODEL}).`
     else if (status === 400 && /credit balance/i.test(msg))
       curta = 'saldo Anthropic esgotado. Contate o administrador.'
     else if (status === 429) curta = 'limite de requisicoes atingido. Aguarde.'

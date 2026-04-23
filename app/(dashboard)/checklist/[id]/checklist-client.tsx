@@ -321,7 +321,7 @@ export default function ChecklistClient({
                   Clique para enviar um arquivo
                 </p>
                 <p className="mt-0.5 text-xs text-gray-400">
-                  PDF, JPG ou PNG — máximo 10MB por arquivo
+                  PDF, JPG, PNG ou WebP — máximo 100MB por arquivo
                 </p>
               </div>
               {enviandoArquivo && (
