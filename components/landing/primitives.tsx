@@ -198,6 +198,8 @@ type ButtonProps = {
   style?: CSSProperties
   type?: "button" | "submit"
   external?: boolean
+  disabled?: boolean
+  ariaLabel?: string
 }
 
 const buttonSizes: Record<ButtonSize, CSSProperties> = {
@@ -245,6 +247,8 @@ export const Button = ({
   style = {},
   type = "button",
   external = false,
+  disabled = false,
+  ariaLabel,
 }: ButtonProps) => {
   const baseStyle: CSSProperties = {
     display: "inline-flex",
@@ -255,30 +259,47 @@ export const Button = ({
     letterSpacing: "-0.005em",
     borderRadius: 999,
     transition: "all .25s ease",
-    cursor: "pointer",
+    cursor: disabled ? "not-allowed" : "pointer",
     whiteSpace: "nowrap",
     border: "1px solid transparent",
+    opacity: disabled ? 0.55 : 1,
     ...buttonSizes[size],
     ...buttonVariants[variant],
     ...style,
   }
 
-  if (href) {
+  if (href && !disabled) {
     if (external || href.startsWith("#") || href.startsWith("http")) {
       return (
-        <a href={href} onClick={onClick} style={baseStyle}>
+        <a
+          href={href}
+          onClick={onClick}
+          aria-label={ariaLabel}
+          style={baseStyle}
+        >
           {children}
         </a>
       )
     }
     return (
-      <Link href={href} onClick={onClick} style={baseStyle}>
+      <Link
+        href={href}
+        onClick={onClick}
+        aria-label={ariaLabel}
+        style={baseStyle}
+      >
         {children}
       </Link>
     )
   }
   return (
-    <button type={type} onClick={onClick} style={baseStyle}>
+    <button
+      type={type}
+      onClick={onClick}
+      disabled={disabled}
+      aria-label={ariaLabel}
+      style={baseStyle}
+    >
       {children}
     </button>
   )

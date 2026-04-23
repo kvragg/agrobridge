@@ -440,7 +440,7 @@ function PlanoCard({
         <div
           style={{ minHeight: 560, display: "flex", flexDirection: "column" }}
         >
-          <div
+          <h3
             className="mono"
             style={{
               fontSize: 11,
@@ -450,6 +450,8 @@ function PlanoCard({
               display: "inline-flex",
               alignItems: "center",
               gap: 8,
+              margin: 0,
+              fontWeight: 500,
             }}
           >
             <span
@@ -462,7 +464,7 @@ function PlanoCard({
               }}
             />
             {plano.nome}
-          </div>
+          </h3>
 
           <div
             style={{

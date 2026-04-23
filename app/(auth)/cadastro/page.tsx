@@ -371,11 +371,11 @@ export default function CadastroPage() {
         >
           {carregando ? (
             <>
-              {Icon.spinner(15)} Criando conta…
+              {Icon.spinner(15)} Criando minha conta…
             </>
           ) : (
             <>
-              Criar conta {Icon.arrow(15)}
+              Criar minha conta {Icon.arrow(15)}
             </>
           )}
         </Button>

@@ -49,7 +49,7 @@ export default function ContaDadosClient({
             color: "#fff",
           }}
         >
-          Seus dados, seus direitos.
+          Meus dados
         </h1>
         <p
           style={{
@@ -200,11 +200,11 @@ function ExportarBlock() {
             >
               {estado === "baixando" ? (
                 <>
-                  {Icon.spinner(14)} Gerando…
+                  {Icon.spinner(14)} Gerando JSON…
                 </>
               ) : (
                 <>
-                  Baixar meus dados {Icon.arrow(14)}
+                  Baixar JSON {Icon.arrow(14)}
                 </>
               )}
             </Button>
@@ -381,6 +381,9 @@ function ExcluirBlock({ email }: { email: string }) {
               variant="ghost"
               size="md"
               onClick={solicitar}
+              disabled={
+                !confirmado || estado === "enviando" || estado === "enviado"
+              }
               style={{
                 color:
                   estado === "enviado" ? "var(--green)" : "var(--danger)",
@@ -392,18 +395,6 @@ function ExcluirBlock({ email }: { email: string }) {
                   estado === "enviado"
                     ? "rgba(78,168,132,0.08)"
                     : "rgba(212,113,88,0.08)",
-                opacity:
-                  !confirmado ||
-                  estado === "enviando" ||
-                  estado === "enviado"
-                    ? 0.55
-                    : 1,
-                cursor:
-                  !confirmado ||
-                  estado === "enviando" ||
-                  estado === "enviado"
-                    ? "not-allowed"
-                    : "pointer",
               }}
             >
               {estado === "enviando"
