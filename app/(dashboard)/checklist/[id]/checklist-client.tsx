@@ -18,6 +18,7 @@ import { sanitizarNomeArquivo, slugDocumento } from '@/lib/validation'
 import { linkOficialPara } from '@/lib/checklist/links-oficiais'
 import UploadDocumento from '@/components/checklist/UploadDocumento'
 import DossieCard from '@/components/checklist/DossieCard'
+import { EntrevistaCTA } from '@/components/shell/EntrevistaCTA'
 
 interface Arquivo {
   nome: string
@@ -256,11 +257,14 @@ export default function ChecklistClient({
           )}
 
           {!perfilDisponivel && !checklistMd && !carregandoChecklist && (
-            <div className="flex items-start gap-3 rounded-xl bg-yellow-50 p-4">
-              <AlertTriangle className="h-5 w-5 flex-shrink-0 text-yellow-600" />
-              <p className="text-sm text-yellow-700">
-                A entrevista ainda não foi concluída. Volte para a entrevista para finalizar.
-              </p>
+            <div className="rounded-xl bg-yellow-50 p-4">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="h-5 w-5 flex-shrink-0 text-yellow-600" />
+                <p className="text-sm text-yellow-700">
+                  A entrevista ainda não foi concluída. Volte para a entrevista para finalizar.
+                </p>
+              </div>
+              <EntrevistaCTA iniciada />
             </div>
           )}
 

@@ -14,6 +14,11 @@ type TopbarProps = {
   tier?: TopbarTier
   /** Renderiza um breadcrumb simples no centro (ex: nome do processo). */
   center?: ReactNode
+  /**
+   * Callback pra abrir o drawer mobile. Quando presente, renderiza botão
+   * hambúrguer no topo esquerdo (só aparece em viewport < 960px).
+   */
+  onMenuClick?: () => void
 }
 
 const TIER_STYLES: Record<Exclude<TopbarTier, null>, { bg: string; color: string; border: string }> = {
@@ -44,7 +49,7 @@ const TIER_STYLES: Record<Exclude<TopbarTier, null>, { bg: string; color: string
  * checklist, planos, conta/dados). Avatar + dropdown com Sair + Planos
  * + LGPD.
  */
-export function Topbar({ nome, email, tier = "free", center }: TopbarProps) {
+export function Topbar({ nome, email, tier = "free", center, onMenuClick }: TopbarProps) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
   const router = useRouter()
@@ -92,28 +97,51 @@ export function Topbar({ nome, email, tier = "free", center }: TopbarProps) {
             gap: 24,
           }}
         >
-          <Link
-            href="/dashboard"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              textDecoration: "none",
-              color: "var(--ink)",
-              flexShrink: 0,
-            }}
-          >
-            <Logo size={22} color="var(--ink)" accent="var(--gold)" />
-            <span
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
+            {onMenuClick && (
+              <button
+                type="button"
+                aria-label="Abrir menu"
+                onClick={onMenuClick}
+                className="topbar-hamburger"
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: 10,
+                  background: "rgba(255,255,255,0.04)",
+                  border: "1px solid var(--line-2)",
+                  color: "var(--ink)",
+                  display: "none",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor: "pointer",
+                }}
+              >
+                {Icon.menu(18)}
+              </button>
+            )}
+            <Link
+              href="/dashboard"
               style={{
-                fontWeight: 500,
-                letterSpacing: "-0.025em",
-                fontSize: 17,
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                textDecoration: "none",
+                color: "var(--ink)",
               }}
             >
-              AgroBridge
-            </span>
-          </Link>
+              <Logo size={22} color="var(--ink)" accent="var(--gold)" />
+              <span
+                style={{
+                  fontWeight: 500,
+                  letterSpacing: "-0.025em",
+                  fontSize: 17,
+                }}
+              >
+                AgroBridge
+              </span>
+            </Link>
+          </div>
 
           {center && (
             <div
@@ -291,6 +319,9 @@ export function Topbar({ nome, email, tier = "free", center }: TopbarProps) {
       <style>{`
         @media (max-width: 760px) {
           .topbar-center { display: none !important; }
+        }
+        @media (max-width: 960px) {
+          .topbar-hamburger { display: inline-flex !important; }
         }
       `}</style>
     </header>

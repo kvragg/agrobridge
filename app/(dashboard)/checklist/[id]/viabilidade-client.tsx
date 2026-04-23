@@ -9,6 +9,7 @@ import {
   ArrowUpRight,
   Sparkles,
 } from 'lucide-react'
+import { EntrevistaCTA } from '@/components/shell/EntrevistaCTA'
 
 interface ViabilidadeClientProps {
   processoId: string
@@ -80,11 +81,14 @@ export default function ViabilidadeClient({
       </div>
 
       {!perfilDisponivel && (
-        <div className="flex items-start gap-3 rounded-xl border border-yellow-200 bg-yellow-50 p-4">
-          <AlertTriangle className="h-5 w-5 flex-shrink-0 text-yellow-600" />
-          <p className="text-sm text-yellow-700">
-            Conclua a entrevista para liberar seu parecer.
-          </p>
+        <div className="rounded-xl border border-yellow-200 bg-yellow-50 p-4">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="h-5 w-5 flex-shrink-0 text-yellow-600" />
+            <p className="text-sm text-yellow-700">
+              Conclua a entrevista para liberar seu parecer.
+            </p>
+          </div>
+          <EntrevistaCTA iniciada={false} />
         </div>
       )}
 

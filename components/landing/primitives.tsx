@@ -485,6 +485,50 @@ export const Icon = {
       />
     </svg>
   ),
+  menu: (s = 16) => (
+    <svg width={s} height={s} viewBox="0 0 16 16" fill="none">
+      <path
+        d="M2 4h12M2 8h12M2 12h12"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+      />
+    </svg>
+  ),
+  layout: (s = 16) => (
+    <svg width={s} height={s} viewBox="0 0 16 16" fill="none">
+      <rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" strokeWidth="1.4" />
+      <path d="M2 6h12M6 6v8" stroke="currentColor" strokeWidth="1.4" />
+    </svg>
+  ),
+  chat: (s = 16) => (
+    <svg width={s} height={s} viewBox="0 0 16 16" fill="none">
+      <path
+        d="M3 3h10a1 1 0 011 1v7a1 1 0 01-1 1H6l-3 2.5V4a1 1 0 011-1Z"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinejoin="round"
+      />
+    </svg>
+  ),
+  clipboardCheck: (s = 16) => (
+    <svg width={s} height={s} viewBox="0 0 16 16" fill="none">
+      <rect x="3" y="3" width="10" height="11" rx="1.5" stroke="currentColor" strokeWidth="1.4" />
+      <path d="M6 2h4v2H6z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" fill="currentColor" fillOpacity="0.08" />
+      <path d="m6 9 1.5 1.5L10.5 7.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  ),
+  logOut: (s = 16) => (
+    <svg width={s} height={s} viewBox="0 0 16 16" fill="none">
+      <path
+        d="M10 3h3a1 1 0 011 1v8a1 1 0 01-1 1h-3M6 5l-3 3 3 3M3 8h8"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  ),
 }
 
 // AgroBridge mark v2 — arch + wheat keystone
