@@ -16,7 +16,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { criarStreamChat, detalharErroAnthropic, type MensagemChat } from '@/lib/anthropic/chat'
 import { extrairFatosDaTroca } from '@/lib/ai/extract-facts'
 import { gerarMiniAnalise } from '@/lib/anthropic/mini-analise'
-import { rateLimit } from '@/lib/rate-limit'
+import { rateLimitIA } from '@/lib/rate-limit'
 import { logAuditEvent } from '@/lib/audit'
 import { getPlanoAtual } from '@/lib/plano'
 import type { PerfilLead } from '@/types/perfil-lead'
@@ -35,14 +35,6 @@ export async function POST(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
   if (!user) return new Response('Nao autorizado', { status: 401 })
-
-  const limite = rateLimit(`ia:chat:${user.id}`, 60, 60 * 60 * 1000)
-  if (!limite.ok) {
-    return new Response('Muitas mensagens. Aguarde alguns minutos.', {
-      status: 429,
-      headers: { 'Retry-After': String(limite.retryAfterSeconds) },
-    })
-  }
 
   const body = (await request.json().catch(() => null)) as { mensagem?: string } | null
   const mensagemRaw = body?.mensagem
@@ -65,6 +57,23 @@ export async function POST(request: NextRequest) {
       .limit(HISTORICO_MAX),
     getPlanoAtual(),
   ])
+
+  // Rate-limit por tier (Free 10/h · Bronze 25/h · Prata 50/h · Ouro 100/h)
+  const limite = rateLimitIA({ userId: user.id, plano: plano.plano, canal: 'chat' })
+  if (!limite.ok) {
+    return Response.json(
+      {
+        erro: `Limite de ${limite.limite} mensagens por hora atingido no plano ${plano.plano}. Aguarde ou faça upgrade.`,
+        retry_after_seconds: limite.retryAfterSeconds,
+        tier: limite.tier,
+        limite_hora: limite.limite,
+      },
+      {
+        status: 429,
+        headers: { 'Retry-After': String(limite.retryAfterSeconds) },
+      },
+    )
+  }
 
   const perfil = (perfilRaw ?? null) as PerfilLead | null
   // Sanitiza pro shape exato da Anthropic API. messages.create() rejeita

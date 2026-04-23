@@ -12,8 +12,11 @@
 import 'server-only'
 import Anthropic from '@anthropic-ai/sdk'
 import type { PerfilLeadCamposDiretos } from '@/types/perfil-lead'
+import { MODEL as ANTHROPIC_MODEL } from '@/lib/anthropic/model'
 
-const MODEL = 'claude-haiku-4-5-20251001' as const
+// Extrator usa Sonnet 4.6 também (uniformização 2026-04-22).
+// Haiku saiu do projeto.
+const MODEL = ANTHROPIC_MODEL
 
 let _client: Anthropic | null = null
 function getClient(): Anthropic {
