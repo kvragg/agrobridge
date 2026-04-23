@@ -21,7 +21,7 @@ const FAQS = [
   },
   {
     q: "Preciso ter tudo organizado antes?",
-    a: "Não. Você chega com o que tem — pode ser só o CPF, a localização da área e uma ideia do que quer financiar. A entrevista com IA mapeia o que falta, e o time te guia até juntar tudo. Organizar é responsabilidade nossa.",
+    a: "Não. Você chega com o que tem — pode ser só o CPF, a localização da área e uma ideia do que quer financiar. A entrevista com IA mapeia o que falta e te guia até juntar tudo. Organizar é responsabilidade nossa.",
   },
   {
     q: "Quanto custa?",
@@ -86,11 +86,16 @@ export function Faq() {
                 lineHeight: 1.6,
                 color: "var(--ink-2)",
                 marginTop: 24,
-                maxWidth: 320,
+                maxWidth: 340,
               }}
             >
-              Se sua dúvida não estiver aqui, manda direto no WhatsApp.
-              Respondemos no mesmo dia.
+              A entrevista com a IA já responde a maior parte das dúvidas
+              técnicas do seu caso. Tratativa humana com o fundador entra
+              no plano{" "}
+              <span style={{ color: "var(--gold)", fontWeight: 500 }}>
+                Acesso à Mesa de Crédito
+              </span>
+              .
             </p>
             <Button
               variant="ghostAccent"
@@ -98,7 +103,7 @@ export function Faq() {
               href="/cadastro"
               style={{ marginTop: 24 }}
             >
-              Começar agora {Icon.arrow(14)}
+              Começar com a IA {Icon.arrow(14)}
             </Button>
           </div>
 

@@ -1,17 +1,25 @@
-'use client'
+"use client"
 
-import { useState } from 'react'
-import Link from 'next/link'
+import { useState } from "react"
+import Link from "next/link"
+import type { PlanoComercial } from "@/lib/plano"
+import { DashboardShell } from "@/components/shell/DashboardShell"
+import { Alert } from "@/components/shell/Alert"
 import {
-  ArrowLeft,
-  Download,
-  Trash2,
-  CheckCircle2,
-  AlertTriangle,
-  HelpCircle,
-} from 'lucide-react'
-import { PlanoBadge } from '@/components/ui/plano-badge'
-import type { PlanoComercial } from '@/lib/plano'
+  Button,
+  Eyebrow,
+  GlassCard,
+  Icon,
+} from "@/components/landing/primitives"
+
+function tierToTopbar(
+  plano: PlanoComercial,
+): "free" | "Bronze" | "Prata" | "Ouro" {
+  if (plano === "Bronze") return "Bronze"
+  if (plano === "Prata") return "Prata"
+  if (plano === "Ouro") return "Ouro"
+  return "free"
+}
 
 export default function ContaDadosClient({
   nome,
@@ -23,84 +31,96 @@ export default function ContaDadosClient({
   plano: PlanoComercial
 }) {
   return (
-    <main className="min-h-screen bg-gradient-to-br from-[#f0fdf4] to-[#f9fafb] px-4 py-10">
-      <div className="mx-auto max-w-2xl">
-        <Link
-          href="/dashboard"
-          className="mb-6 inline-flex items-center gap-1.5 text-sm font-medium text-[#166534] hover:underline"
+    <DashboardShell
+      nome={nome}
+      email={email}
+      tier={tierToTopbar(plano)}
+      containerStyle={{ maxWidth: 820 }}
+    >
+      <div style={{ marginBottom: 40 }}>
+        <Eyebrow>LGPD · Art. 18</Eyebrow>
+        <h1
+          style={{
+            margin: "14px 0 8px",
+            fontSize: "clamp(32px, 4vw, 44px)",
+            fontWeight: 500,
+            letterSpacing: "-0.03em",
+            lineHeight: 1.1,
+            color: "#fff",
+          }}
         >
-          <ArrowLeft className="h-4 w-4" />
-          Voltar para o painel
-        </Link>
-
-        <div className="rounded-2xl border border-gray-200 bg-white shadow-sm">
-          {/* Header do card — identidade + plano */}
-          <header className="border-b border-gray-100 px-6 py-5">
-            <p className="text-xs font-semibold uppercase tracking-widest text-[#166534]">
-              Conta · LGPD Art. 18
-            </p>
-            <div className="mt-1 flex flex-wrap items-center gap-3">
-              <h1 className="text-2xl font-black text-gray-900">Meus dados</h1>
-              <PlanoBadge plano={plano} size="md" />
-            </div>
-            <p className="mt-2 text-sm text-gray-600">
-              Olá, {nome}. Conta: <strong>{email}</strong>
-            </p>
-          </header>
-
-          {/* Exportar — discreto com tooltip */}
-          <section className="border-b border-gray-100 px-6 py-5">
-            <ExportarBlock />
-          </section>
-
-          {/* Excluir — proeminente com disclaimer fiscal */}
-          <section className="px-6 py-5">
-            <ExcluirBlock email={email} />
-          </section>
-        </div>
-
-        <p className="mt-8 text-xs text-gray-500">
-          Dúvidas sobre privacidade? Leia a{' '}
-          <Link href="/privacidade" className="font-medium text-[#166534] hover:underline">
-            Política de Privacidade
-          </Link>{' '}
-          ou fale com{' '}
-          <a
-            href="mailto:paulocosta.contato1@gmail.com"
-            className="font-medium text-[#166534] hover:underline"
-          >
-            paulocosta.contato1@gmail.com
-          </a>
-          .
+          Meus dados
+        </h1>
+        <p
+          style={{
+            margin: 0,
+            fontSize: 15.5,
+            color: "var(--ink-2)",
+            lineHeight: 1.6,
+          }}
+        >
+          Olá, {nome}. Você pode exportar tudo que está na plataforma ou
+          solicitar a exclusão da sua conta a qualquer momento.
         </p>
       </div>
-    </main>
+
+      <div style={{ display: "grid", gap: 20 }}>
+        <ExportarBlock />
+        <ExcluirBlock email={email} />
+      </div>
+
+      <p
+        style={{
+          marginTop: 32,
+          fontSize: 12,
+          color: "var(--muted)",
+          lineHeight: 1.6,
+        }}
+      >
+        Dúvidas sobre privacidade? Leia a{" "}
+        <Link
+          href="/privacidade"
+          style={{ color: "var(--green)", textDecoration: "underline" }}
+        >
+          Política de Privacidade
+        </Link>{" "}
+        ou fale com{" "}
+        <a
+          href="mailto:paulocosta.contato1@gmail.com"
+          style={{ color: "var(--green)", textDecoration: "underline" }}
+        >
+          paulocosta.contato1@gmail.com
+        </a>
+        .
+      </p>
+    </DashboardShell>
   )
 }
 
 function ExportarBlock() {
-  const [estado, setEstado] = useState<'idle' | 'baixando' | 'ok' | 'erro'>('idle')
+  const [estado, setEstado] = useState<"idle" | "baixando" | "ok" | "erro">(
+    "idle",
+  )
   const [mensagem, setMensagem] = useState<string | null>(null)
-  const [mostrarTooltip, setMostrarTooltip] = useState(false)
 
   async function baixar() {
-    setEstado('baixando')
+    setEstado("baixando")
     setMensagem(null)
     try {
-      const res = await fetch('/api/conta/exportar')
+      const res = await fetch("/api/conta/exportar")
       if (!res.ok) {
         const json = await res.json().catch(() => ({}))
-        setEstado('erro')
-        setMensagem(json?.erro ?? 'Não foi possível gerar a exportação.')
+        setEstado("erro")
+        setMensagem(json?.erro ?? "Não foi possível gerar a exportação.")
         return
       }
       const blob = await res.blob()
       const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
+      const a = document.createElement("a")
       a.href = url
       const filename =
         res.headers
-          .get('content-disposition')
+          .get("content-disposition")
           ?.match(/filename="([^"]+)"/)?.[1] ??
         `agrobridge-meus-dados-${new Date().toISOString().slice(0, 10)}.json`
       a.download = filename
@@ -108,96 +128,107 @@ function ExportarBlock() {
       a.click()
       a.remove()
       URL.revokeObjectURL(url)
-      setEstado('ok')
-      setMensagem('Arquivo baixado. Os links dos documentos expiram em 15 minutos.')
+      setEstado("ok")
+      setMensagem(
+        "Arquivo baixado. Os links dos documentos expiram em 15 minutos.",
+      )
     } catch {
-      setEstado('erro')
-      setMensagem('Falha de rede. Tente novamente.')
+      setEstado("erro")
+      setMensagem("Falha de rede. Tente novamente.")
     }
   }
 
   return (
-    <div>
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex-1">
-          <div className="flex items-center gap-1.5">
-            <h2 className="text-sm font-semibold text-gray-900">Exportar meus dados</h2>
-            <div
-              className="relative"
-              onMouseEnter={() => setMostrarTooltip(true)}
-              onMouseLeave={() => setMostrarTooltip(false)}
-              onFocus={() => setMostrarTooltip(true)}
-              onBlur={() => setMostrarTooltip(false)}
-            >
-              <button
-                type="button"
-                aria-label="O que vai no arquivo"
-                className="flex h-5 w-5 items-center justify-center rounded-full text-gray-400 hover:text-gray-600"
-              >
-                <HelpCircle className="h-4 w-4" />
-              </button>
-              {mostrarTooltip && (
-                <div
-                  role="tooltip"
-                  className="absolute left-1/2 z-10 mt-1 w-64 -translate-x-1/2 rounded-lg border border-gray-200 bg-white p-3 text-xs text-gray-700 shadow-lg"
-                >
-                  <p className="font-semibold text-gray-900">O que vai no JSON:</p>
-                  <ul className="mt-1 space-y-0.5 leading-relaxed text-gray-600">
-                    <li>• Cadastro e perfil de lead</li>
-                    <li>• Entrevista e mensagens</li>
-                    <li>• Checklist e uploads (links temporários 15min)</li>
-                    <li>• Compras e pagamentos</li>
-                  </ul>
-                  <p className="mt-1.5 text-[11px] text-gray-500">
-                    Limite: 1 exportação por dia.
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-          <p className="mt-0.5 text-xs text-gray-500">
-            Arquivo JSON com todo seu histórico na plataforma.
-          </p>
-        </div>
-        <button
-          onClick={baixar}
-          disabled={estado === 'baixando'}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs font-semibold text-gray-700 hover:border-[#166534] hover:text-[#166534] disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          <Download className="h-3.5 w-3.5" />
-          {estado === 'baixando' ? 'Gerando…' : 'Baixar JSON'}
-        </button>
-      </div>
-      {mensagem && (
+    <GlassCard glow="green" padding={28} hover={false}>
+      <div style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
         <div
-          className={`mt-3 flex items-start gap-2 rounded-lg p-2.5 text-xs ${
-            estado === 'ok' ? 'bg-green-50 text-green-900' : 'bg-red-50 text-red-900'
-          }`}
+          style={{
+            width: 44,
+            height: 44,
+            borderRadius: 12,
+            background: "rgba(78,168,132,0.12)",
+            border: "1px solid rgba(78,168,132,0.25)",
+            color: "var(--green)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexShrink: 0,
+          }}
         >
-          {estado === 'ok' ? (
-            <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
-          ) : (
-            <AlertTriangle className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
-          )}
-          <p>{mensagem}</p>
+          {Icon.doc(20)}
         </div>
-      )}
-    </div>
+        <div style={{ flex: 1 }}>
+          <h2
+            style={{
+              margin: 0,
+              fontSize: 20,
+              fontWeight: 500,
+              letterSpacing: "-0.015em",
+              color: "#fff",
+            }}
+          >
+            Exportar meus dados
+          </h2>
+          <p
+            style={{
+              margin: "8px 0 0",
+              fontSize: 14,
+              lineHeight: 1.6,
+              color: "var(--ink-2)",
+            }}
+          >
+            Baixe um JSON com todo seu histórico: cadastro, perfil de lead,
+            entrevistas e mensagens, checklist, uploads (com links temporários)
+            e compras. Limite: 1 exportação por dia.
+          </p>
+
+          {mensagem && (
+            <Alert variant={estado === "ok" ? "success" : "error"}>
+              {mensagem}
+            </Alert>
+          )}
+
+          <div style={{ marginTop: 16 }}>
+            <Button
+              variant="accent"
+              size="md"
+              onClick={baixar}
+              style={{
+                opacity: estado === "baixando" ? 0.6 : 1,
+                cursor: estado === "baixando" ? "not-allowed" : "pointer",
+              }}
+            >
+              {estado === "baixando" ? (
+                <>
+                  {Icon.spinner(14)} Gerando JSON…
+                </>
+              ) : (
+                <>
+                  Baixar JSON {Icon.arrow(14)}
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+      </div>
+    </GlassCard>
   )
 }
 
 function ExcluirBlock({ email }: { email: string }) {
-  const [estado, setEstado] = useState<'idle' | 'enviando' | 'enviado' | 'erro'>('idle')
+  const [estado, setEstado] = useState<
+    "idle" | "enviando" | "enviado" | "erro"
+  >("idle")
   const [mensagem, setMensagem] = useState<string | null>(null)
   const [confirmado, setConfirmado] = useState(false)
 
   async function solicitar() {
-    setEstado('enviando')
+    setEstado("enviando")
     setMensagem(null)
     try {
-      const res = await fetch('/api/conta/excluir', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/conta/excluir", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({}),
       })
       const json = (await res.json().catch(() => ({}))) as {
@@ -207,110 +238,176 @@ function ExcluirBlock({ email }: { email: string }) {
         erro?: string
       }
       if (res.ok && json.email_enviado) {
-        setEstado('enviado')
+        setEstado("enviado")
         setMensagem(
-          json.mensagem ?? 'E-mail enviado. Clique no link para concluir a exclusão.'
+          json.mensagem ??
+            "E-mail enviado. Clique no link para concluir a exclusão.",
         )
         return
       }
-      setEstado('erro')
+      setEstado("erro")
       setMensagem(
-        json?.mensagem ?? json?.erro ?? 'Não foi possível enviar o e-mail. Tente novamente.'
+        json?.mensagem ??
+          json?.erro ??
+          "Não foi possível enviar o e-mail. Tente novamente.",
       )
       setConfirmado(true)
     } catch {
-      setEstado('erro')
-      setMensagem('Falha de rede. Tente novamente.')
+      setEstado("erro")
+      setMensagem("Falha de rede. Tente novamente.")
     }
   }
 
   return (
-    <div>
-      <div className="flex items-start gap-3">
-        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-red-50 text-red-700">
-          <Trash2 className="h-5 w-5" />
+    <GlassCard glow="gold" padding={28} hover={false}>
+      <div style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
+        <div
+          style={{
+            width: 44,
+            height: 44,
+            borderRadius: 12,
+            background: "rgba(212,113,88,0.12)",
+            border: "1px solid rgba(212,113,88,0.28)",
+            color: "var(--danger)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexShrink: 0,
+          }}
+        >
+          {Icon.x(20)}
         </div>
-        <div className="flex-1">
-          <h2 className="text-lg font-bold text-gray-900">Excluir minha conta</h2>
-          <p className="mt-1 text-sm text-gray-600">
-            Sua conta, entrevistas, checklist e uploads ficam invisíveis e
+        <div style={{ flex: 1 }}>
+          <h2
+            style={{
+              margin: 0,
+              fontSize: 20,
+              fontWeight: 500,
+              letterSpacing: "-0.015em",
+              color: "#fff",
+            }}
+          >
+            Excluir minha conta
+          </h2>
+          <p
+            style={{
+              margin: "8px 0 0",
+              fontSize: 14,
+              lineHeight: 1.6,
+              color: "var(--ink-2)",
+            }}
+          >
+            Perfil, entrevistas, checklist e uploads ficam invisíveis e
             inacessíveis. O acesso à plataforma é encerrado imediatamente após
-            a confirmação por e-mail.
+            confirmação por e-mail.
           </p>
 
-          <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
-            <p className="flex items-start gap-1.5">
-              <AlertTriangle className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
-              <span>
-                <strong>Obrigação fiscal:</strong> registros financeiros
-                (compras, notas, webhooks de pagamento) ficam arquivados por
-                até <strong>5 anos</strong> para cumprir a legislação
-                tributária brasileira (Lei 5.172/66 — CTN, art. 174). Esses
-                dados saem do app, mas permanecem na base fiscal arquivada.
-                Detalhes na seção 7 da{' '}
-                <Link
-                  href="/privacidade"
-                  className="font-semibold underline hover:text-amber-950"
-                >
-                  Política de Privacidade
-                </Link>
-                .
-              </span>
-            </p>
-          </div>
+          <Alert variant="gold">
+            <strong>Obrigação fiscal:</strong> registros financeiros (compras,
+            notas, webhooks de pagamento) ficam arquivados por até{" "}
+            <strong>5 anos</strong> para cumprir a legislação tributária
+            brasileira (Lei 5.172/66 — CTN, art. 174). Esses dados saem do
+            app, mas permanecem na base fiscal arquivada. Detalhes na seção 7
+            da{" "}
+            <Link
+              href="/privacidade"
+              style={{
+                color: "var(--gold)",
+                textDecoration: "underline",
+                fontWeight: 500,
+              }}
+            >
+              Política de Privacidade
+            </Link>
+            .
+          </Alert>
 
-          <p className="mt-3 text-xs text-gray-500">
-            A confirmação é enviada para <strong>{email}</strong>. O link
+          <p
+            style={{
+              margin: "14px 0 0",
+              fontSize: 13,
+              color: "var(--muted)",
+              lineHeight: 1.55,
+            }}
+          >
+            A confirmação é enviada para{" "}
+            <strong style={{ color: "var(--ink)" }}>{email}</strong>. O link
             expira em 30 minutos.
           </p>
 
-          <div className="mt-3 rounded-lg border border-red-100 bg-red-50 p-3">
-            <label className="flex items-start gap-2 text-sm text-red-900">
-              <input
-                type="checkbox"
-                checked={confirmado}
-                onChange={(e) => setConfirmado(e.target.checked)}
-                className="mt-0.5 h-4 w-4 rounded border-red-300 text-red-700 focus:ring-red-500"
-              />
-              <span>
-                Eu entendo que esta ação é <strong>irreversível</strong> e que
-                meus dados pessoais serão removidos do app.
-              </span>
-            </label>
-          </div>
-
-          <button
-            onClick={solicitar}
-            disabled={!confirmado || estado === 'enviando' || estado === 'enviado'}
-            className="mt-4 inline-flex min-h-[44px] items-center gap-2 rounded-xl bg-red-700 px-5 py-2.5 text-sm font-bold text-white hover:bg-red-800 disabled:cursor-not-allowed disabled:bg-gray-300"
+          <label
+            style={{
+              marginTop: 16,
+              display: "flex",
+              alignItems: "flex-start",
+              gap: 10,
+              padding: "12px 14px",
+              background: "rgba(212,113,88,0.08)",
+              border: "1px solid rgba(212,113,88,0.25)",
+              borderRadius: 12,
+              fontSize: 13.5,
+              color: "var(--ink-2)",
+              cursor: "pointer",
+              lineHeight: 1.5,
+            }}
           >
-            {estado === 'enviando'
-              ? 'Enviando e-mail…'
-              : estado === 'enviado'
-                ? 'E-mail enviado'
-                : estado === 'erro'
-                  ? 'Tentar novamente'
-                  : 'Solicitar exclusão'}
-          </button>
+            <input
+              type="checkbox"
+              checked={confirmado}
+              onChange={(e) => setConfirmado(e.target.checked)}
+              style={{
+                marginTop: 3,
+                width: 16,
+                height: 16,
+                accentColor: "var(--danger)",
+                flexShrink: 0,
+                cursor: "pointer",
+              }}
+            />
+            <span>
+              Entendo que a exclusão é <strong>definitiva</strong> e que meus
+              dados pessoais serão removidos do app.
+            </span>
+          </label>
 
           {mensagem && (
-            <div
-              className={`mt-3 flex items-start gap-2 rounded-lg p-3 text-sm ${
-                estado === 'enviado'
-                  ? 'bg-green-50 text-green-900'
-                  : 'bg-red-50 text-red-900'
-              }`}
-            >
-              {estado === 'enviado' ? (
-                <CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0" />
-              ) : (
-                <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0" />
-              )}
-              <p>{mensagem}</p>
-            </div>
+            <Alert variant={estado === "enviado" ? "success" : "error"}>
+              {mensagem}
+            </Alert>
           )}
+
+          <div style={{ marginTop: 16 }}>
+            <Button
+              variant="ghost"
+              size="md"
+              onClick={solicitar}
+              disabled={
+                !confirmado || estado === "enviando" || estado === "enviado"
+              }
+              style={{
+                color:
+                  estado === "enviado" ? "var(--green)" : "var(--danger)",
+                borderColor:
+                  estado === "enviado"
+                    ? "rgba(78,168,132,0.28)"
+                    : "rgba(212,113,88,0.32)",
+                background:
+                  estado === "enviado"
+                    ? "rgba(78,168,132,0.08)"
+                    : "rgba(212,113,88,0.08)",
+              }}
+            >
+              {estado === "enviando"
+                ? "Enviando e-mail…"
+                : estado === "enviado"
+                ? "E-mail enviado"
+                : estado === "erro"
+                ? "Tentar novamente"
+                : "Solicitar exclusão"}
+            </Button>
+          </div>
         </div>
       </div>
-    </div>
+    </GlassCard>
   )
 }

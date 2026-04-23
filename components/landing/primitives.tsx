@@ -198,6 +198,8 @@ type ButtonProps = {
   style?: CSSProperties
   type?: "button" | "submit"
   external?: boolean
+  disabled?: boolean
+  ariaLabel?: string
 }
 
 const buttonSizes: Record<ButtonSize, CSSProperties> = {
@@ -245,6 +247,8 @@ export const Button = ({
   style = {},
   type = "button",
   external = false,
+  disabled = false,
+  ariaLabel,
 }: ButtonProps) => {
   const baseStyle: CSSProperties = {
     display: "inline-flex",
@@ -255,30 +259,47 @@ export const Button = ({
     letterSpacing: "-0.005em",
     borderRadius: 999,
     transition: "all .25s ease",
-    cursor: "pointer",
+    cursor: disabled ? "not-allowed" : "pointer",
     whiteSpace: "nowrap",
     border: "1px solid transparent",
+    opacity: disabled ? 0.55 : 1,
     ...buttonSizes[size],
     ...buttonVariants[variant],
     ...style,
   }
 
-  if (href) {
+  if (href && !disabled) {
     if (external || href.startsWith("#") || href.startsWith("http")) {
       return (
-        <a href={href} onClick={onClick} style={baseStyle}>
+        <a
+          href={href}
+          onClick={onClick}
+          aria-label={ariaLabel}
+          style={baseStyle}
+        >
           {children}
         </a>
       )
     }
     return (
-      <Link href={href} onClick={onClick} style={baseStyle}>
+      <Link
+        href={href}
+        onClick={onClick}
+        aria-label={ariaLabel}
+        style={baseStyle}
+      >
         {children}
       </Link>
     )
   }
   return (
-    <button type={type} onClick={onClick} style={baseStyle}>
+    <button
+      type={type}
+      onClick={onClick}
+      disabled={disabled}
+      aria-label={ariaLabel}
+      style={baseStyle}
+    >
       {children}
     </button>
   )
@@ -403,6 +424,107 @@ export const Icon = {
         d="M5 3.5v9l7-4.5-7-4.5Z"
         stroke="currentColor"
         strokeWidth="1.4"
+        strokeLinejoin="round"
+      />
+    </svg>
+  ),
+  eye: (s = 16) => (
+    <svg width={s} height={s} viewBox="0 0 16 16" fill="none">
+      <path
+        d="M1 8s2.5-5 7-5 7 5 7 5-2.5 5-7 5-7-5-7-5Z"
+        stroke="currentColor"
+        strokeWidth="1.3"
+      />
+      <circle cx="8" cy="8" r="2.2" stroke="currentColor" strokeWidth="1.3" />
+    </svg>
+  ),
+  eyeOff: (s = 16) => (
+    <svg width={s} height={s} viewBox="0 0 16 16" fill="none">
+      <path
+        d="M2 2l12 12M6.5 6.5a2 2 0 002.8 2.8M4 4C2.5 5.2 1 8 1 8s2.5 5 7 5c1.4 0 2.7-.4 3.7-1M9 3.1c4.2.4 6 4.9 6 4.9s-.8 1.5-2 2.8"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinecap="round"
+      />
+    </svg>
+  ),
+  mail: (s = 16) => (
+    <svg width={s} height={s} viewBox="0 0 16 16" fill="none">
+      <rect x="2" y="3" width="12" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.4" />
+      <path d="m2 5 6 4 6-4" stroke="currentColor" strokeWidth="1.4" />
+    </svg>
+  ),
+  user: (s = 16) => (
+    <svg width={s} height={s} viewBox="0 0 16 16" fill="none">
+      <circle cx="8" cy="6" r="3" stroke="currentColor" strokeWidth="1.4" />
+      <path d="M2 14c1-3 3.5-4 6-4s5 1 6 4" stroke="currentColor" strokeWidth="1.4" />
+    </svg>
+  ),
+  chevron: (s = 16) => (
+    <svg width={s} height={s} viewBox="0 0 16 16" fill="none">
+      <path d="m4 6 4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  ),
+  spinner: (s = 16) => (
+    <svg
+      width={s}
+      height={s}
+      viewBox="0 0 16 16"
+      fill="none"
+      style={{ animation: "landing-spin 0.8s linear infinite" }}
+    >
+      <circle
+        cx="8"
+        cy="8"
+        r="6"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeDasharray="28"
+        strokeDashoffset="10"
+      />
+    </svg>
+  ),
+  menu: (s = 16) => (
+    <svg width={s} height={s} viewBox="0 0 16 16" fill="none">
+      <path
+        d="M2 4h12M2 8h12M2 12h12"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+      />
+    </svg>
+  ),
+  layout: (s = 16) => (
+    <svg width={s} height={s} viewBox="0 0 16 16" fill="none">
+      <rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" strokeWidth="1.4" />
+      <path d="M2 6h12M6 6v8" stroke="currentColor" strokeWidth="1.4" />
+    </svg>
+  ),
+  chat: (s = 16) => (
+    <svg width={s} height={s} viewBox="0 0 16 16" fill="none">
+      <path
+        d="M3 3h10a1 1 0 011 1v7a1 1 0 01-1 1H6l-3 2.5V4a1 1 0 011-1Z"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinejoin="round"
+      />
+    </svg>
+  ),
+  clipboardCheck: (s = 16) => (
+    <svg width={s} height={s} viewBox="0 0 16 16" fill="none">
+      <rect x="3" y="3" width="10" height="11" rx="1.5" stroke="currentColor" strokeWidth="1.4" />
+      <path d="M6 2h4v2H6z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" fill="currentColor" fillOpacity="0.08" />
+      <path d="m6 9 1.5 1.5L10.5 7.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  ),
+  logOut: (s = 16) => (
+    <svg width={s} height={s} viewBox="0 0 16 16" fill="none">
+      <path
+        d="M10 3h3a1 1 0 011 1v8a1 1 0 01-1 1h-3M6 5l-3 3 3 3M3 8h8"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinecap="round"
         strokeLinejoin="round"
       />
     </svg>

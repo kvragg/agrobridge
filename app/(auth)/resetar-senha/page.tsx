@@ -1,12 +1,13 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
-import { Eye, EyeOff, Loader2 } from "lucide-react"
-import { Alert } from "@/components/ui/alert"
 import { validarSenha } from "@/lib/validation"
+import { AuthSplit } from "@/components/shell/AuthSplit"
+import { FormField } from "@/components/shell/FormField"
+import { Alert } from "@/components/shell/Alert"
+import { Button, Icon } from "@/components/landing/primitives"
 
 export default function ResetarSenhaPage() {
   const router = useRouter()
@@ -16,7 +17,6 @@ export default function ResetarSenhaPage() {
   const [sessaoValida, setSessaoValida] = useState(false)
   const [senha, setSenha] = useState("")
   const [confirmarSenha, setConfirmarSenha] = useState("")
-  const [mostrarSenha, setMostrarSenha] = useState(false)
   const [erro, setErro] = useState("")
   const [sucesso, setSucesso] = useState("")
   const [enviando, setEnviando] = useState(false)
@@ -58,7 +58,7 @@ export default function ResetarSenhaPage() {
       return
     }
 
-    setSucesso("Senha atualizada com sucesso! Redirecionando...")
+    setSucesso("Senha atualizada com sucesso. Redirecionando…")
     setTimeout(() => {
       router.push("/dashboard")
       router.refresh()
@@ -67,121 +67,156 @@ export default function ResetarSenhaPage() {
 
   if (verificando) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#f0fdf4] to-[#f9fafb] px-4">
-        <div className="flex items-center gap-2 text-sm text-gray-500">
-          <Loader2 className="h-4 w-4 animate-spin text-[#166534]" />
-          Verificando link...
+      <AuthSplit cardOnly glow="green" maxWidth={420}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+            color: "var(--muted)",
+            fontSize: 14,
+            justifyContent: "center",
+            padding: "20px 0",
+          }}
+        >
+          <span style={{ color: "var(--green)", display: "inline-flex" }}>
+            {Icon.spinner(18)}
+          </span>
+          Verificando link…
         </div>
-      </main>
+      </AuthSplit>
     )
   }
 
   if (!sessaoValida) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#f0fdf4] to-[#f9fafb] px-4">
-        <div className="w-full max-w-md text-center">
-          <div className="rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
-            <h1 className="mb-2 text-xl font-bold text-gray-900">
-              Link expirado
-            </h1>
-            <p className="mb-6 text-sm text-gray-500">
-              Este link de recuperação de senha não é mais válido ou já foi
-              utilizado. Solicite um novo link para redefinir sua senha.
-            </p>
-            <Link
-              href="/login"
-              className="inline-flex min-h-[48px] w-full items-center justify-center rounded-xl bg-[#166534] px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-[#14532d]"
-            >
-              Voltar ao login
-            </Link>
+      <AuthSplit cardOnly glow="gold" maxWidth={460}>
+        <div style={{ textAlign: "center" }}>
+          <div
+            style={{
+              width: 64,
+              height: 64,
+              borderRadius: "50%",
+              background: "rgba(212,113,88,0.12)",
+              border: "1px solid rgba(212,113,88,0.30)",
+              color: "var(--danger)",
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              margin: "0 auto 18px",
+            }}
+          >
+            {Icon.lock(28)}
           </div>
+          <h1
+            style={{
+              margin: "0 0 8px",
+              fontSize: 24,
+              fontWeight: 500,
+              color: "var(--ink)",
+              letterSpacing: "-0.02em",
+            }}
+          >
+            Link expirado
+          </h1>
+          <p
+            style={{
+              margin: "0 0 20px",
+              fontSize: 14.5,
+              color: "var(--ink-2)",
+              lineHeight: 1.55,
+            }}
+          >
+            Este link de recuperação não é mais válido ou já foi utilizado.
+            Solicite um novo link na tela de login.
+          </p>
+          <Button variant="accent" size="lg" href="/login" style={{ width: "100%" }}>
+            Voltar ao login {Icon.arrow(15)}
+          </Button>
         </div>
-      </main>
+      </AuthSplit>
     )
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#f0fdf4] to-[#f9fafb] px-4 py-12">
-      <div className="w-full max-w-md">
-        <div className="mb-8 text-center">
-          <Link href="/" className="text-2xl font-black tracking-tight">
-            <span className="text-[#166534]">Agro</span>
-            <span className="text-gray-900">Bridge</span>
-          </Link>
-        </div>
-
-        <div className="rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
-          <h1 className="mb-2 text-xl font-bold text-gray-900">Nova senha</h1>
-          <p className="mb-6 text-sm text-gray-500">
-            Defina uma nova senha para sua conta.
-          </p>
-
-          <form onSubmit={handleSubmit} className="space-y-4" noValidate>
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-gray-700">
-                Nova senha
-              </label>
-              <div className="relative">
-                <input
-                  type={mostrarSenha ? "text" : "password"}
-                  value={senha}
-                  onChange={(e) => setSenha(e.target.value)}
-                  required
-                  minLength={8}
-                  autoComplete="new-password"
-                  placeholder="8+ caracteres, 1 número, 1 maiúscula"
-                  className="min-h-[44px] w-full rounded-lg border border-gray-300 px-3.5 py-2.5 pr-12 text-base text-gray-900 placeholder-gray-400 outline-none transition focus:border-[#166534] focus:ring-2 focus:ring-[#166534]/20 sm:text-sm"
-                />
-                <button
-                  type="button"
-                  aria-label={mostrarSenha ? "Ocultar senha" : "Mostrar senha"}
-                  onClick={() => setMostrarSenha(!mostrarSenha)}
-                  className="absolute right-1 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center text-gray-400 hover:text-gray-600"
-                >
-                  {mostrarSenha ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
-                </button>
-              </div>
-              <p className="mt-1.5 text-xs text-gray-400">
-                Mínimo 8 caracteres, com ao menos 1 número e 1 letra maiúscula.
-              </p>
-            </div>
-
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-gray-700">
-                Confirmar nova senha
-              </label>
-              <input
-                type="password"
-                value={confirmarSenha}
-                onChange={(e) => setConfirmarSenha(e.target.value)}
-                required
-                autoComplete="new-password"
-                placeholder="Repita a nova senha"
-                className={`min-h-[44px] w-full rounded-lg border px-3.5 py-2.5 text-base text-gray-900 placeholder-gray-400 outline-none transition focus:ring-2 sm:text-sm ${
-                  confirmarSenha && confirmarSenha !== senha
-                    ? "border-red-300 focus:border-red-400 focus:ring-red-200"
-                    : "border-gray-300 focus:border-[#166534] focus:ring-[#166534]/20"
-                }`}
-              />
-            </div>
-
-            {erro && <Alert variante="erro">{erro}</Alert>}
-            {sucesso && <Alert variante="sucesso">{sucesso}</Alert>}
-
-            <button
-              type="submit"
-              disabled={enviando || Boolean(sucesso)}
-              className="mt-2 min-h-[48px] w-full rounded-xl bg-[#166534] px-4 py-3 text-sm font-bold text-white transition-colors hover:bg-[#14532d] disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {enviando ? "Atualizando..." : "Atualizar senha"}
-            </button>
-          </form>
-        </div>
+    <AuthSplit glow="green" maxWidth={460}>
+      <div style={{ marginBottom: 24 }}>
+        <h1
+          style={{
+            margin: 0,
+            fontSize: 26,
+            fontWeight: 500,
+            letterSpacing: "-0.02em",
+            color: "var(--ink)",
+          }}
+        >
+          Nova senha
+        </h1>
+        <p
+          style={{
+            margin: "8px 0 0",
+            fontSize: 14.5,
+            color: "var(--ink-2)",
+            lineHeight: 1.55,
+          }}
+        >
+          Defina uma nova senha pra sua conta.
+        </p>
       </div>
-    </main>
+
+      <form onSubmit={handleSubmit} noValidate>
+        <FormField
+          label="Nova senha"
+          passwordToggle
+          value={senha}
+          onChange={(e) => setSenha(e.target.value)}
+          required
+          minLength={8}
+          autoComplete="new-password"
+          placeholder="8+ caracteres, 1 número, 1 maiúscula"
+          hint="Mínimo 8 caracteres, com ao menos 1 número e 1 letra maiúscula."
+        />
+
+        <FormField
+          label="Confirmar nova senha"
+          type="password"
+          value={confirmarSenha}
+          onChange={(e) => setConfirmarSenha(e.target.value)}
+          required
+          autoComplete="new-password"
+          placeholder="Repita a nova senha"
+          error={
+            confirmarSenha && confirmarSenha !== senha
+              ? "As senhas não coincidem."
+              : undefined
+          }
+        />
+
+        {erro && <Alert variant="error">{erro}</Alert>}
+        {sucesso && <Alert variant="success">{sucesso}</Alert>}
+
+        <Button
+          variant="accent"
+          size="lg"
+          type="submit"
+          style={{
+            width: "100%",
+            marginTop: 12,
+            opacity: enviando || Boolean(sucesso) ? 0.6 : 1,
+            cursor: enviando || Boolean(sucesso) ? "not-allowed" : "pointer",
+          }}
+        >
+          {enviando ? (
+            <>
+              {Icon.spinner(15)} Atualizando…
+            </>
+          ) : (
+            <>
+              Atualizar senha {Icon.arrow(15)}
+            </>
+          )}
+        </Button>
+      </form>
+    </AuthSplit>
   )
 }

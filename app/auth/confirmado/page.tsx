@@ -1,8 +1,9 @@
-'use client'
+"use client"
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { CheckCircle2, Loader2 } from 'lucide-react'
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import { AuthSplit } from "@/components/shell/AuthSplit"
+import { Button, Icon } from "@/components/landing/primitives"
 
 export default function ConfirmadoPage() {
   const router = useRouter()
@@ -14,7 +15,7 @@ export default function ConfirmadoPage() {
     }, 1000)
 
     const timer = setTimeout(() => {
-      router.push('/planos')
+      router.push("/planos")
       router.refresh()
     }, 3000)
 
@@ -25,37 +26,77 @@ export default function ConfirmadoPage() {
   }, [router])
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#f0fdf4] to-[#f9fafb] px-4">
-      <div className="w-full max-w-md text-center">
-        <div className="mb-6 flex justify-center">
-          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-green-100">
-            <CheckCircle2 className="h-10 w-10 text-[#16a34a]" />
-          </div>
+    <AuthSplit cardOnly glow="gold" maxWidth={480}>
+      <div style={{ textAlign: "center" }}>
+        <div
+          style={{
+            width: 72,
+            height: 72,
+            borderRadius: "50%",
+            background:
+              "linear-gradient(135deg, rgba(78,168,132,0.22) 0%, rgba(78,168,132,0.08) 100%)",
+            border: "1px solid rgba(78,168,132,0.4)",
+            color: "var(--green)",
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            margin: "0 auto 20px",
+            boxShadow: "0 0 40px rgba(78,168,132,0.25)",
+          }}
+        >
+          {Icon.check(36)}
         </div>
 
-        <h1 className="mb-3 text-2xl font-black text-gray-900">
-          Conta ativa!
+        <h1
+          style={{
+            margin: "0 0 8px",
+            fontSize: 28,
+            fontWeight: 500,
+            letterSpacing: "-0.02em",
+            color: "var(--ink)",
+          }}
+        >
+          Conta ativa
         </h1>
-        <p className="mb-8 text-base text-gray-600">
-          Agora é escolher o nível de prontidão do seu pedido.
+        <p
+          style={{
+            margin: "0 0 24px",
+            fontSize: 15,
+            color: "var(--ink-2)",
+            lineHeight: 1.6,
+          }}
+        >
+          Próximo passo: escolher o nível de prontidão do seu pedido.
         </p>
 
-        <div className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm text-gray-500 shadow-sm ring-1 ring-gray-200">
-          <Loader2 className="h-4 w-4 animate-spin text-[#166534]" />
-          Abrindo planos em {segundos}s...
+        <div
+          className="mono"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 10,
+            padding: "9px 16px",
+            borderRadius: 999,
+            background: "rgba(255,255,255,0.04)",
+            border: "1px solid var(--line-2)",
+            fontSize: 11.5,
+            color: "var(--muted)",
+            letterSpacing: "0.12em",
+            textTransform: "uppercase",
+          }}
+        >
+          <span style={{ color: "var(--green)", display: "inline-flex" }}>
+            {Icon.spinner(13)}
+          </span>
+          Abrindo planos em {segundos}s
         </div>
 
-        <p className="mt-6 text-xs text-gray-400">
-          Se não for redirecionado automaticamente,{' '}
-          <button
-            onClick={() => router.push('/planos')}
-            className="font-semibold text-[#166534] hover:underline"
-          >
-            clique aqui
-          </button>
-          .
-        </p>
+        <div style={{ marginTop: 24 }}>
+          <Button variant="ghost" size="md" href="/planos">
+            Ir agora {Icon.arrow(14)}
+          </Button>
+        </div>
       </div>
-    </main>
+    </AuthSplit>
   )
 }

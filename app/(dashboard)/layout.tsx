@@ -1,7 +1,16 @@
-import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
-import { DashboardShell } from '@/components/ui/dashboard-shell'
-import { getPlanoAtual } from '@/lib/plano'
+import { createClient } from "@/lib/supabase/server"
+import { redirect } from "next/navigation"
+import { DashboardShell } from "@/components/shell/DashboardShell"
+import type { TopbarTier } from "@/components/shell/Topbar"
+import { getPlanoAtual } from "@/lib/plano"
+import type { PlanoComercial } from "@/lib/plano"
+
+function planoToTier(plano: PlanoComercial): TopbarTier {
+  if (plano === "Bronze") return "Bronze"
+  if (plano === "Prata") return "Prata"
+  if (plano === "Ouro") return "Ouro"
+  return "free"
+}
 
 export default async function DashboardLayout({
   children,
@@ -14,18 +23,22 @@ export default async function DashboardLayout({
   } = await supabase.auth.getUser()
 
   if (!user) {
-    redirect('/login')
+    redirect("/login")
   }
 
   const nome =
-    (user.user_metadata?.nome as string | undefined)?.split(' ')[0] ??
-    user.email?.split('@')[0] ??
-    'Usuário'
+    (user.user_metadata?.nome as string | undefined)?.split(" ")[0] ??
+    user.email?.split("@")[0] ??
+    "Produtor"
 
   const plano = await getPlanoAtual()
 
   return (
-    <DashboardShell nome={nome} email={user.email} plano={plano.plano}>
+    <DashboardShell
+      nome={nome}
+      email={user.email ?? null}
+      tier={planoToTier(plano.plano)}
+    >
       {children}
     </DashboardShell>
   )

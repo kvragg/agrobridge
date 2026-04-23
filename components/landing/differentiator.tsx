@@ -157,7 +157,7 @@ export function Differentiator() {
               Construído por quem
               <br />
               <span style={{ color: "var(--muted)" }}>
-                decidia crédito por dentro do banco.
+                viveu aprovações e recusas por dentro do banco.
               </span>
             </h2>
             <p
