@@ -300,3 +300,70 @@
 @keyframes landing-spin {
   to { transform: rotate(360deg); }
 }
+
+/* Tipografia institucional (privacidade/termos) dentro do shell dark */
+.landing-root .institutional h1 {
+  font-size: clamp(32px, 4.4vw, 48px);
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  color: var(--ink);
+  margin: 0 0 10px;
+}
+.landing-root .institutional h2 {
+  font-size: 22px;
+  font-weight: 500;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+  margin: 48px 0 14px;
+  scroll-margin-top: 80px;
+}
+.landing-root .institutional h3 {
+  font-size: 17px;
+  font-weight: 500;
+  color: var(--ink);
+  margin: 28px 0 10px;
+}
+.landing-root .institutional p,
+.landing-root .institutional li {
+  font-size: 15.5px;
+  line-height: 1.7;
+  color: var(--ink-2);
+  margin: 0 0 10px;
+}
+.landing-root .institutional ul,
+.landing-root .institutional ol {
+  padding-left: 22px;
+  margin: 10px 0 16px;
+}
+.landing-root .institutional li { margin-bottom: 8px; }
+.landing-root .institutional li::marker { color: var(--muted); }
+.landing-root .institutional strong { color: var(--ink); font-weight: 500; }
+.landing-root .institutional a {
+  color: var(--green);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.landing-root .institutional a:hover { color: #6ad0a5; }
+.landing-root .institutional code {
+  background: rgba(255,255,255,0.05);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: var(--font-mono), "Geist Mono", monospace;
+  font-size: 13px;
+  color: var(--ink);
+}
+.landing-root .institutional hr {
+  border: 0;
+  border-top: 1px solid var(--line);
+  margin: 32px 0;
+}
+.landing-root .institutional .callout {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--line-2);
+  border-radius: 12px;
+  padding: 18px 20px;
+  margin: 18px 0;
+}
+.landing-root .institutional .callout p { margin-bottom: 0; }
+.landing-root .institutional .callout p + p { margin-top: 10px; }
