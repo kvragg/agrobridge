@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'node:crypto'
 import { createClient } from '@/lib/supabase/server'
-import { rateLimit } from '@/lib/rate-limit'
+import { rateLimitRemoto } from '@/lib/rate-limit-upstash'
 import { extrairIp, normalizarEmail, validarEmail } from '@/lib/validation'
 import { logAuditEvent } from '@/lib/audit'
 
@@ -14,7 +14,7 @@ const JANELA_MS = 15 * 60 * 1000 // 15 minutos
 
 export async function POST(request: NextRequest) {
   const ip = extrairIp(request)
-  const limite = rateLimit(`login:${ip}`, MAX_TENTATIVAS, JANELA_MS)
+  const limite = await rateLimitRemoto(`login:${ip}`, MAX_TENTATIVAS, JANELA_MS)
 
   if (!limite.ok) {
     return NextResponse.json(

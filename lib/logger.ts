@@ -139,7 +139,28 @@ export function capturarErroProducao(
     },
   })
 
-  // TODO(sentry): quando SENTRY_DSN configurado, enviar para Sentry aqui.
-  // Mantido como placeholder intencional — a função já é o ponto certo
-  // de plug, adicionar o SDK depois sem mudar call-sites.
+  // Integração Sentry — ativa apenas se SENTRY_DSN estiver configurado
+  // (veja instrumentation.ts na raiz que faz o init). Sem DSN, import é
+  // no-op e não incorre custo de rede.
+  if (process.env.SENTRY_DSN) {
+    try {
+      // Import dinâmico para não pagar overhead quando desabilitado.
+      import('@sentry/nextjs')
+        .then((Sentry) => {
+          Sentry.captureException(err, {
+            tags: { modulo: contexto.modulo },
+            extra: {
+              userId: contexto.userId ?? null,
+              requestId: contexto.requestId ?? null,
+              ...sanitizarExtra(contexto.extra),
+            },
+          })
+        })
+        .catch(() => {
+          // Falha de import/capture não deve propagar — já logamos localmente.
+        })
+    } catch {
+      // Defensivo: nunca deixar falha de observabilidade quebrar a rota.
+    }
+  }
 }

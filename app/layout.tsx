@@ -14,10 +14,41 @@ const geistMono = Geist_Mono({
   display: "swap",
 });
 
+const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://agrobridge.app";
+
 export const metadata: Metadata = {
-  title: "AgroBridge — Crédito rural aprovado",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "AgroBridge — Crédito rural aprovado",
+    template: "%s · AgroBridge",
+  },
   description:
     "Consultoria especializada em crédito rural. Entrevista com IA, checklist personalizado e laudo técnico no padrão que o banco aprova.",
+  applicationName: "AgroBridge",
+  authors: [{ name: "AgroBridge" }],
+  openGraph: {
+    type: "website",
+    locale: "pt_BR",
+    url: SITE_URL,
+    siteName: "AgroBridge",
+    title: "AgroBridge — Crédito rural aprovado",
+    description:
+      "Entrevista com IA, checklist personalizado e dossiê técnico pronto pra banco.",
+    // TODO(Paulo): exportar public/og-image.png (1200×630) do Figma e ligar aqui.
+    // images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "AgroBridge" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "AgroBridge — Crédito rural aprovado",
+    description:
+      "Entrevista com IA, checklist personalizado e dossiê técnico pronto pra banco.",
+  },
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+    // TODO(Paulo): apple-icon.png 180×180 quando disponível.
+  },
 };
 
 export const viewport = {

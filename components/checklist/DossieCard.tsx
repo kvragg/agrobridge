@@ -213,10 +213,15 @@ export default function DossieCard({
             <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
               <div className="flex flex-col items-center gap-3">
                 {pagamento.qr_code_url ? (
+                  // QR vem do provedor de pagamento em runtime (URL dinâmica,
+                  // sem domain upfront pro Next). Fica <img> com unoptimized
+                  // via next/image.
+                  // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={pagamento.qr_code_url}
                     alt="QR Code PIX"
                     className="h-48 w-48 rounded-lg border border-gray-200 bg-white p-2"
+                    loading="lazy"
                   />
                 ) : (
                   <div className="flex h-48 w-48 items-center justify-center rounded-lg border border-gray-200 bg-white">

@@ -16,7 +16,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { criarStreamChat, detalharErroAnthropic, type MensagemChat } from '@/lib/anthropic/chat'
 import { extrairFatosDaTroca } from '@/lib/ai/extract-facts'
 import { gerarMiniAnalise } from '@/lib/anthropic/mini-analise'
-import { rateLimitIA } from '@/lib/rate-limit'
+import { rateLimitIARemoto } from '@/lib/rate-limit-upstash'
 import { logAuditEvent } from '@/lib/audit'
 import { getPlanoAtual } from '@/lib/plano'
 import type { PerfilLead } from '@/types/perfil-lead'
@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
   ])
 
   // Rate-limit por tier (Free 10/h · Bronze 25/h · Prata 50/h · Ouro 100/h)
-  const limite = rateLimitIA({ userId: user.id, plano: plano.plano, canal: 'chat' })
+  const limite = await rateLimitIARemoto({ userId: user.id, plano: plano.plano, canal: 'chat' })
   if (!limite.ok) {
     return Response.json(
       {

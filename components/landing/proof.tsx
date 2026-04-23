@@ -5,7 +5,6 @@
 // inputs mudam sozinhos em loop, score reage com animação CountUp,
 // CTA leva pro cadastro/simulador.
 
-import Link from "next/link"
 import { useEffect, useMemo, useRef, useState } from "react"
 import {
   Container,

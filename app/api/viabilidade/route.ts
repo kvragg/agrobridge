@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { gerarParecerViabilidade } from '@/lib/anthropic/viabilidade'
 import { montarViabilidadePDF } from '@/lib/dossie/pdf-viabilidade'
-import { rateLimit } from '@/lib/rate-limit'
+import { rateLimitRemoto } from '@/lib/rate-limit-upstash'
 import { lerTier, temAcesso, TIER_NOME } from '@/lib/tier'
 import { logAuditEvent } from '@/lib/audit'
 import { SONNET_MODEL } from '@/lib/anthropic/sonnet'
@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
 
   // Rate-limit por usuário — viabilidade é mais leve que dossiê,
   // mas ainda chama Sonnet. 10/h cobre uso normal.
-  const limite = rateLimit(`ia:viabilidade:${user.id}`, 10, 60 * 60 * 1000)
+  const limite = await rateLimitRemoto(`ia:viabilidade:${user.id}`, 10, 60 * 60 * 1000)
   if (!limite.ok) {
     return Response.json(
       {

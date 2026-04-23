@@ -2,6 +2,9 @@
   "name": "agrobridge",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=20.11.0 <23"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -16,6 +19,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.89.0",
     "@base-ui/react": "^1.4.0",
+    "@sentry/nextjs": "^10.50.0",
     "@supabase/ssr": "^0.10.2",
     "@supabase/supabase-js": "^2.103.2",
     "class-variance-authority": "^0.7.1",

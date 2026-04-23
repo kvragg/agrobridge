@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { rateLimit } from '@/lib/rate-limit'
+import { rateLimitRemoto } from '@/lib/rate-limit-upstash'
 import {
   extrairIp,
   normalizarEmail,
@@ -18,7 +18,7 @@ const JANELA_MS = 60 * 60 * 1000 // 1 hora
 
 export async function POST(request: NextRequest) {
   const ip = extrairIp(request)
-  const limite = rateLimit(`signup:${ip}`, MAX_CADASTROS, JANELA_MS)
+  const limite = await rateLimitRemoto(`signup:${ip}`, MAX_CADASTROS, JANELA_MS)
 
   if (!limite.ok) {
     return NextResponse.json(

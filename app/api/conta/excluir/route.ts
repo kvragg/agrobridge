@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { rateLimitRemoto } from '@/lib/rate-limit-upstash'
 import { logAuditEvent } from '@/lib/audit'
+import { capturarErroProducao } from '@/lib/logger'
 import { enviarConfirmacaoExclusao } from '@/lib/email/resend'
 
 export const runtime = 'nodejs'
@@ -92,7 +93,11 @@ export async function POST(request: NextRequest) {
     status: 'pendente',
   })
   if (insErr) {
-    console.error('[api/conta/excluir] falha registrar pedido', insErr.message)
+    capturarErroProducao(insErr, {
+      modulo: 'conta/excluir',
+      userId: user.id,
+      extra: { etapa: 'registrar_pedido' },
+    })
     return Response.json({ erro: 'Falha ao processar' }, { status: 500 })
   }
 
@@ -118,7 +123,11 @@ export async function POST(request: NextRequest) {
       emailEnviado = result.ok
       emailErro = result.ok ? null : result.error
     } catch (err) {
-      console.error('[api/conta/excluir] exceção no envio', err)
+      capturarErroProducao(err, {
+        modulo: 'conta/excluir',
+        userId: user.id,
+        extra: { etapa: 'envio_email_confirmacao' },
+      })
       emailErro = err instanceof Error ? err.message : 'erro desconhecido'
     }
   }
@@ -188,7 +197,11 @@ async function confirmarExclusao(
     .maybeSingle()
 
   if (qerr) {
-    console.error('[api/conta/excluir] falha lookup token', qerr.message)
+    capturarErroProducao(qerr, {
+      modulo: 'conta/excluir',
+      userId,
+      extra: { etapa: 'lookup_token' },
+    })
     return Response.json({ erro: 'Falha ao processar' }, { status: 500 })
   }
 
@@ -213,7 +226,11 @@ async function confirmarExclusao(
     p_user_id: userId,
   })
   if (rpcErr) {
-    console.error('[api/conta/excluir] RPC soft_delete falhou', rpcErr.message)
+    capturarErroProducao(rpcErr, {
+      modulo: 'conta/excluir',
+      userId,
+      extra: { rpc: 'soft_delete_user_data' },
+    })
     return Response.json({ erro: 'Falha ao excluir dados' }, { status: 500 })
   }
 
@@ -227,7 +244,11 @@ async function confirmarExclusao(
     ban_duration: '876000h', // ~100 anos — bloqueia login
   })
   if (authErr) {
-    console.error('[api/conta/excluir] falha anonimizar auth.users', authErr.message)
+    capturarErroProducao(authErr, {
+      modulo: 'conta/excluir',
+      userId,
+      extra: { etapa: 'anonimizar_auth_users' },
+    })
     // Não aborta — soft-delete já aconteceu. Fica para reconciliação manual.
   }
 
@@ -260,7 +281,10 @@ async function supabaseSignOut(request: NextRequest): Promise<void> {
     const supabase = await createClient()
     await supabase.auth.signOut()
   } catch (err) {
-    console.error('[api/conta/excluir] falha signOut', err)
+    capturarErroProducao(err, {
+      modulo: 'conta/excluir',
+      extra: { etapa: 'signOut_pos_exclusao' },
+    })
   }
   void request
 }

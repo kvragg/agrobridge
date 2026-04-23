@@ -1,5 +1,7 @@
 import 'server-only'
-import { rateLimit, type ResultadoRateLimit } from './rate-limit'
+import { rateLimit, rateLimitIA, type ResultadoRateLimit } from './rate-limit'
+import type { PlanoComercial } from './plano'
+import { LIMITES_MENSAGENS_POR_HORA, type TierParaRateLimit } from './anthropic/model'
 
 // ============================================================
 // Rate limit distribuído — Upstash Redis via REST (sem SDK)
@@ -96,4 +98,43 @@ export async function rateLimitRemoto(
     retryAfterSeconds: 0,
     remaining: Math.max(0, max - count),
   }
+}
+
+// ----------------------------------------------------------------
+// rateLimitIARemoto — versão distribuída do rateLimitIA.
+//
+// Igual ao sync `rateLimitIA` (lib/rate-limit.ts) mas usando Upstash
+// como backend quando configurado. Fallback pra in-memory se as envs
+// não existirem (dev local) OU se a pipeline Upstash falhar.
+//
+// Chave canônica: `ia:<canal>:<user_id>`, janela deslizante 1h.
+// Limites (definidos em lib/anthropic/model.ts):
+//   Free 10/h · Bronze 25/h · Prata 50/h · Ouro 100/h.
+// ----------------------------------------------------------------
+const UMA_HORA_MS = 60 * 60 * 1000
+
+function planoParaTier(p: PlanoComercial): TierParaRateLimit {
+  if (p === 'Bronze') return 'bronze'
+  if (p === 'Prata') return 'prata'
+  if (p === 'Ouro') return 'ouro'
+  return 'free'
+}
+
+export async function rateLimitIARemoto(params: {
+  userId: string
+  plano: PlanoComercial
+  canal?: string
+}): Promise<ResultadoRateLimit & { tier: TierParaRateLimit; limite: number }> {
+  const tier = planoParaTier(params.plano)
+  const limite = LIMITES_MENSAGENS_POR_HORA[tier]
+  const canal = params.canal ?? 'msg'
+
+  if (!envConfigurada()) {
+    // Dev local / Upstash não configurado — delega pro sync in-memory.
+    const sync = rateLimitIA({ userId: params.userId, plano: params.plano, canal })
+    return sync
+  }
+
+  const resultado = await rateLimitRemoto(`ia:${canal}:${params.userId}`, limite, UMA_HORA_MS)
+  return { ...resultado, tier, limite }
 }

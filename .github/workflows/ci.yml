@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: typecheck · lint · test · build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    env:
+      # Stubs pro build — Vercel usa envs reais em prod.
+      NEXT_PUBLIC_SUPABASE_URL: https://stub.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: stub-anon
+      SUPABASE_SERVICE_ROLE_KEY: stub-service-role
+      NEXT_PUBLIC_SITE_URL: https://agrobridge.app
+      NEXT_PUBLIC_APP_URL: https://agrobridge.app
+      ANTHROPIC_API_KEY: sk-ant-stub
+      RESEND_API_KEY: re_stub
+      LEAD_NOTIFICATION_EMAIL: ci@agrobridge.app
+      CAKTO_WEBHOOK_SECRET: stub-cakto-secret
+      CAKTO_PRODUTO_DIAGNOSTICO: stub
+      CAKTO_PRODUTO_DOSSIE: stub
+      CAKTO_PRODUTO_MENTORIA: stub
+      PAGARME_WEBHOOK_SECRET: stub-pagarme-legacy
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Unit tests
+        run: npx vitest run __tests__
+
+      - name: Build
+        run: npm run build

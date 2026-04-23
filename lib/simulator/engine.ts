@@ -20,12 +20,10 @@
 //  13. teto de valor estimado
 
 import {
-  CULTURAS,
   getCultura,
   type Cultura,
 } from './data/culturas'
 import {
-  GARANTIAS,
   getGarantia,
   GARANTIAS_PREMIUM_COMPLEMENTARES,
 } from './data/garantias'

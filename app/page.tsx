@@ -10,6 +10,13 @@ import { CTA } from "@/components/landing/cta"
 import { Faq } from "@/components/landing/faq"
 import { Footer } from "@/components/landing/footer"
 
+export const metadata = {
+  title: "Crédito rural aprovado · dossiê técnico pronto pra banco",
+  description:
+    "Entrevista com IA, checklist personalizado do MCR e dossiê técnico no padrão que o comitê de crédito aprova. Do cadastro ao laudo.",
+  alternates: { canonical: "/" },
+}
+
 export default function Home() {
   return (
     <div className="landing-root">

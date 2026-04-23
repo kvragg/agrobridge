@@ -6,7 +6,7 @@ import { getPlanoAtual } from '@/lib/plano'
 import { simular } from '@/lib/simulator/engine'
 import { CONJUNTURA_ATUAL } from '@/lib/simulator/data/conjuntura'
 import type { SimulatorInput } from '@/lib/simulator/types'
-import { rateLimit } from '@/lib/rate-limit'
+import { rateLimitRemoto } from '@/lib/rate-limit-upstash'
 import { NextRequest } from 'next/server'
 
 export const runtime = 'nodejs'
@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
   }
 
   // Rate-limit pra evitar spam de salvar (chave separada do chat)
-  const rl = rateLimit(`simulador:salvar:${user.id}`, 60, 60 * 60 * 1000)
+  const rl = await rateLimitRemoto(`simulador:salvar:${user.id}`, 60, 60 * 60 * 1000)
   if (!rl.ok) {
     return Response.json(
       { erro: 'Muitas simulações salvas — aguarde alguns minutos.' },

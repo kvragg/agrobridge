@@ -104,22 +104,6 @@ export function ComparadorClient() {
     return out
   }, [cenarios])
 
-  // Detecção de campos divergentes (pra destacar em amarelo)
-  const camposComparados: (keyof SimulatorInput)[] = [
-    "cultura",
-    "valor_pretendido",
-    "finalidade",
-    "porte",
-    "uf",
-    "relacao_terra",
-    "cadastro_nivel",
-    "historico_scr",
-    "endividamento_pct",
-    "car",
-    "tem_seguro_agricola",
-    "reciprocidade_bancaria",
-  ]
-
   function divergente(campo: keyof SimulatorInput): boolean {
     if (cenarios.length < 2) return false
     const v0 = JSON.stringify(cenarios[0].input[campo])

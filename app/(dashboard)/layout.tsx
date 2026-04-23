@@ -1,9 +1,14 @@
+import type { Metadata } from "next"
 import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
 import { DashboardShell } from "@/components/shell/DashboardShell"
 import type { TopbarTier } from "@/components/shell/Topbar"
 import { getPlanoAtual } from "@/lib/plano"
 import type { PlanoComercial } from "@/lib/plano"
+
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+}
 
 function planoToTier(plano: PlanoComercial): TopbarTier {
   if (plano === "Bronze") return "Bronze"

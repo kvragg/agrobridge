@@ -3,6 +3,7 @@ import crypto from 'node:crypto'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { enviarPagamentoConfirmado } from '@/lib/email/resend'
 import { logAuditEvent } from '@/lib/audit'
+import { capturarErroProducao } from '@/lib/logger'
 import { type Tier, TIER_PRECO_CENTAVOS } from '@/lib/tier'
 import { tierParaPlano } from '@/lib/plano'
 
@@ -67,8 +68,9 @@ const EVENTOS_APROVACAO = new Set([
 function checarAuth(req: NextRequest, rawBody: string, payload: CaktoPayload): boolean {
   const secret = process.env.CAKTO_WEBHOOK_SECRET
   if (!secret) {
-    console.error(
-      '[pagamento/webhook] CAKTO_WEBHOOK_SECRET ausente — request negado'
+    capturarErroProducao(
+      new Error('CAKTO_WEBHOOK_SECRET ausente — request negado'),
+      { modulo: 'pagamento/webhook' }
     )
     return false
   }
@@ -179,9 +181,15 @@ export async function POST(request: NextRequest) {
   // Determina o tier a partir do produto Cakto
   const tier = mapProdutoParaTier(data.product?.id ?? data.product?.offer_id)
   if (!tier) {
-    console.error(
-      '[pagamento/webhook] produto Cakto não mapeado para tier',
-      data.product
+    capturarErroProducao(
+      new Error('produto Cakto não mapeado para tier'),
+      {
+        modulo: 'pagamento/webhook',
+        extra: {
+          productId: data.product?.id ?? null,
+          offerId: data.product?.offer_id ?? null,
+        },
+      }
     )
     return Response.json(
       { erro: 'Produto não reconhecido — verifique CAKTO_PRODUTO_*' },
@@ -209,7 +217,10 @@ export async function POST(request: NextRequest) {
   )
 
   if (error) {
-    console.error('[pagamento/webhook] RPC confirmar_pagamento_v2 falhou', error)
+    capturarErroProducao(error, {
+      modulo: 'pagamento/webhook',
+      extra: { rpc: 'confirmar_pagamento_v2', processoId, eventId },
+    })
     return Response.json({ erro: 'Falha ao processar' }, { status: 500 })
   }
 
@@ -242,7 +253,11 @@ export async function POST(request: NextRequest) {
         tierNome: planoLabel === 'Free' ? undefined : planoLabel,
       })
     } catch (err) {
-      console.error('[pagamento/webhook] falha email', err)
+      capturarErroProducao(err, {
+        modulo: 'pagamento/webhook',
+        userId: row.user_id,
+        extra: { etapa: 'email_confirmacao' },
+      })
     }
   }
 
@@ -306,7 +321,11 @@ async function resolveProcessoId(
     .maybeSingle()
 
   if (procErr) {
-    console.error('[pagamento/webhook] falha lookup processo por email', procErr.message)
+    capturarErroProducao(procErr, {
+      modulo: 'pagamento/webhook',
+      userId,
+      extra: { etapa: 'lookup_processo_por_email' },
+    })
     return null
   }
   if (procRow?.id) return procRow.id
@@ -324,9 +343,13 @@ async function resolveProcessoId(
     .single()
 
   if (novoErr || !novoProc) {
-    console.error(
-      '[pagamento/webhook] falha auto-criar processo p/ pagamento',
-      novoErr?.message
+    capturarErroProducao(
+      novoErr ?? new Error('insert processo retornou null'),
+      {
+        modulo: 'pagamento/webhook',
+        userId,
+        extra: { etapa: 'auto_criar_processo_orfao' },
+      }
     )
     return null
   }
@@ -359,7 +382,10 @@ async function registrarCompraOrfa(
       },
     })
   } catch (err) {
-    console.error('[pagamento/webhook] falha gravar orfa em webhook_events', err)
+    capturarErroProducao(err, {
+      modulo: 'pagamento/webhook',
+      extra: { etapa: 'gravar_orfa_webhook_events', eventId },
+    })
   }
 }
 
