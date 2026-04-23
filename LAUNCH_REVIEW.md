@@ -170,20 +170,20 @@ export const metadata = {
 
 **Evidência:** `grep -rn "openGraph" app lib components` → nada encontrado. `public/` só tem SVGs default do `create-next-app`; sem `og-image.png`.
 
-**Impacto:** quando alguém compartilha `agrobridge.app` no WhatsApp/LinkedIn/Twitter, o preview fica vazio ou genérico. Em produto SaaS onde indicação/marketing boca-a-boca importa, isso custa conversão.
+**Impacto:** quando alguém compartilha `agrobridge.space` no WhatsApp/LinkedIn/Twitter, o preview fica vazio ou genérico. Em produto SaaS onde indicação/marketing boca-a-boca importa, isso custa conversão.
 
 **Correção (esforço: ~1h):**
 1. Criar `public/og-image.png` (1200×630, logo + tagline "Crédito rural aprovado").
 2. Em `app/layout.tsx`, adicionar no metadata:
 ```tsx
 export const metadata: Metadata = {
-  metadataBase: new URL("https://agrobridge.app"),
+  metadataBase: new URL("https://agrobridge.space"),
   title: "AgroBridge — Crédito rural aprovado",
   description: "...",
   openGraph: {
     type: "website",
     locale: "pt_BR",
-    url: "https://agrobridge.app",
+    url: "https://agrobridge.space",
     siteName: "AgroBridge",
     title: "AgroBridge — Crédito rural aprovado",
     description: "Consultoria especializada em crédito rural via IA.",

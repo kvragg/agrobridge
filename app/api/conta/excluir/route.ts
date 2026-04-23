@@ -48,7 +48,7 @@ function tokenHash(token: string): string {
 }
 
 function baseUrl(): string {
-  return process.env.NEXT_PUBLIC_SITE_URL ?? 'https://agrobridge.app'
+  return process.env.NEXT_PUBLIC_SITE_URL ?? 'https://agrobridge.space'
 }
 
 export async function POST(request: NextRequest) {

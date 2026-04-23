@@ -51,7 +51,7 @@ export default function GlobalError({
         }}
       >
         Tivemos um erro inesperado do nosso lado. Tenta de novo — se persistir,
-        fale com a gente em contato@agrobridge.app.
+        fale com a gente em contato@agrobridge.space.
       </p>
       {error.digest && (
         <code

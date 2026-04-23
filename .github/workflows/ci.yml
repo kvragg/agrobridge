@@ -21,11 +21,11 @@ jobs:
       NEXT_PUBLIC_SUPABASE_URL: https://stub.supabase.co
       NEXT_PUBLIC_SUPABASE_ANON_KEY: stub-anon
       SUPABASE_SERVICE_ROLE_KEY: stub-service-role
-      NEXT_PUBLIC_SITE_URL: https://agrobridge.app
-      NEXT_PUBLIC_APP_URL: https://agrobridge.app
+      NEXT_PUBLIC_SITE_URL: https://agrobridge.space
+      NEXT_PUBLIC_APP_URL: https://agrobridge.space
       ANTHROPIC_API_KEY: sk-ant-stub
       RESEND_API_KEY: re_stub
-      LEAD_NOTIFICATION_EMAIL: ci@agrobridge.app
+      LEAD_NOTIFICATION_EMAIL: ci@agrobridge.space
       CAKTO_WEBHOOK_SECRET: stub-cakto-secret
       CAKTO_PRODUTO_DIAGNOSTICO: stub
       CAKTO_PRODUTO_DOSSIE: stub

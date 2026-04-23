@@ -93,7 +93,7 @@ function InterviewMock() {
             textTransform: "uppercase",
           }}
         >
-          agrobridge.app · entrevista
+          agrobridge.space · entrevista
         </div>
         <div
           className="mono"

@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ?? "https://agrobridge.app";
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://agrobridge.space";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
