@@ -15,7 +15,7 @@ export default defineConfig({
   test: {
     environment: "node",
     setupFiles: ["./tests/setup.ts"],
-    include: ["tests/**/*.test.ts"],
+    include: ["tests/**/*.test.ts", "__tests__/**/*.test.ts"],
     globals: false,
     // Passo 0: sem nenhum teste de API ainda — só smoke. Mantém o runner
     // honesto: se ninguém escrever teste, CI ainda trava.
