@@ -68,8 +68,12 @@ const F = {
 } as const
 
 const MARGIN = 56 // ~20mm
+const MARGIN_BOTTOM = 80 // mais folga pra não sobrepor footer chrome (em h-40)
 const PAGE_W_A4 = 595
 const PAGE_H_A4 = 842
+const CONTENT_W = PAGE_W_A4 - MARGIN * 2
+// Limite vertical pra detectar necessidade de page-break.
+const Y_SAFE_BOTTOM = PAGE_H_A4 - MARGIN_BOTTOM
 
 export type TierLaudo = 'diagnostico' | 'dossie' | 'mentoria'
 
@@ -97,7 +101,12 @@ export async function montarLaudoPDF(input: LaudoInput): Promise<Buffer> {
     try {
       const doc = new PDFDocument({
         size: 'A4',
-        margins: { top: MARGIN, bottom: MARGIN, left: MARGIN, right: MARGIN },
+        margins: {
+          top: MARGIN,
+          bottom: MARGIN_BOTTOM,
+          left: MARGIN,
+          right: MARGIN,
+        },
         bufferPages: true,
         info: {
           Title: `Laudo AgroBridge — ${input.produtor.nome}`,
@@ -287,49 +296,66 @@ function renderCapa(doc: PDFDoc, input: LaudoInput): void {
       `${kickerTier(input.tier)} · Safra ${safraAtual()}`,
       MARGIN,
       heroY,
-      { characterSpacing: 1.8, lineBreak: false },
+      { characterSpacing: 1.8, width: CONTENT_W, lineBreak: false },
     )
 
-  // H1 — display grande em 4 linhas estilo editorial
-  const h1Y = heroY + 28
-  const h1Font = F.display
-  doc.font(h1Font).fontSize(52).fillColor(V06.ink)
+  // H1 — display grande em até 4 linhas editoriais.
+  // Cada linha renderiza com width fixo e lineGap controlado; altura
+  // real vem do doc.y depois do render (não usar yCursor += hardcoded,
+  // que causa overlap quando a fonte mede diferente do previsto).
+  const h1FontSize = 48
+  const h1LineHeight = 46
+  let y1 = heroY + 28
   const linhas = tituloCapa(input.tier).split('\n')
-  let yCursor = h1Y
   for (const l of linhas) {
     if (l.includes('{{em}}')) {
-      // linha com ênfase italic no accent2 — pinta em 2 passes
       const [pre, emTxt] = l.split('{{em}}')
+      // Renderiza as duas partes como fragmentos contínuos na MESMA
+      // linha — text com continued, sem wrap (a linha toda cabe na
+      // coluna porque cada linha do título é curta por design).
       doc
         .font(F.display)
-        .fontSize(52)
+        .fontSize(h1FontSize)
         .fillColor(V06.ink)
-        .text(pre, MARGIN, yCursor, { lineBreak: false, continued: true })
+        .text(pre, MARGIN, y1, {
+          continued: true,
+          lineBreak: false,
+          width: CONTENT_W,
+        })
       doc
         .font(F.displayItalic)
-        .fontSize(52)
+        .fontSize(h1FontSize)
         .fillColor(V06.accent2)
-        .text(emTxt, { lineBreak: false })
+        .text(emTxt, {
+          continued: false,
+          lineBreak: false,
+          width: CONTENT_W,
+        })
     } else {
-      doc.font(h1Font).fontSize(52).fillColor(V06.ink).text(l, MARGIN, yCursor, {
-        lineBreak: false,
-      })
+      doc
+        .font(F.display)
+        .fontSize(h1FontSize)
+        .fillColor(V06.ink)
+        .text(l, MARGIN, y1, { lineBreak: false, width: CONTENT_W })
     }
-    yCursor += 50
+    y1 += h1LineHeight
   }
 
-  // Lede
+  // Lede — com width, sem lineBreak: false, pode quebrar naturalmente
   doc
     .font(F.sans)
     .fontSize(11)
     .fillColor(V06.ink2)
-    .text(ledeCapa(input), MARGIN, yCursor + 14, {
-      width: width - MARGIN * 2 - 50,
+    .text(ledeCapa(input), MARGIN, y1 + 10, {
+      width: CONTENT_W * 0.82,
       lineGap: 3,
     })
 
-  // Stats row no rodapé da capa (4 cols: produtor, imóvel, área, operação)
-  const statsY = height - 170
+  // Stats row no rodapé da capa (4 cols: produtor, localização, área, operação).
+  // Dimensionamento: col = 120pt, com padding horizontal 10pt sobra ~100pt
+  // úteis pra o VAL. Valores longos (ex. "Cocalzinho de Goiás / GO") precisam
+  // de fonte menor + wrap em 2 linhas pra não saírem do box.
+  const statsY = height - 190
   doc
     .moveTo(MARGIN, statsY - 10)
     .lineTo(width - MARGIN, statsY - 10)
@@ -339,7 +365,9 @@ function renderCapa(doc: PDFDoc, input: LaudoInput): void {
 
   const perfil = input.perfil.perfil ?? ({} as { nome?: string; municipio?: string; estado?: string })
   const prop = input.perfil.propriedade ?? ({} as { area_hectares?: number | null })
-  const colW = (width - MARGIN * 2) / 4
+  const statsTotalW = width - MARGIN * 2
+  const statsColW = statsTotalW / 4
+  const statsColGap = 10 // padding interno da célula
   const cols = [
     {
       lbl: 'Produtor',
@@ -355,39 +383,50 @@ function renderCapa(doc: PDFDoc, input: LaudoInput): void {
     },
     { lbl: 'Operação', val: input.valor ? brl(input.valor) : '—' },
   ]
+  const rowH = 64
   for (let i = 0; i < cols.length; i++) {
-    const cx = MARGIN + i * colW
+    const cx = MARGIN + i * statsColW
+    // Label mono 7pt com ellipsis na largura útil
     doc
       .font(F.mono)
       .fontSize(7)
       .fillColor(V06.muted)
-      .text(cols[i].lbl.toUpperCase(), cx + 8, statsY + 2, {
+      .text(cols[i].lbl.toUpperCase(), cx + statsColGap, statsY + 8, {
         characterSpacing: 1.4,
+        width: statsColW - statsColGap * 2,
         lineBreak: false,
+        ellipsis: true,
       })
+    // Valor — tamanho adaptativo pra caber, com wrap em 2 linhas máx
     doc
       .font(F.display)
-      .fontSize(14)
+      .fontSize(13)
       .fillColor(V06.ink)
-      .text(cols[i].val, cx + 8, statsY + 16, { width: colW - 16, lineBreak: false, ellipsis: true })
+      .text(cols[i].val, cx + statsColGap, statsY + 24, {
+        width: statsColW - statsColGap * 2,
+        height: rowH - 28,
+        lineBreak: true,
+        ellipsis: true,
+        lineGap: 1,
+      })
     if (i < cols.length - 1) {
       doc
-        .moveTo(cx + colW, statsY)
-        .lineTo(cx + colW, statsY + 44)
+        .moveTo(cx + statsColW, statsY)
+        .lineTo(cx + statsColW, statsY + rowH)
         .lineWidth(0.3)
         .strokeColor(V06.line)
         .stroke()
     }
   }
   doc
-    .moveTo(MARGIN, statsY + 50)
-    .lineTo(width - MARGIN, statsY + 50)
+    .moveTo(MARGIN, statsY + rowH + 6)
+    .lineTo(width - MARGIN, statsY + rowH + 6)
     .lineWidth(0.5)
     .strokeColor(V06.line)
     .stroke()
 
-  // Cover foot
-  const fy = height - 80
+  // Cover foot — sempre à esquerda, selo da vaga (Ouro) à direita
+  const fy = height - 60
   doc
     .font(F.mono)
     .fontSize(7)
@@ -396,34 +435,38 @@ function renderCapa(doc: PDFDoc, input: LaudoInput): void {
       `Documento ${numeroDoc(input.tier)} · Validade 120 dias`,
       MARGIN,
       fy,
-      { characterSpacing: 1.4, lineBreak: false },
+      { characterSpacing: 1.4, width: CONTENT_W * 0.55, lineBreak: false },
     )
 
-  // Se Ouro com vaga — selo discreto no canto inferior direito
   if (input.tier === 'mentoria' && input.numeroVaga) {
-    const seloX = width - MARGIN - 160
+    const seloW = 150
+    const seloH = 32
+    const seloX = width - MARGIN - seloW
+    const seloY = fy - 10
     doc
-      .rect(seloX, fy - 10, 160, 36)
+      .rect(seloX, seloY, seloW, seloH)
       .lineWidth(0.8)
       .strokeColor(V06.accentGold)
       .stroke()
     doc
       .font(F.mono)
-      .fontSize(7)
+      .fontSize(6.5)
       .fillColor(V06.accentGold)
-      .text('MESA DE CRÉDITO · VAGA', seloX + 10, fy - 4, {
-        characterSpacing: 1.4,
+      .text('MESA DE CRÉDITO · VAGA', seloX, seloY + 4, {
+        characterSpacing: 1.3,
+        width: seloW,
+        align: 'center',
         lineBreak: false,
       })
     doc
       .font(F.display)
-      .fontSize(14)
+      .fontSize(13)
       .fillColor(V06.ink)
       .text(
         `Nº ${String(input.numeroVaga).padStart(2, '0')} / 06`,
-        seloX + 10,
-        fy + 8,
-        { lineBreak: false },
+        seloX,
+        seloY + 15,
+        { width: seloW, align: 'center', lineBreak: false },
       )
   }
 }
@@ -446,7 +489,7 @@ function renderSumarioExecutivo(doc: PDFDoc, input: LaudoInput): void {
       MARGIN,
       doc.y + 14,
       {
-        width: doc.page.width - MARGIN * 2 - 60,
+        width: CONTENT_W,
         align: 'justify',
         lineGap: 3,
       },
@@ -570,7 +613,7 @@ function renderViabilidade(doc: PDFDoc, input: LaudoInput): void {
     .fontSize(10.5)
     .fillColor(V06.ink2)
     .text(descricaoViabilidade(input), MARGIN, doc.y + 14, {
-      width: doc.page.width - MARGIN * 2 - 60,
+      width: CONTENT_W,
       align: 'justify',
       lineGap: 3,
     })
@@ -604,7 +647,7 @@ function renderGarantias(doc: PDFDoc, input: LaudoInput): void {
       MARGIN,
       doc.y + 14,
       {
-        width: doc.page.width - MARGIN * 2 - 60,
+        width: CONTENT_W,
         align: 'justify',
         lineGap: 3,
       },
@@ -647,7 +690,7 @@ function renderGarantias(doc: PDFDoc, input: LaudoInput): void {
       MARGIN,
       doc.y,
       {
-        width: doc.page.width - MARGIN * 2 - 60,
+        width: CONTENT_W,
         align: 'justify',
         lineGap: 2,
       },
@@ -667,7 +710,7 @@ function renderParecer(doc: PDFDoc, input: LaudoInput): void {
     .fontSize(10.5)
     .fillColor(V06.ink2)
     .text(textoParecer(input, ga), MARGIN, doc.y + 14, {
-      width: doc.page.width - MARGIN * 2 - 60,
+      width: CONTENT_W,
       align: 'justify',
       lineGap: 3,
     })
@@ -687,7 +730,8 @@ function renderParecer(doc: PDFDoc, input: LaudoInput): void {
   const y0 = doc.y
   const colW = (doc.page.width - MARGIN * 2 - 20) / 2
 
-  miniH3Xy(doc, 'Identificação documental', MARGIN, y0)
+  // Coluna esquerda — Identificação documental
+  miniH3Xy(doc, 'Identificação documental', MARGIN, y0, colW)
   const idInfo = [
     `LAUDO         ${numeroDoc(input.tier)}`,
     `PROCESSO     ${shortProc(input.processoId)}`,
@@ -699,39 +743,45 @@ function renderParecer(doc: PDFDoc, input: LaudoInput): void {
     .font(F.mono)
     .fontSize(9)
     .fillColor(V06.ink2)
-    .text(idInfo.join('\n'), MARGIN, doc.y + 4, {
+    .text(idInfo.join('\n'), MARGIN, y0 + 18, {
       width: colW,
       lineGap: 4,
     })
+  const leftEndY = doc.y
 
-  miniH3Xy(doc, 'Emissor', MARGIN + colW + 20, y0)
+  // Coluna direita — Emissor
+  const rx = MARGIN + colW + 20
+  miniH3Xy(doc, 'Emissor', rx, y0, colW)
   doc
     .font(F.display)
     .fontSize(18)
     .fillColor(V06.ink)
-    .text('AgroBridge', MARGIN + colW + 20, y0 + 18, { lineBreak: false })
+    .text('AgroBridge', rx, y0 + 18, { width: colW, lineBreak: false, ellipsis: true })
   doc
     .font(F.sans)
     .fontSize(9.5)
     .fillColor(V06.ink2)
     .text(
       'Mesa Técnica de Crédito · consultoria especializada em crédito rural.',
-      MARGIN + colW + 20,
-      y0 + 40,
+      rx,
+      y0 + 42,
       { width: colW, lineGap: 3 },
     )
+  const rightMidY = doc.y
   doc
     .font(F.sansItalic)
     .fontSize(9)
     .fillColor(V06.muted)
     .text(
       'Este laudo reflete análise técnica baseada nos dados autodeclarados e na documentação apresentada. Decisão final de aprovação compete ao comitê do credor.',
-      MARGIN + colW + 20,
-      doc.y + 4,
+      rx,
+      rightMidY + 6,
       { width: colW, lineGap: 2 },
     )
+  const rightEndY = doc.y
 
-  doc.y = Math.max(doc.y, y0 + 120)
+  // Avança cursor pro maior dos dois fins
+  doc.y = Math.max(leftEndY, rightEndY) + 12
 
   // Assinatura — 2 colunas
   doc.moveDown(1)
@@ -788,7 +838,7 @@ function renderGargalos(doc: PDFDoc, input: LaudoInput): void {
       MARGIN,
       doc.y + 14,
       {
-        width: doc.page.width - MARGIN * 2 - 60,
+        width: CONTENT_W,
         align: 'justify',
         lineGap: 3,
       },
@@ -941,7 +991,7 @@ function renderParecerFundador(doc: PDFDoc, input: LaudoInput): void {
       MARGIN,
       doc.y,
       {
-        width: doc.page.width - MARGIN * 2 - 60,
+        width: CONTENT_W,
         align: 'right',
       },
     )
@@ -966,7 +1016,7 @@ function renderRoteiroComite(doc: PDFDoc, input: LaudoInput): void {
       'Quando o gerente leva o pedido pra mesa, a defesa oral conta tanto quanto o dossiê. Este roteiro estrutura o que dizer — na ordem em que o comitê pergunta — pra deixar a operação pronta pra aprovação.',
       MARGIN,
       doc.y + 14,
-      { width: doc.page.width - MARGIN * 2 - 60, align: 'justify', lineGap: 2 },
+      { width: CONTENT_W, align: 'justify', lineGap: 2 },
     )
   doc.moveDown(0.6)
 
@@ -1029,7 +1079,7 @@ function renderRoteiroComite(doc: PDFDoc, input: LaudoInput): void {
       .fontSize(10)
       .fillColor(V06.ink2)
       .text(etapa.script, MARGIN + 8, doc.y, {
-        width: doc.page.width - MARGIN * 2 - 8 - 60,
+        width: CONTENT_W - 8,
         align: 'justify',
         lineGap: 2,
       })
@@ -1056,19 +1106,20 @@ function startSecao(doc: PDFDoc, numero: string, titulo: string): void {
     .fillColor(V06.accent2)
     .text(numero.toUpperCase(), MARGIN, doc.y, {
       characterSpacing: 1.8,
+      width: CONTENT_W,
       lineBreak: false,
+      ellipsis: true,
     })
   doc.moveDown(0.4)
   doc
     .font(F.display)
     .fontSize(26)
     .fillColor(V06.ink)
-    .text(titulo, MARGIN, doc.y, { width: doc.page.width - MARGIN * 2 })
-  // Fio accent sob
-  doc
-    .rect(MARGIN, doc.y + 4, 40, 1.5)
-    .fill(V06.accent2)
-  doc.y += 10
+    .text(titulo, MARGIN, doc.y, { width: CONTENT_W, lineGap: 2 })
+  // Fio accent sob título — ancorado ao y final do text, não ao y atual
+  const fioY = doc.y + 4
+  doc.rect(MARGIN, fioY, 40, 1.5).fill(V06.accent2)
+  doc.y = fioY + 12
 }
 
 function miniH3(doc: PDFDoc, titulo: string): void {
@@ -1078,7 +1129,9 @@ function miniH3(doc: PDFDoc, titulo: string): void {
     .fillColor(V06.accent)
     .text(titulo.toUpperCase(), MARGIN, doc.y, {
       characterSpacing: 1.2,
+      width: CONTENT_W,
       lineBreak: false,
+      ellipsis: true,
     })
   doc.moveDown(0.2)
   doc
@@ -1090,14 +1143,21 @@ function miniH3(doc: PDFDoc, titulo: string): void {
   doc.moveDown(0.3)
 }
 
-function miniH3Xy(doc: PDFDoc, titulo: string, x: number, y: number): void {
+/**
+ * Variante de miniH3 posicionada em (x,y) absoluto — usada em layouts
+ * two-col onde cada coluna tem origem própria. Atualiza doc.y pro fim
+ * do título pra próxima chamada seguir o fluxo.
+ */
+function miniH3Xy(doc: PDFDoc, titulo: string, x: number, y: number, w: number): void {
   doc
     .font(F.sansBold)
     .fontSize(9)
     .fillColor(V06.accent)
     .text(titulo.toUpperCase(), x, y, {
       characterSpacing: 1.2,
+      width: w,
       lineBreak: false,
+      ellipsis: true,
     })
 }
 
@@ -1108,13 +1168,16 @@ function renderKpiRow(
   const y0 = doc.y
   const totalW = doc.page.width - MARGIN * 2
   const colW = totalW / kpis.length
-  const h = 62
-  // Borda externa do bloco
+  const padX = 10
+  const innerW = colW - padX * 2
+  const h = 78 // +16pt pra valores longos renderizarem em 2 linhas sem overflow
+
   doc
     .rect(MARGIN, y0, totalW, h)
     .lineWidth(0.5)
     .strokeColor(V06.line)
     .stroke()
+
   for (let i = 0; i < kpis.length; i++) {
     const x = MARGIN + i * colW
     if (i > 0) {
@@ -1125,57 +1188,72 @@ function renderKpiRow(
         .strokeColor(V06.line)
         .stroke()
     }
+    // Label
     doc
       .font(F.mono)
       .fontSize(7)
       .fillColor(V06.muted)
-      .text(kpis[i].lbl.toUpperCase(), x + 10, y0 + 10, {
+      .text(kpis[i].lbl.toUpperCase(), x + padX, y0 + 10, {
         characterSpacing: 1.4,
-        width: colW - 20,
-        lineBreak: false,
-      })
-    doc
-      .font(F.display)
-      .fontSize(19)
-      .fillColor(V06.ink)
-      .text(kpis[i].val, x + 10, y0 + 24, {
-        width: colW - 20,
+        width: innerW,
         lineBreak: false,
         ellipsis: true,
       })
+    // Valor: fonte adaptativa (16pt base, 13pt se muito comprido)
+    const valTxt = kpis[i].val
+    doc.font(F.display)
+    const baseSize = 17
+    const estWidth = doc.widthOfString(valTxt, { size: baseSize } as never)
+    const adaptiveSize = estWidth > innerW ? 13 : baseSize
+    doc
+      .font(F.display)
+      .fontSize(adaptiveSize)
+      .fillColor(V06.ink)
+      .text(valTxt, x + padX, y0 + 24, {
+        width: innerW,
+        height: 32,
+        lineBreak: true,
+        ellipsis: true,
+        lineGap: 1,
+      })
+    // Sub
     doc
       .font(F.sans)
       .fontSize(8)
       .fillColor(V06.muted)
-      .text(kpis[i].sub, x + 10, y0 + 48, { width: colW - 20, lineBreak: false })
+      .text(kpis[i].sub, x + padX, y0 + h - 18, {
+        width: innerW,
+        height: 14,
+        lineBreak: false,
+        ellipsis: true,
+      })
   }
-  doc.y = y0 + h + 4
+  doc.y = y0 + h + 6
 }
 
 function renderPullQuote(doc: PDFDoc, quote: string, caption: string): void {
   const y0 = doc.y
   const innerX = MARGIN + 14
-  const innerW = doc.page.width - MARGIN * 2 - 14
+  const innerW = doc.page.width - MARGIN * 2 - 14 - 8
 
   doc
     .font(F.displayItalic)
     .fontSize(14)
     .fillColor(V06.ink)
-    .text(quote, innerX, y0 + 4, {
-      width: innerW - 20,
-      lineGap: 3,
-    })
-  doc.moveDown(0.3)
+    .text(quote, innerX, y0 + 4, { width: innerW, lineGap: 3 })
+  // doc.y agora é o fim do quote
+  const capY = doc.y + 6
   doc
     .font(F.mono)
     .fontSize(7.5)
     .fillColor(V06.muted)
-    .text(caption.toUpperCase(), innerX, doc.y, {
+    .text(caption.toUpperCase(), innerX, capY, {
       characterSpacing: 1.4,
+      width: innerW,
       lineBreak: false,
+      ellipsis: true,
     })
-  const endY = doc.y + 4
-  // Accent left border
+  const endY = doc.y + 6
   doc.rect(MARGIN, y0, 3, endY - y0).fill(V06.accent2)
   doc.y = endY + 4
 }
@@ -1191,61 +1269,49 @@ function renderTwoColLists(
 ): void {
   const y0 = doc.y
   const colW = (doc.page.width - MARGIN * 2 - 24) / 2
-
-  // Left col
-  doc
-    .font(F.sansBold)
-    .fontSize(9)
-    .fillColor(V06.accent)
-    .text(p.leftTitle.toUpperCase(), MARGIN, y0, {
-      characterSpacing: 1.2,
-      width: colW,
-      lineBreak: false,
-    })
-  doc
-    .moveTo(MARGIN, y0 + 14)
-    .lineTo(MARGIN + colW, y0 + 14)
-    .lineWidth(0.3)
-    .strokeColor(V06.lineSoft)
-    .stroke()
-  let lyL = y0 + 20
-  for (const item of p.leftItems.length > 0 ? p.leftItems : ['—']) {
-    doc
-      .font(F.sans)
-      .fontSize(9.5)
-      .fillColor(V06.ink2)
-      .text(`→  ${item}`, MARGIN, lyL, { width: colW, lineGap: 2 })
-    lyL = doc.y + 4
-  }
-
-  // Right col
   const rx = MARGIN + colW + 24
-  doc
-    .font(F.sansBold)
-    .fontSize(9)
-    .fillColor(V06.accent)
-    .text(p.rightTitle.toUpperCase(), rx, y0, {
-      characterSpacing: 1.2,
-      width: colW,
-      lineBreak: false,
-    })
-  doc
-    .moveTo(rx, y0 + 14)
-    .lineTo(rx + colW, y0 + 14)
-    .lineWidth(0.3)
-    .strokeColor(V06.lineSoft)
-    .stroke()
-  let lyR = y0 + 20
-  for (const item of p.rightItems.length > 0 ? p.rightItems : ['—']) {
+
+  // Helper que renderiza UMA coluna a partir de y0 e devolve o y final.
+  // Usa heightOfString pra calcular a altura real de cada item antes de
+  // posicionar — evita sobreposição quando item quebra em 2-3 linhas.
+  const renderCol = (
+    x: number,
+    title: string,
+    items: string[],
+  ): number => {
     doc
-      .font(F.sans)
-      .fontSize(9.5)
-      .fillColor(V06.ink2)
-      .text(`→  ${item}`, rx, lyR, { width: colW, lineGap: 2 })
-    lyR = doc.y + 4
+      .font(F.sansBold)
+      .fontSize(9)
+      .fillColor(V06.accent)
+      .text(title.toUpperCase(), x, y0, {
+        characterSpacing: 1.2,
+        width: colW,
+        lineBreak: false,
+        ellipsis: true,
+      })
+    doc
+      .moveTo(x, y0 + 14)
+      .lineTo(x + colW, y0 + 14)
+      .lineWidth(0.3)
+      .strokeColor(V06.lineSoft)
+      .stroke()
+    let cy = y0 + 20
+    const list = items.length > 0 ? items : ['—']
+    for (const item of list) {
+      const txt = `→  ${item}`
+      doc.font(F.sans).fontSize(9.5)
+      const itemH = doc.heightOfString(txt, { width: colW, lineGap: 2 })
+      doc
+        .fillColor(V06.ink2)
+        .text(txt, x, cy, { width: colW, lineGap: 2 })
+      cy += itemH + 4
+    }
+    return cy
   }
 
-  doc.y = Math.max(lyL, lyR) + 4
+  const lyL = renderCol(MARGIN, p.leftTitle, p.leftItems)
+  const lyR = renderCol(rx, p.rightTitle, p.rightItems)
+  doc.y = Math.max(lyL, lyR) + 6
 }
 
 function renderKvCol(
@@ -1255,23 +1321,34 @@ function renderKvCol(
   w: number,
   items: Array<[string, string]>,
 ): void {
+  const labelW = w * 0.40
+  const valueX = x + w * 0.42
+  const valueW = w * 0.58
   let cy = y
   for (const [k, v] of items) {
+    // Mede altura real do valor antes de renderizar — garante que
+    // próxima linha não colida com a anterior quando valor quebra.
+    doc.font(F.sans).fontSize(10)
+    const valH = doc.heightOfString(v, { width: valueW, lineGap: 2 })
+    const rowH = Math.max(16, valH + 4)
+    // Label mono
     doc
       .font(F.mono)
       .fontSize(7.5)
       .fillColor(V06.muted)
-      .text(k.toUpperCase(), x, cy, {
+      .text(k.toUpperCase(), x, cy + 1, {
         characterSpacing: 1.2,
-        width: w * 0.4,
+        width: labelW,
         lineBreak: false,
+        ellipsis: true,
       })
+    // Valor
     doc
       .font(F.sans)
       .fontSize(10)
       .fillColor(V06.ink)
-      .text(v, x + w * 0.42, cy - 1, { width: w * 0.58, lineGap: 2 })
-    cy = Math.max(cy + 16, doc.y + 4)
+      .text(v, valueX, cy, { width: valueW, lineGap: 2 })
+    cy += rowH
   }
   doc.y = cy
 }
@@ -1296,6 +1373,13 @@ function renderTableSimple(
     }
     const rowH = maxH + padY * 2
 
+    // Page-break: se a linha não cabe, quebra e repinta o fundo.
+    if (y + rowH > Y_SAFE_BOTTOM) {
+      doc.addPage()
+      pageBg(doc)
+    }
+    const yFinal = doc.y
+
     let cx = MARGIN
     for (let i = 0; i < cols.length; i++) {
       const txt = isHeader ? (cells[i] ?? '').toUpperCase() : (cells[i] ?? '')
@@ -1303,7 +1387,7 @@ function renderTableSimple(
         .fillColor(color)
         .font(font)
         .fontSize(isHeader ? 7.5 : 9.5)
-        .text(txt, cx + padX, y + padY, {
+        .text(txt, cx + padX, yFinal + padY, {
           width: colWs[i] - padX * 2,
           align: cols[i].align ?? 'left',
           ...(isHeader ? { characterSpacing: 1.2 } : {}),
@@ -1315,12 +1399,12 @@ function renderTableSimple(
     const lineColor = isHeader ? V06.accent2 : V06.lineSoft
     const lineWidth = isHeader ? 0.8 : 0.3
     doc
-      .moveTo(MARGIN, y + rowH)
-      .lineTo(MARGIN + tableW, y + rowH)
+      .moveTo(MARGIN, yFinal + rowH)
+      .lineTo(MARGIN + tableW, yFinal + rowH)
       .lineWidth(lineWidth)
       .strokeColor(lineColor)
       .stroke()
-    doc.y = y + rowH
+    doc.y = yFinal + rowH
   }
 
   renderRow(
@@ -1393,15 +1477,24 @@ function renderMarkdownInline(doc: PDFDoc, md: string): void {
       doc.moveDown(0.4)
       continue
     }
+    // Page-break preventivo se já estamos perto do bottom
+    if (doc.y > Y_SAFE_BOTTOM - 30) {
+      doc.addPage()
+      pageBg(doc)
+    }
     if (l.startsWith('## ')) {
       doc.moveDown(0.6)
       doc
         .font(F.display)
-        .fontSize(18)
+        .fontSize(17)
         .fillColor(V06.ink)
-        .text(l.slice(3).trim(), MARGIN, doc.y)
-      doc.rect(MARGIN, doc.y + 2, 36, 1.2).fill(V06.accent2)
-      doc.moveDown(0.5)
+        .text(l.slice(3).trim(), MARGIN, doc.y, {
+          width: CONTENT_W,
+          lineGap: 1,
+        })
+      const fioY = doc.y + 2
+      doc.rect(MARGIN, fioY, 36, 1.2).fill(V06.accent2)
+      doc.y = fioY + 8
       doc.font(F.sans).fontSize(10.5).fillColor(V06.ink2)
       continue
     }
@@ -1411,7 +1504,10 @@ function renderMarkdownInline(doc: PDFDoc, md: string): void {
         .font(F.sansBold)
         .fontSize(11)
         .fillColor(V06.ink)
-        .text(l.slice(4).trim(), MARGIN, doc.y)
+        .text(l.slice(4).trim(), MARGIN, doc.y, {
+          width: CONTENT_W,
+          lineGap: 1,
+        })
       doc.moveDown(0.15)
       doc.font(F.sans).fontSize(10.5).fillColor(V06.ink2)
       continue
@@ -1439,7 +1535,7 @@ function renderMarkdownInline(doc: PDFDoc, md: string): void {
         .fontSize(9.5)
         .fillColor(V06.muted)
         .text(texto, MARGIN, doc.y, {
-          width: doc.page.width - MARGIN * 2 - 60,
+          width: CONTENT_W,
           align: 'justify',
           lineGap: 2,
         })
@@ -1455,7 +1551,7 @@ function renderPar(doc: PDFDoc, texto: string, opts: { indent?: number } = {}): 
   const partes = parseBold(texto)
   const indent = opts.indent ?? 0
   const x = MARGIN + indent
-  const width = doc.page.width - MARGIN * 2 - 60 - indent
+  const width = CONTENT_W - indent
   let primeira = true
   for (const p of partes) {
     doc
