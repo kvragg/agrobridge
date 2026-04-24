@@ -6,8 +6,11 @@ import { NextResponse, type NextRequest } from 'next/server'
 // - /api/pagamento/webhook (autenticado via HMAC do Cakto, não via sessão)
 const PUBLIC_API_PREFIXES = ['/api/auth', '/api/pagamento/webhook']
 
-// Rotas web (páginas) que exigem sessão autenticada:
-const ROTAS_PROTEGIDAS_WEB = ['/dashboard', '/entrevista', '/checklist', '/planos', '/conta']
+// Rotas web (páginas) que exigem sessão autenticada.
+// `/admin` exige sessão + check de admin no layout — middleware aqui só
+// garante que sem-sessão recebe 307 limpo (Next 16 retorna 200 com shell
+// quando o redirect() é só do layout, comportamento estranho).
+const ROTAS_PROTEGIDAS_WEB = ['/dashboard', '/entrevista', '/checklist', '/planos', '/conta', '/admin']
 
 function requerAuthWeb(pathname: string): boolean {
   return ROTAS_PROTEGIDAS_WEB.some((rota) => pathname.startsWith(rota))
