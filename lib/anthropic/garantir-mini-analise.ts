@@ -1,6 +1,7 @@
 import 'server-only'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { logAuditEvent } from '@/lib/audit'
+import { capturarErroProducao } from '@/lib/logger'
 import type { PerfilLead } from '@/types/perfil-lead'
 import { gerarMiniAnalise } from './mini-analise'
 
@@ -33,7 +34,11 @@ export async function garantirMiniAnalise(
   if (error) {
     // A geração aconteceu com sucesso — o lead recebe o texto nessa
     // chamada mesmo sem cache persistir. Log pra investigação.
-    console.error('[garantir-mini-analise] falha persistir:', error.message)
+    capturarErroProducao(error, {
+      modulo: 'garantir-mini-analise',
+      userId,
+      extra: { etapa: 'persistir_mini_analise' },
+    })
   }
 
   await logAuditEvent({

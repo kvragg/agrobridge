@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { validarDocumento } from '@/lib/anthropic/validador'
 import { logAuditEvent } from '@/lib/audit'
+import { capturarErroProducao } from '@/lib/logger'
 import { realMimeType } from '@/lib/file-sniff'
 import { rateLimitRemoto } from '@/lib/rate-limit-upstash'
 
@@ -148,7 +149,11 @@ export async function POST(request: NextRequest) {
     return Response.json({ ok: true, resultado })
   } catch (err) {
     const e = err as { status?: number; message?: string }
-    console.error('[api/documento/validar]', e.status, e.message)
+    capturarErroProducao(err, {
+      modulo: 'documento/validar',
+      userId: user.id,
+      extra: { etapa: 'sonnet_validar', status: e.status ?? 0, doc_slug },
+    })
     const isCredito =
       e.message && /credit|balance|insufficient/i.test(e.message)
     return Response.json(

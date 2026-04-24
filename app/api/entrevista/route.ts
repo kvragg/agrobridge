@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { criarStreamEntrevista, HAIKU_MODEL } from '@/lib/anthropic/haiku'
 import type { MensagemChat } from '@/lib/anthropic/haiku'
 import { rateLimitRemoto } from '@/lib/rate-limit-upstash'
+import { capturarErroProducao } from '@/lib/logger'
 import { NextRequest } from 'next/server'
 
 function detalharErroAnthropic(err: unknown): {
@@ -123,7 +124,11 @@ export async function POST(request: NextRequest) {
         }
       } catch (err) {
         const detalhes = detalharErroAnthropic(err)
-        console.error('[api/entrevista] erro no stream Anthropic:', detalhes, err)
+        capturarErroProducao(err, {
+          modulo: 'entrevista',
+          userId: user.id,
+          extra: { etapa: 'stream_haiku', status: detalhes.status ?? 0 },
+        })
         controller.enqueue(
           encoder.encode(
             `data: ${JSON.stringify({ erro: `Falha na IA: ${detalhes.mensagemCurta}` })}\n\n`
@@ -165,7 +170,11 @@ export async function POST(request: NextRequest) {
             )
           )
         } catch (err) {
-          console.error('[api/entrevista] JSON do perfil malformado:', err)
+          capturarErroProducao(err, {
+            modulo: 'entrevista',
+            userId: user.id,
+            extra: { etapa: 'parse_perfil_json', processoId: processo_id },
+          })
           controller.enqueue(
             encoder.encode(`data: ${JSON.stringify({ done: true })}\n\n`)
           )

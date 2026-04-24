@@ -1,11 +1,33 @@
+/**
+ * PDF Bronze · Diagnóstico Rápido — Parecer de Viabilidade
+ *
+ * Tier mais leve. Sem capa cheia, vai direto ao parecer. O design é
+ * intencionalmente sóbrio (accent muted/neutro) — o salto visual pro
+ * verde do Prata e ouro do Ouro é parte do funil de upsell.
+ *
+ * Layout (1-2 páginas):
+ * 1. Header premium (eyebrow + título display + key-value do produtor)
+ * 2. Corpo markdown (## h2 com fio accent · render rico)
+ * 3. Footer de upsell pro Prata
+ */
+
 import PDFDocument from 'pdfkit'
 import type { PerfilEntrevista } from '@/types/entrevista'
-
-const GREEN = '#0f3d2e'
-const INK = '#0a0a0a'
-const INK_2 = '#2a2a2a'
-const MUTED = '#6b6b64'
-const LINE = '#d6d1c3'
+import {
+  COLOR,
+  FONT,
+  SIZE,
+  SPACE,
+  TIER_THEMES,
+  dataHojeExtenso,
+} from './_theme'
+import {
+  finalizePageChrome,
+  renderEyebrow,
+  renderKeyValueList,
+  renderMarkdown,
+  renderUpsellFooter,
+} from './_primitives'
 
 export interface ViabilidadeInput {
   produtor: {
@@ -15,30 +37,24 @@ export interface ViabilidadeInput {
   }
   processoId: string
   perfil: PerfilEntrevista
-  /** Markdown completo do parecer gerado pela Sonnet */
   parecerMd: string
 }
 
-function dataHoje(): string {
-  return new Date().toLocaleDateString('pt-BR', {
-    day: '2-digit',
-    month: 'long',
-    year: 'numeric',
-  })
-}
-
 export async function montarViabilidadePDF(
-  input: ViabilidadeInput
+  input: ViabilidadeInput,
 ): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     try {
+      const theme = TIER_THEMES.diagnostico
       const doc = new PDFDocument({
         size: 'A4',
-        margin: 56,
+        margins: { top: 60, bottom: 60, left: SPACE.margin, right: SPACE.margin },
+        bufferPages: true, // necessário pro chrome cross-page
         info: {
-          Title: `Parecer de viabilidade de crédito — ${input.produtor.nome}`,
+          Title: `Parecer de viabilidade — ${input.produtor.nome}`,
           Author: 'AgroBridge',
-          Subject: 'Diagnóstico Rápido de viabilidade de crédito rural',
+          Subject: 'Diagnóstico Rápido · Viabilidade de crédito rural',
+          Creator: 'AgroBridge · Bronze',
         },
       })
 
@@ -47,10 +63,29 @@ export async function montarViabilidadePDF(
       doc.on('end', () => resolve(Buffer.concat(chunks)))
       doc.on('error', reject)
 
-      renderHeader(doc, input)
-      renderParecer(doc, input.parecerMd)
-      renderUpsellFooter(doc)
+      const ctx = {
+        theme,
+        produtor: { nome: input.produtor.nome, cpf: input.produtor.cpf },
+        processoId: input.processoId,
+      }
 
+      renderHeader(doc, input)
+      renderMarkdown(doc, input.parecerMd, theme)
+
+      // Reserva espaço pro upsell — força quebra se faltar < 170pt
+      if (doc.page.height - doc.y < 170) doc.addPage()
+      renderUpsellFooter(doc, {
+        eyebrow: 'Próximo passo natural · Prata',
+        titulo: 'Dossiê Bancário Completo — pronto pra mesa do comitê',
+        corpo:
+          'Inclui tudo do diagnóstico, mais o checklist documental personalizado, ' +
+          'a defesa técnica de crédito redigida em linguagem de comitê, o roteiro ' +
+          'de visita técnica do analista e o PDF consolidado com seus documentos ' +
+          'anexados na ordem que o banco lê. Confira em /planos dentro da sua conta.',
+        accent: TIER_THEMES.dossie.accent,
+      })
+
+      finalizePageChrome(doc, ctx)
       doc.end()
     } catch (err) {
       reject(err)
@@ -60,163 +95,98 @@ export async function montarViabilidadePDF(
 
 type PDFDoc = InstanceType<typeof PDFDocument>
 
-function renderHeader(doc: PDFDoc, input: ViabilidadeInput) {
+function renderHeader(doc: PDFDoc, input: ViabilidadeInput): void {
+  const theme = TIER_THEMES.diagnostico
   const { width } = doc.page
 
+  // Eyebrow inicial — repete a info do header pra reforçar identidade
+  doc.y = 64
+  renderEyebrow(doc, `Parecer · ${dataHojeExtenso()}`, {
+    color: theme.accent,
+    size: 8.5,
+  })
+
+  // Título display em serif — peso documental
+  doc.moveDown(0.6)
   doc
-    .font('Helvetica-Bold')
-    .fontSize(9)
-    .fillColor(GREEN)
-    .text('AGROBRIDGE · DIAGNÓSTICO RÁPIDO', 56, 40, { characterSpacing: 2 })
-  doc
-    .moveTo(56, 60)
-    .lineTo(width - 56, 60)
-    .strokeColor(LINE)
-    .stroke()
-
-  doc.font('Helvetica-Bold').fontSize(20).fillColor(INK)
-  doc.text('Parecer de viabilidade', 56, 80)
-
-  doc.font('Helvetica').fontSize(10).fillColor(MUTED)
-  doc.text(`Produtor: ${input.produtor.nome}`, 56, doc.y + 6)
-  doc.text(
-    `Localização: ${input.perfil.perfil.municipio || 'não informado'} / ${
-      input.perfil.perfil.estado || 'UF'
-    }`,
-    56,
-    doc.y + 2
-  )
-  doc.text(`Emitido em ${dataHoje()}`, 56, doc.y + 2)
-
-  doc.moveDown(1)
-}
-
-function renderParecer(doc: PDFDoc, parecerMd: string) {
-  doc.moveDown(0.4)
-  doc.font('Helvetica').fontSize(11).fillColor(INK_2)
-
-  const linhas = parecerMd.split('\n')
-  for (const bruta of linhas) {
-    const l = bruta.trimEnd()
-    if (!l.trim()) {
-      doc.moveDown(0.4)
-      continue
-    }
-    if (l.startsWith('## ')) {
-      doc.moveDown(0.7)
-      doc.font('Helvetica-Bold').fontSize(15).fillColor(GREEN).text(l.slice(3).trim())
-      doc.moveDown(0.2)
-      doc.font('Helvetica').fontSize(11).fillColor(INK_2)
-      continue
-    }
-    if (l.startsWith('### ')) {
-      doc.moveDown(0.45)
-      doc.font('Helvetica-Bold').fontSize(12).fillColor(INK).text(l.slice(4).trim())
-      doc.moveDown(0.15)
-      doc.font('Helvetica').fontSize(11).fillColor(INK_2)
-      continue
-    }
-    if (l.trim() === '---') {
-      doc.moveDown(0.25)
-      doc
-        .moveTo(56, doc.y)
-        .lineTo(doc.page.width - 56, doc.y)
-        .strokeColor(LINE)
-        .stroke()
-      doc.moveDown(0.25)
-      continue
-    }
-    if (/^\s*[-•]\s+/.test(l)) {
-      const texto = l.replace(/^\s*[-•]\s+/, '')
-      renderParagrafo(doc, `• ${texto}`, { indent: 10 })
-      continue
-    }
-    if (/^\*[^*].*\*$/.test(l.trim())) {
-      const texto = l.trim().replace(/^\*|\*$/g, '')
-      doc
-        .font('Helvetica-Oblique')
-        .fontSize(9.5)
-        .fillColor(MUTED)
-        .text(texto, { align: 'justify' })
-      doc.font('Helvetica').fontSize(11).fillColor(INK_2)
-      doc.moveDown(0.3)
-      continue
-    }
-    renderParagrafo(doc, l)
-  }
-}
-
-function renderParagrafo(
-  doc: PDFDoc,
-  texto: string,
-  opts: { indent?: number } = {}
-) {
-  const partes = parseBold(texto)
-  const { indent = 0 } = opts
-  const x = 56 + indent
-  let primeira = true
-  for (const p of partes) {
-    doc.font(p.bold ? 'Helvetica-Bold' : 'Helvetica').fontSize(11).fillColor(INK_2)
-    doc.text(p.texto, primeira ? x : undefined, primeira ? doc.y : undefined, {
-      continued: !p.ultima,
-      align: 'justify',
+    .font(FONT.display)
+    .fontSize(28)
+    .fillColor(COLOR.ink)
+    .text('Parecer de viabilidade de crédito rural', SPACE.margin, doc.y, {
+      width: width - SPACE.margin * 2,
+      lineGap: -2,
     })
-    primeira = false
-  }
-  doc.moveDown(0.2)
-}
 
-function parseBold(
-  texto: string
-): { texto: string; bold: boolean; ultima: boolean }[] {
-  const partes: { texto: string; bold: boolean; ultima: boolean }[] = []
-  const re = /\*\*([^*]+)\*\*/g
-  let last = 0
-  let m: RegExpExecArray | null
-  while ((m = re.exec(texto)) !== null) {
-    if (m.index > last) {
-      partes.push({ texto: texto.slice(last, m.index), bold: false, ultima: false })
-    }
-    partes.push({ texto: m[1], bold: true, ultima: false })
-    last = m.index + m[0].length
-  }
-  if (last < texto.length) {
-    partes.push({ texto: texto.slice(last), bold: false, ultima: false })
-  }
-  if (partes.length === 0) {
-    partes.push({ texto, bold: false, ultima: true })
-  } else {
-    partes[partes.length - 1].ultima = true
-  }
-  return partes
-}
-
-function renderUpsellFooter(doc: PDFDoc) {
-  const { width, height } = doc.page
-  const y = height - 110
-
+  // Subtítulo — leitura preliminar
+  doc.moveDown(0.3)
   doc
-    .moveTo(56, y - 10)
-    .lineTo(width - 56, y - 10)
-    .strokeColor(LINE)
+    .font(FONT.sansItalic)
+    .fontSize(SIZE.bodyLg)
+    .fillColor(COLOR.muted)
+    .text(
+      'Leitura preliminar baseada nos dados autodeclarados na entrevista. ' +
+      'Sujeita a análise final do comitê do credor.',
+      SPACE.margin,
+      doc.y,
+      {
+        width: width - SPACE.margin * 2,
+      },
+    )
+
+  doc.moveDown(0.8)
+
+  // Linha de identificação — dados do produtor em key-value compacto
+  const perfil = input.perfil.perfil ?? {}
+  const livre = input.perfil as unknown as Record<string, unknown>
+  const operacao = livre.operacao as
+    | { fazenda_nome?: string; area_ha?: number; cultura_principal?: string }
+    | undefined
+  const credito = livre.credito as
+    | { finalidade?: string; valor_pretendido?: number }
+    | undefined
+
+  renderKeyValueList(doc, [
+    { label: 'Produtor', value: input.produtor.nome, strong: true },
+    {
+      label: 'Localização',
+      value: `${perfil.municipio || 'município não informado'} / ${
+        perfil.estado || '—'
+      }`,
+    },
+    ...(operacao?.fazenda_nome
+      ? [{ label: 'Propriedade', value: operacao.fazenda_nome }]
+      : []),
+    ...(operacao?.area_ha
+      ? [
+          {
+            label: 'Área',
+            value: `${operacao.area_ha.toLocaleString('pt-BR')} ha · ${
+              operacao.cultura_principal ?? 'atividade não informada'
+            }`,
+          },
+        ]
+      : []),
+    ...(credito?.valor_pretendido
+      ? [
+          {
+            label: 'Operação pretendida',
+            value: `${credito.finalidade ?? 'crédito rural'} · R$ ${credito.valor_pretendido.toLocaleString(
+              'pt-BR',
+            )}`,
+          },
+        ]
+      : []),
+  ])
+
+  doc.moveDown(0.5)
+
+  // Divisor accent fino antes do parecer
+  doc
+    .moveTo(SPACE.margin, doc.y)
+    .lineTo(SPACE.margin + 36, doc.y)
+    .lineWidth(2)
+    .strokeColor(theme.accent)
     .stroke()
 
-  doc.font('Helvetica-Bold').fontSize(10).fillColor(GREEN)
-  doc.text('Próximo passo natural', 56, y, { width: width - 112 })
-
-  doc.font('Helvetica').fontSize(9.5).fillColor(INK_2)
-  doc.text(
-    'O Dossiê Bancário Completo (plano Prata) inclui o checklist personalizado de documentos com passo a passo de obtenção, a defesa técnica de crédito redigida em linguagem de comitê e o PDF consolidado com seus documentos anexados — pronto para entregar ao gerente. Confira o valor em /planos dentro da sua conta.',
-    56,
-    doc.y + 4,
-    { width: width - 112, align: 'justify' }
-  )
-
-  doc.font('Helvetica').fontSize(8).fillColor(MUTED)
-  doc.text(
-    'AgroBridge · construído por quem viveu aprovações e recusas dentro do banco — 14 anos no SFN',
-    56,
-    height - 40,
-    { width: width - 112, align: 'center' }
-  )
+  doc.moveDown(0.8)
 }

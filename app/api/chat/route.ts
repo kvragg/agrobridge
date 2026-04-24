@@ -18,6 +18,7 @@ import { extrairFatosDaTroca } from '@/lib/ai/extract-facts'
 import { garantirMiniAnalise } from '@/lib/anthropic/garantir-mini-analise'
 import { rateLimitIARemoto } from '@/lib/rate-limit-upstash'
 import { logAuditEvent } from '@/lib/audit'
+import { capturarErroProducao } from '@/lib/logger'
 import { getPlanoAtual } from '@/lib/plano'
 import type { PerfilLead } from '@/types/perfil-lead'
 import { NextRequest } from 'next/server'
@@ -87,7 +88,11 @@ export async function POST(request: NextRequest) {
   const isFree = plano.tier === null
   if (isFree && perfil && perfil.perguntas_respondidas_gratis >= FREEMIUM_LIMITE) {
     const mini = await garantirMiniAnalise(user.id, perfil).catch((err) => {
-      console.error('[chat] falha ao gerar mini-analise:', err)
+      capturarErroProducao(err, {
+        modulo: 'chat',
+        userId: user.id,
+        extra: { etapa: 'gerar_mini_analise_freemium' },
+      })
       return perfil.mini_analise_texto ?? null
     })
     return Response.json({
@@ -117,7 +122,11 @@ export async function POST(request: NextRequest) {
         }
       } catch (err) {
         const d = detalharErroAnthropic(err)
-        console.error('[api/chat] erro no stream:', d, err)
+        capturarErroProducao(err, {
+          modulo: 'chat',
+          userId: user.id,
+          extra: { etapa: 'stream_anthropic', status: d.status ?? 0 },
+        })
         controller.enqueue(
           encoder.encode(`data: ${JSON.stringify({ erro: `Falha na IA: ${d.mensagemCurta}` })}\n\n`)
         )
@@ -132,7 +141,13 @@ export async function POST(request: NextRequest) {
         mensagemUser,
         respostaIA: respostaCompleta,
         isFree,
-      }).catch((err) => console.error('[api/chat] persistencia falhou:', err))
+      }).catch((err) =>
+        capturarErroProducao(err, {
+          modulo: 'chat',
+          userId: user.id,
+          extra: { etapa: 'persistir_turno_fatos' },
+        }),
+      )
 
       // Se isFree e esta no turno 5 (ou logo apos), preemptivamente dispara mini
       // pra proxima request. Melhor UX: quando o lead mandar a 6a, ja tem cache.
@@ -148,7 +163,11 @@ export async function POST(request: NextRequest) {
               await garantirMiniAnalise(user.id, perfilAtualizado as PerfilLead)
             }
           } catch (err) {
-            console.error('[api/chat] pre-gerar mini-analise falhou:', err)
+            capturarErroProducao(err, {
+              modulo: 'chat',
+              userId: user.id,
+              extra: { etapa: 'pre_gerar_mini_analise' },
+            })
           }
         })()
       }
@@ -209,7 +228,11 @@ async function persistirTurnoEFatos(params: {
       .update(atualizacoes)
       .eq('user_id', userId)
     if (error) {
-      console.error('[api/chat] update perfis_lead falhou:', error)
+      capturarErroProducao(error, {
+        modulo: 'chat',
+        userId,
+        extra: { etapa: 'update_perfis_lead' },
+      })
     } else if (Object.keys(fatos.campos_diretos).length > 0 || Object.keys(fatos.memoria_ia_adicionar).length > 0) {
       logAuditEvent({
         userId,

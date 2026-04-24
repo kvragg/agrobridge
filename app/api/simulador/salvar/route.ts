@@ -7,6 +7,7 @@ import { simular } from '@/lib/simulator/engine'
 import { CONJUNTURA_ATUAL } from '@/lib/simulator/data/conjuntura'
 import type { SimulatorInput } from '@/lib/simulator/types'
 import { rateLimitRemoto } from '@/lib/rate-limit-upstash'
+import { capturarErroProducao } from '@/lib/logger'
 import { NextRequest } from 'next/server'
 
 export const runtime = 'nodejs'
@@ -64,7 +65,11 @@ export async function POST(request: NextRequest) {
     .single()
 
   if (error || !data) {
-    console.error('[simulador/salvar] erro:', error)
+    capturarErroProducao(error ?? new Error('simulacao row ausente'), {
+      modulo: 'simulador/salvar',
+      userId: user.id,
+      extra: { etapa: 'insert_simulacoes' },
+    })
     return Response.json({ erro: 'Falha ao salvar' }, { status: 500 })
   }
 

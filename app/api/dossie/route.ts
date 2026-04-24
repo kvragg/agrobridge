@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { gerarLaudo } from '@/lib/anthropic/defesa'
 import { montarDossiePDF } from '@/lib/dossie/pdf'
+import { montarMentoriaPDF } from '@/lib/dossie/pdf-mentoria'
 import { calcularCompletude } from '@/lib/dossie/status'
 import { enviarDossiePronto } from '@/lib/email/resend'
 import { logAuditEvent } from '@/lib/audit'
@@ -192,21 +193,27 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 3. Montar PDF
+    // 3. Montar PDF — Ouro recebe template Mentoria com seções extras
+    //    (gargalos ocultos, parecer estratégico, roteiro de comitê).
+    //    Prata recebe template Dossiê padrão.
+    const pdfInput = {
+      produtor: {
+        nome: perfil.perfil?.nome || user.email?.split('@')[0] || 'Produtor',
+        cpf: perfil.perfil?.cpf || '',
+        email: user.email,
+      },
+      processoId,
+      banco: processo.banco as string | null,
+      valor: processo.valor as number | null,
+      perfil,
+      laudoMd,
+    }
     let pdfBuffer: Buffer
     try {
-      pdfBuffer = await montarDossiePDF({
-        produtor: {
-          nome: perfil.perfil?.nome || user.email?.split('@')[0] || 'Produtor',
-          cpf: perfil.perfil?.cpf || '',
-          email: user.email,
-        },
-        processoId,
-        banco: processo.banco as string | null,
-        valor: processo.valor as number | null,
-        perfil,
-        laudoMd,
-      })
+      pdfBuffer =
+        tier === 'mentoria'
+          ? await montarMentoriaPDF(pdfInput)
+          : await montarDossiePDF(pdfInput)
     } catch (err) {
       capturarErroProducao(err, {
         modulo: 'dossie',

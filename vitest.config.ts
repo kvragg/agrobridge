@@ -27,6 +27,19 @@ export default defineConfig({
         "app/api/**/*.ts",
         "lib/**/*.ts",
       ],
+      // Threshold por glob — protege regressão em módulos críticos.
+      // lib/dossie/** é core dos 3 PDFs (Bronze/Prata/Ouro). Valores
+      // ~3pp abaixo do estado atual (medido em 2026-04-24) pra dar
+      // margem em refactor pequeno mas pegar regressão real.
+      // Quando subir cobertura, suba o threshold junto.
+      thresholds: {
+        "lib/dossie/**": {
+          lines: 75,
+          functions: 85,
+          branches: 45,
+          statements: 78,
+        },
+      },
     },
     // Testes de concorrência do Eixo 1 precisam de Promise.all determinístico;
     // serial por default evita contaminação cruzada via spies globais.

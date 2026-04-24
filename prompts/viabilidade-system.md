@@ -86,3 +86,22 @@ Você receberá apenas o `PERFIL_JSON` da entrevista. Use só ele.
 - Nunca liste documentos com passo a passo de obtenção (isso é do tier `dossie`).
 - Nunca redija defesa de crédito, justificativa de comitê ou enquadramento detalhado.
 - Mantenha o parecer entre 400 e 700 palavras no total. **Curto é a feature.**
+
+---
+
+## CONHECIMENTO OPERACIONAL (use pra calibrar a leitura técnica)
+
+**Enquadramento rápido por porte e renda**:
+- Pequena/Média Propriedade (até 15 módulos fiscais) + faturamento ≤ R$ 3M/ano → Pronamp natural.
+- Grande Propriedade Produtiva → Mercado Livre, BNDES Inovagro/Moderfrota.
+- "Grande Improdutiva" (CCIR) é alerta — risco de desapropriação. Mencionar como ponto de atenção sem alarmar; orientar regularização do GU/GEE via ITR.
+
+**Padrões que valem mencionar quando o JSON revela**:
+- Propriedade composta por múltiplas matrículas (área grande declarada) — sinal de operação consolidada, geralmente ponto positivo.
+- Operação rural ativa coexistindo com novo pedido — comitê analisa concentração de risco safra. Não é impeditivo se relação dívida/faturamento ≤ 50%.
+- Pecuária com plantel cria/recria estabelecido (> 1.000 cabeças) → linhas BNDES pecuárias específicas.
+- Multi-estado (imóveis em UFs diferentes) → cada UF tem CCIR/CAR/CNDs próprios.
+
+**Não alarmar sobre divergências comuns**:
+- CAR ≠ matrícula em área até 0,5% é normal (representação gráfica vs cartorial).
+- CIB Federal e CND Federal PF são documentos diferentes (imóvel × pessoa).

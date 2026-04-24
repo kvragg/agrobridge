@@ -3,7 +3,7 @@ import crypto from 'node:crypto'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { enviarPagamentoConfirmado } from '@/lib/email/resend'
 import { logAuditEvent } from '@/lib/audit'
-import { capturarErroProducao } from '@/lib/logger'
+import { capturarErroProducao, logger } from '@/lib/logger'
 import { type Tier, TIER_PRECO_CENTAVOS } from '@/lib/tier'
 import { tierParaPlano } from '@/lib/plano'
 
@@ -152,7 +152,12 @@ export async function POST(request: NextRequest) {
   const eventId = data.id! // Cakto usa o id da transação como identificador único
 
   if (!EVENTOS_APROVACAO.has(ev)) {
-    console.info('[pagamento/webhook] evento ignorado', ev, eventId)
+    logger.info({
+      msg: 'evento ignorado',
+      modulo: 'pagamento/webhook',
+      eventId,
+      extra: { evento: ev },
+    })
     return Response.json({ ok: true, ignored: ev })
   }
 
@@ -169,12 +174,12 @@ export async function POST(request: NextRequest) {
     // Registra em compras como "orfao" para o admin reprocessar manualmente
     // (user não existe no Supabase ou email ausente).
     await registrarCompraOrfa(supabase, data, ev, eventId, payload)
-    console.warn(
-      '[pagamento/webhook] compra orfa — user nao encontrado',
-      ev,
+    logger.warn({
+      msg: 'compra orfa — user nao encontrado',
+      modulo: 'pagamento/webhook',
       eventId,
-      { email: data.customer?.email }
-    )
+      extra: { evento: ev, email: data.customer?.email },
+    })
     return Response.json({ ok: true, ignored: 'sem_user_lookup' })
   }
 
@@ -304,7 +309,11 @@ async function resolveProcessoId(
 
   const userId = await findUserIdByEmail(email)
   if (!userId) {
-    console.warn('[pagamento/webhook] email sem user no Supabase', email)
+    logger.warn({
+      msg: 'email sem user no Supabase',
+      modulo: 'pagamento/webhook',
+      extra: { email },
+    })
     return null
   }
 
@@ -353,10 +362,12 @@ async function resolveProcessoId(
     )
     return null
   }
-  console.info(
-    '[pagamento/webhook] processo auto-criado para pagamento orfao',
-    { user: userId, processo: novoProc.id, email }
-  )
+  logger.info({
+    msg: 'processo auto-criado para pagamento orfao',
+    modulo: 'pagamento/webhook',
+    userId,
+    extra: { processoId: novoProc.id, email },
+  })
   return novoProc.id
 }
 

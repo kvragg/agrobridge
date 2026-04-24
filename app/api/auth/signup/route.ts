@@ -12,6 +12,7 @@ import {
 } from '@/lib/validation'
 import { enviarLeadNotification } from '@/lib/email/resend'
 import { logAuditEvent } from '@/lib/audit'
+import { capturarErroProducao, logger } from '@/lib/logger'
 
 const MAX_CADASTROS = 3
 const JANELA_MS = 60 * 60 * 1000 // 1 hora
@@ -84,7 +85,10 @@ export async function POST(request: NextRequest) {
       // e-mail. Atacante perde o oráculo; usuário legítimo encontra os
       // botões "Reenviar confirmação" e "Fazer login" na tela de
       // confirmação. Lead notification NÃO é disparada (canal lateral).
-      console.info('[signup] tentativa de re-registro silenciosamente ignorada')
+      logger.info({
+        msg: 'tentativa de re-registro silenciosamente ignorada',
+        modulo: 'signup',
+      })
       return NextResponse.json({ ok: true, temSessao: false })
     }
     return NextResponse.json(
@@ -97,7 +101,11 @@ export async function POST(request: NextRequest) {
   try {
     await enviarLeadNotification({ nome, email, whatsapp })
   } catch (e) {
-    console.error('[signup] erro ao notificar lead:', e)
+    capturarErroProducao(e, {
+      modulo: 'signup',
+      userId: data.user?.id ?? null,
+      extra: { etapa: 'notificar_lead' },
+    })
   }
 
   // Audit (E4): fire-and-forget.

@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { capturarErroProducao } from '@/lib/logger'
 
 export const runtime = 'nodejs'
 
@@ -34,7 +35,11 @@ export async function GET() {
     .maybeSingle<VagasMentoriaRow>()
 
   if (error) {
-    console.error('[api/planos/vagas-mentoria] falha query view', error.message)
+    capturarErroProducao(error, {
+      modulo: 'planos/vagas-mentoria',
+      userId: user.id,
+      extra: { etapa: 'query_view' },
+    })
     return Response.json({ erro: 'Falha ao consultar vagas' }, { status: 500 })
   }
 

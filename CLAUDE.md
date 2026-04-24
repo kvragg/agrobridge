@@ -5,7 +5,7 @@
 Mapa para Claude Code navegar o repo sem grep às cegas. Atualizar quando
 módulo novo for adicionado ou arquitetura mudar de forma não-trivial.
 
-## Stack efetivo (2026-04-21)
+## Stack efetivo (2026-04-24)
 
 - **Next.js 16.2.4** — App Router. `proxy.ts` (não `middleware.ts`, que
   foi renomeado). Ler `node_modules/next/dist/docs/` antes de palpitar.
@@ -33,8 +33,14 @@ módulo novo for adicionado ou arquitetura mudar de forma não-trivial.
    oficiais (B10 — CAR/CCIR/ITR/CNDs/Matrícula/Licença).
 4. **Upload + Validação** — `components/checklist/DossieCard.tsx`,
    `app/api/documento/validar`. Magic bytes em `lib/file-sniff.ts`.
-5. **Dossiê** — `app/api/dossie` (sonnet + defesa), `lib/dossie/pdf.ts`.
-6. **Viabilidade** — `app/api/viabilidade` (sonnet) + PDF.
+5. **Dossiê (Prata/Ouro)** — `app/api/dossie` (sonnet + defesa). Escolhe
+   template por tier: `lib/dossie/pdf.ts` (Prata) ou
+   `lib/dossie/pdf-mentoria.ts` (Ouro, com gargalos ocultos + roteiro
+   de comitê). Helpers em `lib/dossie/_theme.ts` + `_primitives.ts` +
+   `_domain.ts`. Docs estruturais em `docs/architecture/catalogo-documentos.md`
+   e tokens em `docs/design/tokens-site.md`.
+6. **Viabilidade (Bronze)** — `app/api/viabilidade` (sonnet) +
+   `lib/dossie/pdf-viabilidade.ts`.
 7. **Pagamento** — `/planos` (gated) → Cakto external. Webhook
    `app/api/pagamento/webhook` (HMAC + idempotência via
    `webhook_events` UNIQUE (provider, event_id) + RPC
@@ -64,7 +70,10 @@ módulo novo for adicionado ou arquitetura mudar de forma não-trivial.
 - **Redirects**: todo redirect/`router.push` com input externo precisa
   passar por `sanitizarCaminhoInterno` (`lib/safe-redirect.ts`).
 - **Errors em rota de API**: usar `capturarErroProducao(err, ctx)` de
-  `lib/logger.ts`. Ponto único — Sentry é plugável ali.
+  `lib/logger.ts`. Ponto único — Sentry é plugável ali. Warnings
+  estruturais usam `logger.warn({ msg, modulo, extra })`. `console.error`
+  direto em `app/api/*` é **regressão** — logger sanitiza campos PII
+  via `CAMPOS_PROIBIDOS` (cpf/nome/email/token/etc.).
 - **RLS**: todas as tabelas com PII têm RLS. Policies filtram
   `deleted_at IS NULL` (soft delete). Uploads têm ownership
   transitiva via `processos.user_id`.
@@ -86,7 +95,7 @@ npm run dev                     # Next.js dev server
 npm run build                   # Build prod
 npx tsc --noEmit                # Typecheck (sem emit)
 npm run lint                    # ESLint
-npm test                        # Vitest (quebra no Win por WDAC — CI)
+npx vitest run                  # Vitest — roda OK no Win (não usar `npm test`)
 bash scripts/check-secrets.sh   # Pré-commit secrets scan
 ```
 
@@ -105,8 +114,9 @@ bash scripts/check-secrets.sh   # Pré-commit secrets scan
 
 ## Dívida conhecida (não mexer sem motivo)
 
-- `tests/smoke.test.ts` e `tests/setup.ts` ainda referenciam
-  `PAGARME_WEBHOOK_SECRET`. Legacy — Pagar.me foi removido do produto.
-  Migrar para CAKTO quando oportuno.
 - `lib/anthropic/*` duplica padrão de leitura de API key — refactor
   para helper central não é prioridade.
+- Nota histórica: a migração de testes legacy Pagar.me → Cakto foi
+  concluída em 2026-04-24 (commit na branch `redesign-pdfs-tiers`).
+  `webhook-idempotencia.test.ts` + `helpers/hmac.ts` foram deletados;
+  `dossie-concorrencia.test.ts` migrou pra rate-limit-upstash e tier.

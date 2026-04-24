@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { rateLimitRemoto } from '@/lib/rate-limit-upstash'
 import { logAuditEvent } from '@/lib/audit'
+import { capturarErroProducao } from '@/lib/logger'
 import { enviarExportacaoPronta } from '@/lib/email/resend'
 
 export const runtime = 'nodejs'
@@ -86,13 +87,21 @@ export async function GET(request: NextRequest) {
   ])
 
   if (procRes.error || msgRes.error || chkRes.error || upRes.error || compRes.error) {
-    console.error('[api/conta/exportar] falha query', {
-      proc: procRes.error?.message,
-      msg: msgRes.error?.message,
-      chk: chkRes.error?.message,
-      up: upRes.error?.message,
-      comp: compRes.error?.message,
-    })
+    capturarErroProducao(
+      procRes.error || msgRes.error || chkRes.error || upRes.error || compRes.error,
+      {
+        modulo: 'conta/exportar',
+        userId: user.id,
+        extra: {
+          etapa: 'query_dados',
+          proc: procRes.error?.code ?? null,
+          msg: msgRes.error?.code ?? null,
+          chk: chkRes.error?.code ?? null,
+          up: upRes.error?.code ?? null,
+          comp: compRes.error?.code ?? null,
+        },
+      },
+    )
     return Response.json({ erro: 'Falha ao gerar exportação' }, { status: 500 })
   }
 
@@ -158,7 +167,11 @@ export async function GET(request: NextRequest) {
       (typeof user.user_metadata?.nome === 'string' && user.user_metadata.nome) ||
       user.email.split('@')[0]
     void enviarExportacaoPronta({ to: user.email, nome }).catch((err) =>
-      console.error('[api/conta/exportar] falha email confirmacao', err)
+      capturarErroProducao(err, {
+        modulo: 'conta/exportar',
+        userId: user.id,
+        extra: { etapa: 'email_confirmacao' },
+      }),
     )
   }
 

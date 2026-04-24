@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { gerarChecklist, SONNET_MODEL } from '@/lib/anthropic/sonnet'
 import { rateLimitRemoto } from '@/lib/rate-limit-upstash'
 import { lerTier, temAcesso, TIER_NOME } from '@/lib/tier'
+import { capturarErroProducao } from '@/lib/logger'
 import type { PerfilEntrevista } from '@/types/entrevista'
 import { NextRequest } from 'next/server'
 
@@ -93,10 +94,11 @@ export async function POST(request: NextRequest) {
     }
     const status = e.status
     const msg = e.error?.message ?? e.message ?? String(err)
-    console.error(
-      `[api/checklist] erro Sonnet status=${status} msg=${msg}`,
-      err
-    )
+    capturarErroProducao(err, {
+      modulo: 'checklist',
+      userId: user.id,
+      extra: { etapa: 'sonnet_checklist', status: status ?? 0, msg: msg.slice(0, 200) },
+    })
     let curta = 'Falha ao gerar checklist. Tente novamente em alguns segundos.'
     if (status === 401) curta = 'Chave da API inválida ou ausente no servidor.'
     else if (status === 404) curta = `Modelo não encontrado (${SONNET_MODEL}).`

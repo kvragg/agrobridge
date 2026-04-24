@@ -20,6 +20,7 @@ import { realMimeType } from '@/lib/file-sniff'
 import { rateLimitIARemoto } from '@/lib/rate-limit-upstash'
 import { getPlanoAtual } from '@/lib/plano'
 import { logAuditEvent } from '@/lib/audit'
+import { capturarErroProducao } from '@/lib/logger'
 import { NextRequest } from 'next/server'
 import { randomUUID } from 'crypto'
 
@@ -147,7 +148,11 @@ export async function POST(request: NextRequest) {
     })
 
   if (uploadErr) {
-    console.error('[widget-ia/upload] storage falhou:', uploadErr)
+    capturarErroProducao(uploadErr, {
+      modulo: 'widget-ia/upload',
+      userId: user.id,
+      extra: { etapa: 'storage_upload', processoId: processoAtivo.id },
+    })
     return Response.json(
       { erro: 'Não foi possível salvar o arquivo no storage.' },
       { status: 500 },
@@ -186,7 +191,11 @@ export async function POST(request: NextRequest) {
     .single()
 
   if (insertErr || !upload) {
-    console.error('[widget-ia/upload] insert uploads falhou:', insertErr)
+    capturarErroProducao(insertErr ?? new Error('upload row ausente'), {
+      modulo: 'widget-ia/upload',
+      userId: user.id,
+      extra: { etapa: 'insert_uploads', processoId: processoAtivo.id },
+    })
     // Tenta limpar o arquivo órfão
     await admin.storage.from('documentos').remove([storagePath]).catch(() => null)
     return Response.json(

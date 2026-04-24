@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { NextRequest, NextResponse } from 'next/server'
 import { logAuditEvent } from '@/lib/audit'
+import { capturarErroProducao } from '@/lib/logger'
 
 // DELETE — soft-delete de um processo do próprio user, em cascata
 // atomica via RPC `soft_delete_processo` (SECURITY DEFINER).
@@ -40,7 +41,11 @@ export async function DELETE(
     .maybeSingle()
 
   if (checkErr) {
-    console.error('[processos/DELETE] lookup falhou', checkErr.message)
+    capturarErroProducao(checkErr, {
+      modulo: 'processos/DELETE',
+      userId: user.id,
+      extra: { etapa: 'ownership_lookup', processoId: id },
+    })
     return NextResponse.json(
       { erro: 'Erro ao verificar processo' },
       { status: 500 }
@@ -63,7 +68,11 @@ export async function DELETE(
   )
 
   if (rpcErr) {
-    console.error('[processos/DELETE] RPC soft_delete falhou', rpcErr.message)
+    capturarErroProducao(rpcErr, {
+      modulo: 'processos/DELETE',
+      userId: user.id,
+      extra: { etapa: 'rpc_soft_delete', processoId: id },
+    })
     return NextResponse.json(
       { erro: 'Erro ao excluir processo' },
       { status: 500 }

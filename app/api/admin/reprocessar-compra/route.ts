@@ -3,6 +3,7 @@ import { getAdminUser } from '@/lib/admin-auth'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { enviarPagamentoConfirmado } from '@/lib/email/resend'
 import { logAuditEvent } from '@/lib/audit'
+import { capturarErroProducao } from '@/lib/logger'
 import type { Tier } from '@/lib/tier'
 import { tierParaPlano } from '@/lib/plano'
 
@@ -133,7 +134,11 @@ export async function POST(request: NextRequest) {
   )
 
   if (error) {
-    console.error('[admin/reprocessar] RPC falhou', error)
+    capturarErroProducao(error, {
+      modulo: 'admin/reprocessar',
+      userId: admin.id,
+      extra: { etapa: 'rpc_confirmar_pagamento_v2', processoId },
+    })
     void logAuditEvent({
       userId: admin.id,
       eventType: 'pagamento_confirmado',
@@ -199,7 +204,11 @@ export async function POST(request: NextRequest) {
         tierNome: planoLabel === 'Free' ? undefined : planoLabel,
       })
     } catch (err) {
-      console.error('[admin/reprocessar] falha email', err)
+      capturarErroProducao(err, {
+        modulo: 'admin/reprocessar',
+        userId: admin.id,
+        extra: { etapa: 'enviar_email_confirmacao', processoId },
+      })
     }
   }
 

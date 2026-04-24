@@ -258,3 +258,39 @@ Adicionalmente, para PJ, inclua:
 - Nunca cite nome comercial de banco ou cooperativa.
 - Se faltar dado no JSON, use `[Verificar com o produtor: ...]`.
 - Se a instituição não for informada, use requisitos padrão do MCR e note: "Requisitos podem variar — confirmar na agência."
+
+---
+
+### CONHECIMENTO OPERACIONAL — fundamentos pra orientar o produtor
+
+Use o que está abaixo pra **calibrar prazo, validade e tom** nas instruções
+de cada documento. Esses são padrões observados em documentos reais.
+
+**Validades típicas** (mencionar no item quando relevante):
+- CAR: sem prazo formal, mas pode ser suspenso por notificação não respondida. Banco aceita ativo nos últimos 12 meses.
+- CCIR: anual (exercício). Sem **quitação da taxa**, é inválido. Reemissão só no Banco do Brasil.
+- ITR: anual. Banco pede os **5 últimos exercícios** quitados.
+- Matrícula c.i.t.: bancos aceitam emitida nos **últimos 90 dias** pra garantia hipotecária.
+- CIB Federal (RFB/PGFN): **6 meses** de validade.
+- CND Federal PF: 180 dias. CND Estadual: 30-180 (varia por UF). CND Municipal: 30 dias típico.
+- Registrato (Bacen): 30 dias.
+- Comprovante de endereço: 90 dias.
+
+**Casos comuns que o produtor não sabe explicar — instrua na linguagem certa**:
+
+1. **Múltiplas matrículas**: propriedade rural grande frequentemente é composta por várias matrículas (ex: 5 matrículas somando 1.500 ha). O CCIR lista todas no campo "Situação Jurídica". Se o JSON declarar área grande (> 500 ha), reforce no item da matrícula: "Pedir certidão de inteiro teor de **todas** as matrículas que compõem a propriedade — não só a principal."
+
+2. **Multi-estado** (produtor com imóveis em UFs diferentes): cada imóvel exige CAR, CCIR, ITR e CNDs **da UF onde está**. Não unificar.
+
+3. **Divergência CAR vs matrícula**: diferenças de área até ~0,5% (ex: matrícula 1503 ha, CAR 1501 ha) são **normais** — vêm da representação gráfica georreferenciada. Não alarmar. Se for maior, sugerir retificação de área.
+
+4. **CIB Federal ≠ CIB Estadual** (confusão comum!): a CIB Federal é a certidão da Receita Federal/PGFN sobre o imóvel rural. CIB Estadual (quando existe) é municipal/estadual. São documentos distintos — listar separadamente quando ambos forem necessários.
+
+5. **Classificação fundiária no CCIR define linha MCR**:
+   - Pequena/Média Propriedade Produtiva → Pronaf (até 4 módulos) ou Pronamp (4-15 módulos, faturamento até R$ 3M).
+   - Grande Propriedade Produtiva → Mercado Livre / BNDES Inovagro / Moderfrota.
+   - **"Improdutiva"** no CCIR é alerta forte: risco de desapropriação pra reforma agrária. Comitê pesquisa via ITR (GU/GEE). Orientar regularização antes do pedido.
+
+6. **Pecuária — saldo de animais**: INDEA-MT, IAGRO-MS, AGRODEFESA-GO são órgãos estaduais distintos. O documento mostra estratificação por idade/sexo. **Perfil cria/recria** = > 40% de fêmeas > 36 meses + cria jovem abundante. **Perfil engorda/confinamento** = massa de machos 13-24 meses. Vacinas (Brucelose 2x/ano, Aftosa quando aplicável) precisam estar em dia — comunicação obrigatória de estoque em maio e novembro.
+
+7. **Registrato é grátis e antecipa pergunta do comitê**: sempre orientar a puxar antes do protocolo (registrato.bcb.gov.br via gov.br). Vale ouro pro dossiê.

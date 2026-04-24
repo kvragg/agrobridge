@@ -4,6 +4,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { capturarErroProducao } from '@/lib/logger'
 
 const HISTORICO_MAX = 30
 
@@ -26,7 +27,11 @@ export async function GET() {
     .limit(HISTORICO_MAX)
 
   if (error) {
-    console.error('[widget-ia/historico] erro:', error)
+    capturarErroProducao(error, {
+      modulo: 'widget-ia/historico',
+      userId: user.id,
+      extra: { etapa: 'query_mensagens' },
+    })
     return Response.json({ erro: 'Falha ao carregar historico' }, { status: 500 })
   }
 

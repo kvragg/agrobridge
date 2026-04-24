@@ -53,3 +53,7 @@ audit/scratch/
 # Claude Code — estado local do agente (não versionar)
 .claude/scheduled_tasks.lock
 docs/examples/*.pdf
+
+# Documentos reais de produtores (PII — LGPD). Nunca versionar.
+# Usar apenas pra análise local e geração de catálogo anonimizado.
+/_private/

@@ -12,7 +12,7 @@ process.env.NEXT_PUBLIC_SUPABASE_URL =
   process.env.NEXT_PUBLIC_SUPABASE_URL ?? "https://test.supabase.co";
 process.env.SUPABASE_SERVICE_ROLE_KEY =
   process.env.SUPABASE_SERVICE_ROLE_KEY ?? "test-service-role";
-process.env.PAGARME_WEBHOOK_SECRET =
-  process.env.PAGARME_WEBHOOK_SECRET ?? "test-pagarme-secret";
+process.env.CAKTO_WEBHOOK_SECRET =
+  process.env.CAKTO_WEBHOOK_SECRET ?? "test-cakto-secret";
 process.env.ANTHROPIC_API_KEY =
   process.env.ANTHROPIC_API_KEY ?? "sk-ant-test";

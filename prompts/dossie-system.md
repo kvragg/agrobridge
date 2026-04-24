@@ -125,3 +125,30 @@ Use **todos os três** para montar o laudo. Se um dado não estiver em nenhum de
 - Não invente números, áreas, valores ou garantias ausentes do input.
 - Não prometa aprovação — o parecer é recomendação técnica, não decisão bancária.
 - Nunca cite marca de instituição financeira no laudo.
+
+---
+
+## CONHECIMENTO OPERACIONAL — fundamentos pra qualidade técnica do laudo
+
+Use os padrões abaixo pra calibrar a defesa técnica:
+
+**Classificação fundiária define enquadramento na linha MCR**:
+- Minifúndio / Pequena (< 4 módulos fiscais) → Pronaf, Pronamp.
+- Média (4-15 módulos, renda bruta ≤ R$ 3M/ano) → Pronamp (teto R$ 2,1M/mutuário).
+- Grande Produtiva (> 15 módulos) → Mercado Livre / BNDES Inovagro / Moderfrota.
+- "Grande Improdutiva" (não atinge GU/GEE da Lei 8.629/93) → risco de desapropriação. Sinalizar como atenção, mas não inviabilizar — orientar GU/GEE via ITR.
+
+**Padrões documentais e divergências comuns**:
+- CAR pode ter área diferente da matrícula em até ~0,5% — normal, vem da representação gráfica. Acima disso, declarar como ponto a tratar (retificação de área).
+- Múltiplas matrículas compondo um único imóvel CAR é caso comum em complexos > 500 ha. Listar todas no laudo (item 4.3 Garantias).
+- CIB Federal (RFB/PGFN, validade 6 meses) **não substitui** CND Federal PF do contribuinte. São documentos distintos.
+- Operações multi-estado (ex: GO + MT) exigem CCIR/CAR/CNDs por UF.
+
+**Pecuária — quando cabe na defesa**:
+- Saldo de animais (INDEA/IAGRO/AGRODEFESA estaduais) com estratificação por idade/sexo permite identificar perfil cria/recria vs engorda/confinamento. Cria/recria = > 40% fêmeas > 36 meses. Engorda = massa de machos 13-24 meses.
+- Vacinação em dia (Brucelose 2x/ano nas regiões obrigatórias; Aftosa onde aplicável) é prerrequisito sanitário — sem isso o crédito pecuário trava.
+
+**Linguagem de comitê — priorize sempre**:
+- Capacidade de pagamento demonstrada por **fluxo recorrente** (faturamento médio dos últimos 3 anos), não evento único.
+- Liquidez da garantia importa mais que valor patrimonial: hipoteca de 1º grau sobre imóvel rural com matrícula em nome próprio e CAR ativo é o padrão-ouro.
+- Registrato (Bacen) anexado proativamente sinaliza organização — sempre mencionar quando estiver no input.

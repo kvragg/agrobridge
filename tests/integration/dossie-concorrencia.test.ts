@@ -46,6 +46,13 @@ vi.mock("@/lib/dossie/pdf", () => ({
   montarDossiePDF: hoisted.montarDossiePDF,
 }));
 
+// Mock do template Ouro também — endpoint escolhe por tier (Prata/Ouro).
+// Como o seed usa _tier='dossie', roda o mock de pdf.ts, mas mockamos os
+// dois pra garantir que trocas de tier no seed não quebrem o teste.
+vi.mock("@/lib/dossie/pdf-mentoria", () => ({
+  montarMentoriaPDF: hoisted.montarDossiePDF,
+}));
+
 vi.mock("@/lib/dossie/status", () => ({
   calcularCompletude: hoisted.calcularCompletude,
 }));
@@ -55,12 +62,29 @@ vi.mock("@/lib/email/resend", () => ({
   enviarPagamentoConfirmado: vi.fn(),
 }));
 
-// Rate-limit por usuário interfere com este teste de concorrência: a 6ª
-// request seria 429 antes de exercitar o lock CAS. Como o objetivo aqui
-// é o lock, não o rate-limit, deixamos o helper sempre OK (a defesa de
-// rate-limit é coberta separadamente).
-vi.mock("@/lib/rate-limit", () => ({
-  rateLimit: () => ({ ok: true, retryAfterSeconds: 0, remaining: 999 }),
+// Rate-limit interfere com teste de concorrência: a 6ª request seria 429
+// antes de exercitar o lock CAS. Como o objetivo aqui é o lock, deixamos
+// OK (rate-limit é coberto por rate-limit-upstash.test.ts).
+vi.mock("@/lib/rate-limit-upstash", () => ({
+  rateLimitRemoto: async () => ({ ok: true, retryAfterSeconds: 0, remaining: 999 }),
+  rateLimitIARemoto: async () => ({
+    ok: true,
+    retryAfterSeconds: 0,
+    remaining: 999,
+    limite: 999,
+    tier: 'teste',
+  }),
+}));
+
+// Logger redacted — evita ruído nos logs de teste.
+vi.mock("@/lib/logger", () => ({
+  capturarErroProducao: vi.fn(),
+  logger: {
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+  },
 }));
 
 vi.mock("@/lib/supabase/server", () => ({
@@ -97,6 +121,9 @@ function seed(): TabelaFake {
           perfil: { nome: "Zé Teste", cpf: "000.000.000-00" },
           _checklist_md: "## Checklist\n- IR 2025",
           _pagamento: { status: "paid" },
+          // Pós-redesign dos PDFs por tier: endpoint escolhe template
+          // baseado em perfil_json._tier. Sem isso, gate temAcesso falha.
+          _tier: "dossie",
         },
       },
     ],

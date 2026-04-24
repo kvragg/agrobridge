@@ -4,6 +4,7 @@ import { montarViabilidadePDF } from '@/lib/dossie/pdf-viabilidade'
 import { rateLimitRemoto } from '@/lib/rate-limit-upstash'
 import { lerTier, temAcesso, TIER_NOME } from '@/lib/tier'
 import { logAuditEvent } from '@/lib/audit'
+import { capturarErroProducao } from '@/lib/logger'
 import { SONNET_MODEL } from '@/lib/anthropic/sonnet'
 import type { PerfilEntrevista } from '@/types/entrevista'
 import { NextRequest } from 'next/server'
@@ -104,7 +105,11 @@ export async function POST(request: NextRequest) {
       }
       const status = e.status
       const msg = e.error?.message ?? e.message ?? String(err)
-      console.error('[api/viabilidade] erro Sonnet', status, msg, err)
+      capturarErroProducao(err, {
+        modulo: 'viabilidade',
+        userId: user.id,
+        extra: { etapa: 'sonnet_parecer', status: status ?? 0, msg: msg.slice(0, 200) },
+      })
       let curta = 'Falha ao gerar parecer. Tente novamente em alguns segundos.'
       if (status === 401) curta = 'Chave da API inválida ou ausente no servidor.'
       else if (status === 404) curta = `Modelo não encontrado (${SONNET_MODEL}).`
@@ -138,7 +143,11 @@ export async function POST(request: NextRequest) {
       parecerMd,
     })
   } catch (err) {
-    console.error('[api/viabilidade] falha ao montar PDF', err)
+    capturarErroProducao(err, {
+      modulo: 'viabilidade',
+      userId: user.id,
+      extra: { etapa: 'montar_pdf', processoId },
+    })
     return Response.json({ erro: 'Erro ao montar PDF' }, { status: 500 })
   }
 
@@ -150,7 +159,11 @@ export async function POST(request: NextRequest) {
       upsert: true,
     })
   if (uploadErr) {
-    console.error('[api/viabilidade] upload falhou', uploadErr)
+    capturarErroProducao(uploadErr, {
+      modulo: 'viabilidade',
+      userId: user.id,
+      extra: { etapa: 'upload_storage', processoId },
+    })
     return Response.json({ erro: 'Falha ao salvar parecer' }, { status: 500 })
   }
 
