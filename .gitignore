@@ -52,3 +52,4 @@ audit/scratch/
 
 # Claude Code — estado local do agente (não versionar)
 .claude/scheduled_tasks.lock
+docs/examples/*.pdf
