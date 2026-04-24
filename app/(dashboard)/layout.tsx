@@ -5,6 +5,7 @@ import { DashboardShell } from "@/components/shell/DashboardShell"
 import type { TopbarTier } from "@/components/shell/Topbar"
 import { getPlanoAtual } from "@/lib/plano"
 import type { PlanoComercial } from "@/lib/plano"
+import { isEmailAdmin } from "@/lib/admin-auth"
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false },
@@ -37,6 +38,7 @@ export default async function DashboardLayout({
     "Produtor"
 
   const plano = await getPlanoAtual()
+  const isAdmin = isEmailAdmin(user.email)
 
   return (
     <DashboardShell
@@ -44,6 +46,7 @@ export default async function DashboardLayout({
       email={user.email ?? null}
       tier={planoToTier(plano.plano)}
       userId={user.id}
+      isAdmin={isAdmin}
     >
       {children}
     </DashboardShell>

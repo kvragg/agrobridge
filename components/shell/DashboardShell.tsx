@@ -44,6 +44,7 @@ export function DashboardShell({
   center,
   containerStyle,
   userId,
+  isAdmin,
 }: {
   children: ReactNode
   nome?: string | null
@@ -53,6 +54,9 @@ export function DashboardShell({
   containerStyle?: React.CSSProperties
   /** ID do usuário pra localStorage do widget (auto-open diário). */
   userId?: string | null
+  /** Se true, mostra item "Admin" na sidebar. Computado no server
+   * layout via isEmailAdmin(user.email). Nunca fie no client-only. */
+  isAdmin?: boolean
 }) {
   const [mobileOpen, setMobileOpen] = useState(false)
   const pathname = usePathname() ?? "/"
@@ -66,7 +70,11 @@ export function DashboardShell({
         background: "var(--bg)",
       }}
     >
-      <AppSidebar mobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
+      <AppSidebar
+        mobileOpen={mobileOpen}
+        onClose={() => setMobileOpen(false)}
+        isAdmin={Boolean(isAdmin)}
+      />
 
       <div
         className="dashboard-shell__main"

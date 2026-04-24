@@ -73,9 +73,12 @@ type AppSidebarProps = {
   mobileOpen: boolean
   /** Fecha o drawer (mobile). */
   onClose: () => void
+  /** Se true, renderiza o item "Admin" no final. Autoridade vem
+   * validada no server (isEmailAdmin) — este flag é só visual. */
+  isAdmin?: boolean
 }
 
-export function AppSidebar({ mobileOpen, onClose }: AppSidebarProps) {
+export function AppSidebar({ mobileOpen, onClose, isAdmin = false }: AppSidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
 
@@ -179,6 +182,38 @@ export function AppSidebar({ mobileOpen, onClose }: AppSidebarProps) {
       </ul>
 
       <div style={{ height: 1, background: "var(--line)", margin: "16px 0 10px" }} />
+
+      {isAdmin && (
+        <Link
+          href="/admin/dashboard"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+            padding: "10px 12px",
+            borderRadius: 10,
+            fontSize: 13.5,
+            color: "var(--gold)",
+            textDecoration: "none",
+            marginBottom: 4,
+            border: "1px solid color-mix(in srgb, var(--gold) 35%, transparent)",
+            background: "color-mix(in srgb, var(--gold) 6%, transparent)",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background =
+              "color-mix(in srgb, var(--gold) 14%, transparent)"
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background =
+              "color-mix(in srgb, var(--gold) 6%, transparent)"
+          }}
+        >
+          <span style={{ color: "var(--gold)", display: "inline-flex", flexShrink: 0 }}>
+            {Icon.bank(16)}
+          </span>
+          Admin
+        </Link>
+      )}
 
       <Link
         href="/como-funciona"
