@@ -106,11 +106,13 @@ Operação proposta com lastro em propriedade própria de 1.518 ha.
 Faturamento R$ 4,2M sustenta a alavancagem pretendida.
 `
 
-// Ranges conservadores. Conteúdo dos pareceres acima é curto — quanto
-// maior o markdown real, maior o PDF. Ajustar ao mudar template.
-const RANGE_BRONZE = { min: 3_000, max: 30_000 }
-const RANGE_PRATA = { min: 15_000, max: 80_000 }
-const RANGE_OURO = { min: 15_000, max: 80_000 }
+// Ranges conservadores pra template pdf-v06 (Verde Agro Premium).
+// Conteúdo dos pareceres acima é curto — quanto maior o markdown real,
+// maior o PDF. Ajustar ao mudar template. Medidos em 2026-04-24:
+// Bronze ~9KB (3pg), Prata ~23KB (6pg), Ouro ~32KB (8pg).
+const RANGE_BRONZE = { min: 5_000, max: 25_000 }
+const RANGE_PRATA = { min: 12_000, max: 60_000 }
+const RANGE_OURO = { min: 18_000, max: 80_000 }
 
 function eValidoPdf(buf: Buffer): boolean {
   return (
