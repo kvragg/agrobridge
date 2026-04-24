@@ -15,7 +15,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { criarStreamChat, detalharErroAnthropic, type MensagemChat } from '@/lib/anthropic/chat'
 import { extrairFatosDaTroca } from '@/lib/ai/extract-facts'
-import { gerarMiniAnalise } from '@/lib/anthropic/mini-analise'
+import { garantirMiniAnalise } from '@/lib/anthropic/garantir-mini-analise'
 import { rateLimitIARemoto } from '@/lib/rate-limit-upstash'
 import { logAuditEvent } from '@/lib/audit'
 import { getPlanoAtual } from '@/lib/plano'
@@ -229,28 +229,6 @@ async function persistirTurnoEFatos(params: {
   })
 }
 
-// Garante mini-analise em cache (perfis_lead.mini_analise_texto). Se ja
-// existe, retorna o cache. Idempotente por turno.
-async function garantirMiniAnalise(userId: string, perfil: PerfilLead): Promise<string | null> {
-  if (perfil.mini_analise_texto) return perfil.mini_analise_texto
-
-  const admin = createAdminClient()
-  const texto = await gerarMiniAnalise(perfil)
-  await admin
-    .from('perfis_lead')
-    .update({ mini_analise_texto: texto, mini_analise_gerada_em: new Date().toISOString() })
-    .eq('user_id', userId)
-
-  await logAuditEvent({
-    userId,
-    eventType: 'mini_analise_gerada',
-    payload: { caracteres: texto.length },
-  })
-  await logAuditEvent({
-    userId,
-    eventType: 'gate_freemium_ativado',
-    payload: { limite: FREEMIUM_LIMITE },
-  })
-
-  return texto
-}
+// `garantirMiniAnalise` foi extraído pra `lib/anthropic/garantir-mini-analise.ts`
+// pra ser reutilizado pelo endpoint `/api/chat/mini-analise` (consulta sob
+// demanda do ChatClient quando entra o gate freemium).

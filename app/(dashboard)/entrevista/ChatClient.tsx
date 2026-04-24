@@ -37,8 +37,53 @@ export function ChatClient(props: Props) {
     props.miniAnalise,
   )
   const [gate, setGate] = useState(props.gateAtivo)
+  const [carregandoAnalise, setCarregandoAnalise] = useState(false)
+  const [erroAnalise, setErroAnalise] = useState<string | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+
+  // Busca a mini-análise sob demanda. Garante que nunca fica exibido
+  // o fallback genérico "atualize a página": UX trabalha só com
+  // loading (com estágios reais) ou erro (com retry claro).
+  const buscarMiniAnalise = useCallback(async () => {
+    setErroAnalise(null)
+    setCarregandoAnalise(true)
+    try {
+      const res = await fetch("/api/chat/mini-analise", { cache: "no-store" })
+      const data = (await res.json().catch(() => ({}))) as {
+        pronta?: boolean
+        texto?: string | null
+        motivo?: string
+        detalhe?: string
+      }
+      if (!res.ok || !data.pronta || !data.texto) {
+        throw new Error(
+          data.detalhe ||
+            "A IA está com alta demanda agora. Tenta de novo em alguns segundos.",
+        )
+      }
+      setMiniAnalise(data.texto)
+    } catch (e) {
+      setErroAnalise(
+        e instanceof Error
+          ? e.message
+          : "Não consegui montar sua análise agora. Tenta de novo.",
+      )
+    } finally {
+      setCarregandoAnalise(false)
+    }
+  }, [])
+
+  // Dispara automaticamente quando o gate vira ativo e ainda não temos
+  // o texto. Não dispara se já houver erro (evita loop — user faz retry
+  // manual via botão).
+  useEffect(() => {
+    if (!gate) return
+    if (miniAnalise) return
+    if (carregandoAnalise) return
+    if (erroAnalise) return
+    void buscarMiniAnalise()
+  }, [gate, miniAnalise, carregandoAnalise, erroAnalise, buscarMiniAnalise])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -194,7 +239,14 @@ export function ChatClient(props: Props) {
             mensagens.length > 0 &&
             mensagens[mensagens.length - 1].role === "user" && <TypingDots />}
 
-          {gate && <PaywallCard miniAnalise={miniAnalise} />}
+          {gate && (
+            <PaywallCard
+              miniAnalise={miniAnalise}
+              carregando={carregandoAnalise}
+              erro={erroAnalise}
+              onRetry={buscarMiniAnalise}
+            />
+          )}
 
           {erro && <Alert variant="error">{erro}</Alert>}
 
@@ -434,70 +486,224 @@ function BoasVindas({ onSugestao }: { onSugestao: (s: string) => void }) {
   )
 }
 
-function PaywallCard({ miniAnalise }: { miniAnalise: string | null }) {
+function PaywallCard({
+  miniAnalise,
+  carregando,
+  erro,
+  onRetry,
+}: {
+  miniAnalise: string | null
+  carregando: boolean
+  erro: string | null
+  onRetry: () => void
+}) {
+  const mostrarCTAPlanos = Boolean(miniAnalise) && !carregando && !erro
   return (
     <div
       style={{
-        padding: 24,
-        borderRadius: 16,
+        padding: 28,
+        borderRadius: 18,
         background:
-          "linear-gradient(180deg, rgba(78,168,132,0.10) 0%, rgba(201,168,106,0.06) 100%)",
-        border: "1px solid rgba(78,168,132,0.28)",
+          "linear-gradient(180deg, rgba(78,168,132,0.12) 0%, rgba(201,168,106,0.08) 100%)",
+        border: "1px solid rgba(201,168,106,0.35)",
+        boxShadow:
+          "0 20px 60px -20px rgba(78,168,132,0.25), 0 0 0 1px rgba(201,168,106,0.12) inset",
         marginTop: 6,
       }}
     >
-      <Eyebrow>Sua análise gratuita</Eyebrow>
+      <Eyebrow color="var(--gold)" dot="var(--gold)">
+        Sua análise estratégica
+      </Eyebrow>
+
       {miniAnalise ? (
+        <AnaliseRenderizada texto={miniAnalise} />
+      ) : erro ? (
+        <AnaliseErro mensagem={erro} onRetry={onRetry} />
+      ) : (
+        <AnaliseLoading />
+      )}
+
+      {mostrarCTAPlanos && (
         <div
           style={{
-            whiteSpace: "pre-wrap",
-            fontSize: 14,
-            lineHeight: 1.65,
-            color: "var(--ink-2)",
-            margin: "14px 0 0",
+            marginTop: 22,
+            paddingTop: 18,
+            borderTop: "1px solid rgba(255,255,255,0.08)",
+            display: "flex",
+            gap: 12,
+            flexWrap: "wrap",
+            alignItems: "center",
           }}
         >
-          {miniAnalise}
+          <Button variant="accent" size="md" href="/planos">
+            Ver planos e continuar {Icon.arrow(14)}
+          </Button>
+          <p
+            style={{
+              margin: 0,
+              flex: 1,
+              minWidth: 220,
+              fontSize: 12.5,
+              color: "var(--muted)",
+              lineHeight: 1.55,
+            }}
+          >
+            Pra eu redigir a defesa técnica, montar o roteiro de comitê e
+            cuidar dos pontos sensíveis do seu caso, escolha um plano. Você
+            mantém a conversa e tudo que já contamos.
+          </p>
         </div>
-      ) : (
-        <p
-          style={{
-            margin: "14px 0 0",
-            fontSize: 14,
-            color: "var(--muted)",
-            lineHeight: 1.6,
-          }}
-        >
-          A IA está preparando sua análise agora. Atualize a página em alguns
-          segundos.
-        </p>
       )}
+    </div>
+  )
+}
+
+function AnaliseRenderizada({ texto }: { texto: string }) {
+  // Renderiza **bold** e preserva parágrafos. Suficiente pra mini-análise —
+  // não importa lib pesada.
+  const partes = texto.split(/\n\n+/)
+  return (
+    <div
+      style={{
+        marginTop: 14,
+        fontSize: 14.5,
+        lineHeight: 1.7,
+        color: "var(--ink)",
+        letterSpacing: "-0.003em",
+      }}
+    >
+      {partes.map((p, i) => (
+        <p
+          key={i}
+          style={{
+            margin: i === 0 ? "0 0 14px" : "14px 0",
+            whiteSpace: "pre-wrap",
+          }}
+          dangerouslySetInnerHTML={{ __html: formatarBold(p) }}
+        />
+      ))}
+    </div>
+  )
+}
+
+function formatarBold(texto: string): string {
+  const escapado = texto
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+  return escapado.replace(
+    /\*\*([^*]+)\*\*/g,
+    '<strong style="color:var(--ink);font-weight:500">$1</strong>',
+  )
+}
+
+function AnaliseLoading() {
+  return (
+    <div style={{ marginTop: 16 }}>
       <div
         style={{
-          marginTop: 20,
-          display: "flex",
-          gap: 12,
-          flexWrap: "wrap",
+          display: "inline-flex",
           alignItems: "center",
+          gap: 10,
+          padding: "6px 12px",
+          borderRadius: 999,
+          background: "rgba(78,168,132,0.12)",
+          border: "1px solid rgba(78,168,132,0.3)",
+          color: "var(--green)",
+          fontSize: 11.5,
+          fontFamily: "var(--font-mono, ui-monospace)",
+          letterSpacing: "0.12em",
+          textTransform: "uppercase",
         }}
       >
-        <Button variant="accent" size="md" href="/planos">
-          Ver planos e continuar {Icon.arrow(14)}
-        </Button>
-        <p
+        <span
+          aria-hidden="true"
           style={{
-            margin: 0,
-            flex: 1,
-            minWidth: 200,
-            fontSize: 12,
-            color: "var(--muted)",
-            lineHeight: 1.55,
+            width: 6,
+            height: 6,
+            borderRadius: "50%",
+            background: "var(--green)",
+            boxShadow: "0 0 8px var(--green)",
+            animation: "landing-blink 1s infinite",
           }}
-        >
-          Pra IA redigir a defesa técnica, montar o roteiro de comitê e
-          finalizar o dossiê, escolha um plano. Você mantém a conversa e tudo
-          que já contamos.
-        </p>
+        />
+        IA montando sua análise
+      </div>
+      <div
+        style={{
+          marginTop: 16,
+          display: "grid",
+          gap: 10,
+        }}
+      >
+        {[88, 72, 84, 60].map((w, i) => (
+          <div
+            key={i}
+            style={{
+              height: 10,
+              width: `${w}%`,
+              borderRadius: 6,
+              background:
+                "linear-gradient(90deg, rgba(255,255,255,0.04) 0%, rgba(78,168,132,0.18) 50%, rgba(255,255,255,0.04) 100%)",
+              backgroundSize: "200% 100%",
+              animation: "skeleton-shimmer 1.8s ease-in-out infinite",
+              animationDelay: `${i * 0.15}s`,
+            }}
+          />
+        ))}
+      </div>
+      <p
+        style={{
+          marginTop: 16,
+          fontSize: 12.5,
+          color: "var(--muted)",
+          lineHeight: 1.55,
+        }}
+      >
+        Estou cruzando seu perfil com a tabela MCR 2026, o comportamento
+        típico do credor e os pontos que mais sobem sua probabilidade. Levo
+        até uns 20 segundos.
+      </p>
+      <style>{`
+        @keyframes skeleton-shimmer {
+          0% { background-position: 200% 0; }
+          100% { background-position: -200% 0; }
+        }
+      `}</style>
+    </div>
+  )
+}
+
+function AnaliseErro({
+  mensagem,
+  onRetry,
+}: {
+  mensagem: string
+  onRetry: () => void
+}) {
+  return (
+    <div style={{ marginTop: 14 }}>
+      <div
+        style={{
+          padding: "14px 16px",
+          borderRadius: 12,
+          background: "rgba(212,113,88,0.08)",
+          border: "1px solid rgba(212,113,88,0.3)",
+          color: "var(--ink)",
+          fontSize: 13.5,
+          lineHeight: 1.55,
+        }}
+      >
+        {mensagem}
+      </div>
+      <div style={{ marginTop: 14, display: "flex", gap: 10, flexWrap: "wrap" }}>
+        <Button variant="accent" size="sm" onClick={onRetry}>
+          Tentar de novo {Icon.arrow(12)}
+        </Button>
+        <Button variant="ghost" size="sm" href="/planos">
+          Ver planos mesmo assim
+        </Button>
       </div>
     </div>
   )

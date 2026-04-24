@@ -214,7 +214,7 @@ function renderUpsellFooter(doc: PDFDoc) {
 
   doc.font('Helvetica').fontSize(8).fillColor(MUTED)
   doc.text(
-    'AgroBridge · feito por quem decidiu crédito por 14 anos dentro de banco privado de grande porte',
+    'AgroBridge · construído por quem viveu aprovações e recusas dentro do banco — 14 anos no SFN',
     56,
     height - 40,
     { width: width - 112, align: 'center' }
