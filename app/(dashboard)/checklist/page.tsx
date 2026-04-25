@@ -4,10 +4,13 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { getPlanoAtual } from "@/lib/plano"
 import { Eyebrow } from "@/components/landing/primitives"
 import { ChecklistGenerico } from "@/components/checklist/ChecklistGenerico"
+import { CadastroBancarioBlock } from "@/components/checklist/CadastroBancarioBlock"
+import { EtapasFluxoCredito } from "@/components/checklist/EtapasFluxoCredito"
+import { CarrosselEducativo } from "@/components/checklist/CarrosselEducativo"
 
 export const dynamic = "force-dynamic"
 export const metadata = {
-  title: "Checklist · AgroBridge",
+  title: "Documentos do crédito · AgroBridge",
   robots: { index: false, follow: false },
 }
 
@@ -57,10 +60,19 @@ export default async function ChecklistIndexPage() {
 
   const fezEntrevista = (count ?? 0) >= 3
 
+  // Etapa ativa: 2 (cadastro) se já fez entrevista, senão 1
+  const etapaAtiva = fezEntrevista ? 2 : 1
+  const tierLabel = (() => {
+    if (plano.plano === "Bronze") return "Bronze" as const
+    if (plano.plano === "Prata") return "Prata" as const
+    if (plano.plano === "Ouro") return "Ouro" as const
+    return "free" as const
+  })()
+
   return (
     <div>
-      <header style={{ marginBottom: 28 }}>
-        <Eyebrow>Checklist</Eyebrow>
+      <header style={{ marginBottom: 24 }}>
+        <Eyebrow>Documentos necessários para o crédito rural</Eyebrow>
         <h1
           style={{
             margin: "12px 0 8px",
@@ -71,7 +83,7 @@ export default async function ChecklistIndexPage() {
             color: "#fff",
           }}
         >
-          Os documentos que o banco precisa ver.
+          Documentos do crédito — passo a passo.
         </h1>
         <p
           style={{
@@ -82,11 +94,20 @@ export default async function ChecklistIndexPage() {
             maxWidth: 720,
           }}
         >
-          Lista padrão de crédito rural — válida pra qualquer modalidade
-          (custeio, investimento, Pronaf). Cada item tem o passo-a-passo de
-          onde emitir e o que evitar pra não perder tempo.
+          Antes de juntar papel, seu cadastro no banco precisa estar
+          atualizado — esse é o maior motivo de reprovação hoje. Comece
+          pela etapa abaixo, depois siga pra documentação.
         </p>
       </header>
+
+      <EtapasFluxoCredito etapaAtiva={etapaAtiva} entrevistaConcluida={fezEntrevista} />
+
+      {/* Carrossel educativo — 6 slides com mensagens diretas sobre
+          cadastro bancário, valor de mercado, fluxo AgroBridge.
+          Posicionado ANTES do bloco detalhado pra prender atenção. */}
+      <CarrosselEducativo tier={tierLabel} />
+
+      <CadastroBancarioBlock tier={tierLabel} />
 
       <ChecklistGenerico fezEntrevista={fezEntrevista} isFree={isFree} />
     </div>

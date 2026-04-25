@@ -140,7 +140,7 @@ export function ChecklistGenerico({ fezEntrevista = false, isFree = true }: Prop
         }}
       >
         <div>
-          <Eyebrow>Documentos core do crédito rural</Eyebrow>
+          <Eyebrow>Documentos para anexar ou tirar</Eyebrow>
           <h2
             style={{
               margin: "8px 0 0",
@@ -160,8 +160,9 @@ export function ChecklistGenerico({ fezEntrevista = false, isFree = true }: Prop
               lineHeight: 1.55,
             }}
           >
-            Comece de cima pra baixo. Cada item tem o passo-a-passo e o link
-            do portal oficial. Trava em algum? Pergunta no chat da IA.
+            Se já tem o documento → anexa pelo botão na seção do dossiê. Se ainda não tem
+            → expanda o item pra ver o passo-a-passo de onde emitir no portal oficial.
+            Trava em algum? Pergunta no chat da IA.
           </p>
         </div>
       </div>
@@ -208,7 +209,7 @@ export function ChecklistGenerico({ fezEntrevista = false, isFree = true }: Prop
         )}
       </div>
 
-      {/* Footer — proxy pra entrevista */}
+      {/* Footer — próxima etapa: análise + dossiê */}
       <GlassCard glow="green" padding={24} hover={false} style={{ marginTop: 36 }}>
         <div
           style={{
@@ -220,17 +221,28 @@ export function ChecklistGenerico({ fezEntrevista = false, isFree = true }: Prop
           }}
         >
           <div style={{ flex: 1, minWidth: 240 }}>
-            <h3
+            <div
+              className="mono"
               style={{
-                margin: "0 0 4px",
-                fontSize: 15.5,
-                fontWeight: 500,
-                color: "var(--ink)",
+                fontSize: 10.5,
+                letterSpacing: "0.18em",
+                textTransform: "uppercase",
+                color: "var(--green)",
+                marginBottom: 6,
               }}
             >
-              {fezEntrevista
-                ? "Já fez a entrevista — quer ver o parecer técnico?"
-                : "Após reunir os documentos, faça a entrevista."}
+              Próxima etapa — depois dos documentos
+            </div>
+            <h3
+              style={{
+                margin: "0 0 6px",
+                fontSize: 16,
+                fontWeight: 500,
+                color: "var(--ink)",
+                letterSpacing: "-0.01em",
+              }}
+            >
+              Análise técnica profunda + Dossiê de defesa em PDF
             </h3>
             <p
               style={{
@@ -241,8 +253,8 @@ export function ChecklistGenerico({ fezEntrevista = false, isFree = true }: Prop
               }}
             >
               {fezEntrevista
-                ? "Seu parecer está disponível a partir do plano Bronze. O time AgroBridge monta o dossiê de defesa após receber todos os documentos obrigatórios."
-                : "A IA gera um parecer técnico do seu caso e o time AgroBridge monta o dossiê de defesa para o banco."}
+                ? "Quando todos os documentos obrigatórios estiverem anexados, a IA da AgroBridge faz análise técnica profunda do seu cenário e gera o PDF do dossiê com a defesa de crédito em linguagem de comitê — pronto pra protocolar no banco."
+                : "Faça a entrevista pra IA gerar parecer técnico personalizado. Depois, anexe os documentos. Aí o sistema monta o dossiê de defesa em PDF — no padrão que o comitê de crédito espera."}
             </p>
           </div>
           {isFree ? (

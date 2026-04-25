@@ -32,7 +32,7 @@ const MAIN_ITEMS: NavItem[] = [
   },
   {
     href: "/checklist",
-    label: "Checklist",
+    label: "Documentos do crédito",
     icon: Icon.clipboardCheck(16),
     activePrefix: "/checklist",
   },
