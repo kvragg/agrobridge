@@ -54,7 +54,7 @@ export function Faq() {
   return (
     <section id="faq" style={{ padding: "140px 0", position: "relative" }}>
       <Container>
-        <SectionLabel num="07" label="Dúvidas que o produtor faz" />
+        <SectionLabel num="08" label="Dúvidas que o produtor faz" />
         <div
           className="two-col"
           style={{

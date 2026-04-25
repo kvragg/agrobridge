@@ -7,6 +7,7 @@ import { HowItWorks } from "@/components/landing/howitworks"
 import { Proof } from "@/components/landing/proof"
 import { Plans } from "@/components/landing/plans"
 import { CTA } from "@/components/landing/cta"
+import { Glossario } from "@/components/landing/glossario"
 import { Faq } from "@/components/landing/faq"
 import { Footer } from "@/components/landing/footer"
 
@@ -30,6 +31,7 @@ export default function Home() {
         <Proof />
         <Plans />
         <CTA />
+        <Glossario />
         <Faq />
       </main>
       <Footer />
