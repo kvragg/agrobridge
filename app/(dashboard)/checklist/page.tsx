@@ -7,6 +7,7 @@ import { ChecklistGenerico } from "@/components/checklist/ChecklistGenerico"
 import { CadastroBancarioBlock } from "@/components/checklist/CadastroBancarioBlock"
 import { EtapasFluxoCredito } from "@/components/checklist/EtapasFluxoCredito"
 import { CarrosselEducativo } from "@/components/checklist/CarrosselEducativo"
+import type { LeadType, SocioPJ } from "@/types/perfil-lead"
 
 export const dynamic = "force-dynamic"
 export const metadata = {
@@ -19,11 +20,11 @@ export const metadata = {
  *  1. Se user tem processo com pagamento confirmado: redireciona pro
  *     checklist personalizado em /checklist/[id]
  *  2. Senão (sem processo ou só free): mostra o checklist GENÉRICO
- *     com 9 docs core do crédito rural + banner pra entrevista
+ *     com docs core do crédito rural + banner pra entrevista
  *
- * Decisão de produto (2026-04-25): remoção do gating. Antes essa rota
- * fazia redirect("/dashboard") quando sem processo, escondendo o
- * conteúdo justamente do lead que mais precisa dele.
+ * Carrega contexto do lead (nome, lead_type, sócios, finalidade) pra
+ * personalizar greeting e filtrar docs não aplicáveis. UX é o ponto
+ * de maior abandono — quanto menos ruído, melhor.
  */
 export default async function ChecklistIndexPage() {
   const supabase = await createClient()
@@ -50,6 +51,48 @@ export default async function ChecklistIndexPage() {
   // Sem processo pago — render genérico (acessível a TODOS, inclusive Free)
   const plano = await getPlanoAtual()
   const isFree = plano.tier === null
+
+  // Carrega perfil_lead pra greeting + lead_type + finalidade
+  const { data: perfil } = await admin
+    .from("perfis_lead")
+    .select("nome, lead_type, finalidade_credito, memoria_ia")
+    .eq("user_id", user.id)
+    .maybeSingle()
+
+  const nome = (perfil?.nome ?? null) as string | null
+  const leadType: LeadType = (perfil?.lead_type as LeadType | undefined) ?? "pf"
+
+  // Heurística simples pra inferir investimento/Pronaf a partir da finalidade
+  const finalidade = String(perfil?.finalidade_credito ?? "").toLowerCase()
+  const investimento =
+    finalidade.includes("investimento") ||
+    finalidade.includes("aquisição") ||
+    finalidade.includes("aquisicao") ||
+    finalidade.includes("pronamp") ||
+    finalidade.includes("inovagro") ||
+    finalidade.includes("moderfrota") ||
+    finalidade.includes("abc")
+  const pronaf = finalidade.includes("pronaf")
+
+  // Estado civil pode estar em memoria_ia (entrevista grava lá) — heurística defensiva
+  const memoriaCasado = (() => {
+    const m = perfil?.memoria_ia as Record<string, unknown> | null
+    if (!m) return false
+    const ec = String(m.estado_civil ?? "").toLowerCase()
+    return ec.includes("casad") || ec.includes("uniao") || ec.includes("união")
+  })()
+
+  // Sócios (só se PJ)
+  let socios: SocioPJ[] = []
+  if (leadType === "pj") {
+    const { data: sociosData } = await admin
+      .from("perfil_socios")
+      .select("*")
+      .eq("user_id", user.id)
+      .is("deleted_at", null)
+      .order("display_order", { ascending: true })
+    socios = (sociosData ?? []) as SocioPJ[]
+  }
 
   // Detecta se já fez ao menos 1 mensagem na entrevista (heurística simples)
   const { count } = await admin
@@ -109,7 +152,16 @@ export default async function ChecklistIndexPage() {
 
       <CadastroBancarioBlock tier={tierLabel} />
 
-      <ChecklistGenerico fezEntrevista={fezEntrevista} isFree={isFree} />
+      <ChecklistGenerico
+        nome={nome}
+        leadType={leadType}
+        socios={socios}
+        casado={memoriaCasado}
+        investimento={investimento}
+        pronaf={pronaf}
+        fezEntrevista={fezEntrevista}
+        isFree={isFree}
+      />
     </div>
   )
 }

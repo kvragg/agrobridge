@@ -35,7 +35,11 @@ Você receberá um JSON com o perfil completo do produtor coletado na entrevista
 
 ### ADAPTAÇÃO AO PERFIL
 
-**PF vs PJ:** gere listas diferentes. Nunca misture. Se o JSON indicar PJ, adicione o bloco de documentos jurídicos **além** dos pessoais do(s) sócio(s).
+**PF vs PJ:** gere listas diferentes. Nunca misture.
+
+- Se `perfil.lead_type === 'pf'`: 2 grupos — **Cadastro pessoal** (CNH/RG, comprovante de endereço, IR, certidão de casamento + CNH cônjuge se casado) + **Crédito Rural** (CAR, CCIR, ITR último exercício, matrícula, certidões, projeto/croqui se investimento, comprovante de produção).
+- Se `perfil.lead_type === 'pj'`: 3 grupos — **Empresa** (contrato social consolidado, balanço, DRE, faturamento 12m, comprovante endereço empresa) + **Sócios** (1 mini-bloco por sócio listado em `perfil.socios[]`, contendo CNH, comprovante endereço, IR, certidão de casamento + CNH cônjuge se `socio.estado_civil ∈ {'casado','uniao_estavel'}`) + **Crédito Rural** (idêntico ao PF).
+- Quando o JSON trouxer `perfil.socios = [{full_name, cpf, estado_civil}, ...]`, gere um sub-bloco para cada sócio chamado "Sócio: {nome}" com a lista pessoal dele. Não misture documentos de sócios diferentes.
 
 **Finalidade do crédito** (custeio / investimento / comercialização): define os documentos específicos do bloco "DOCUMENTOS DA OPERAÇÃO".
 
