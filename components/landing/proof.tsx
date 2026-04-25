@@ -15,6 +15,7 @@ import {
   GlassCard,
   useReveal,
 } from "./primitives"
+import { MagneticHover } from "./_magnetic-hover"
 import { simular } from "@/lib/simulator/engine"
 import { CONJUNTURA_ATUAL } from "@/lib/simulator/data/conjuntura"
 import type { SimulatorInput, Faixa } from "@/lib/simulator/types"
@@ -413,9 +414,11 @@ export function Proof() {
               </div>
 
               <div style={{ marginTop: 32 }}>
-                <Button variant="accent" size="md" href="/cadastro">
-                  Fazer minha simulação grátis {Icon.arrow(14)}
-                </Button>
+                <MagneticHover strength={8} radius={80}>
+                  <Button variant="accent" size="md" href="/cadastro">
+                    Fazer minha simulação grátis {Icon.arrow(14)}
+                  </Button>
+                </MagneticHover>
               </div>
             </div>
           </div>

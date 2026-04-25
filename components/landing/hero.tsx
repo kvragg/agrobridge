@@ -11,6 +11,7 @@ import {
   GridLayer,
   useReveal,
 } from "./primitives"
+import { MagneticHover } from "./_magnetic-hover"
 
 type Msg = { role: "ai" | "me"; text: string }
 
@@ -493,9 +494,11 @@ export function Hero() {
                 marginTop: 40,
               }}
             >
-              <Button size="lg" variant="accent" href="/cadastro">
-                Iniciar análise gratuita {Icon.arrow(15)}
-              </Button>
+              <MagneticHover strength={10} radius={100}>
+                <Button size="lg" variant="accent" href="/cadastro">
+                  Iniciar análise gratuita {Icon.arrow(15)}
+                </Button>
+              </MagneticHover>
               <Button size="lg" variant="ghost" href="#fluxo">
                 {Icon.play(13)} Ver como funciona
               </Button>
