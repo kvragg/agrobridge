@@ -57,3 +57,8 @@ docs/examples/*.pdf
 # Documentos reais de produtores (PII — LGPD). Nunca versionar.
 # Usar apenas pra análise local e geração de catálogo anonimizado.
 /_private/
+
+# Imagens de produto Cakto — geradas pelo script `gerar-imagens-cakto.ts`,
+# enviadas manualmente pro painel Cakto. Não inflar o repo com binários.
+docs/cakto-images/*.png
+docs/cakto-images/*.svg
