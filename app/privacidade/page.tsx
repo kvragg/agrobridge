@@ -46,8 +46,8 @@ export default function PrivacidadePage() {
             </p>
             <p>
               <strong>Contato / Encarregado (DPO):</strong>{" "}
-              <a href="mailto:paulocosta.contato1@gmail.com">
-                paulocosta.contato1@gmail.com
+              <a href="mailto:suporte@agrobridge.space">
+                suporte@agrobridge.space
               </a>
             </p>
           </div>
@@ -296,8 +296,8 @@ export default function PrivacidadePage() {
           </ul>
           <p>
             As solicitações devem ser enviadas para{" "}
-            <a href="mailto:paulocosta.contato1@gmail.com">
-              paulocosta.contato1@gmail.com
+            <a href="mailto:suporte@agrobridge.space">
+              suporte@agrobridge.space
             </a>{" "}
             e serão respondidas em até 15 (quinze) dias.
           </p>
@@ -400,8 +400,8 @@ export default function PrivacidadePage() {
             <br />
             <strong>Paulo Costa</strong>
             <br />
-            <a href="mailto:paulocosta.contato1@gmail.com">
-              paulocosta.contato1@gmail.com
+            <a href="mailto:suporte@agrobridge.space">
+              suporte@agrobridge.space
             </a>
           </p>
         </section>

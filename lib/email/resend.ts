@@ -239,7 +239,7 @@ function escapeHtml(s: string): string {
 // Dispara quando um novo lead se cadastra — vai para o admin monitorar o funil.
 export async function enviarLeadNotification(dados: DadosLead): Promise<EmailResult> {
   const destino =
-    process.env.LEAD_NOTIFICATION_EMAIL ?? 'paulocosta.contato1@gmail.com'
+    process.env.LEAD_NOTIFICATION_EMAIL ?? 'comercial@agrobridge.space'
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://agrobridge.space'
 
   const dataFormatada = new Intl.DateTimeFormat('pt-BR', {

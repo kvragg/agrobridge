@@ -90,10 +90,10 @@ export default function ContaDadosClient({
         </Link>{" "}
         ou fale com{" "}
         <a
-          href="mailto:paulocosta.contato1@gmail.com"
+          href="mailto:suporte@agrobridge.space"
           style={{ color: "var(--green)", textDecoration: "underline" }}
         >
-          paulocosta.contato1@gmail.com
+          suporte@agrobridge.space
         </a>
         .
       </p>

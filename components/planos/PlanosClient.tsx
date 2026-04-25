@@ -397,13 +397,13 @@ export default function PlanosClient({
         >
           Dúvida antes de comprar?{" "}
           <a
-            href="mailto:paulocosta.contato1@gmail.com"
+            href="mailto:comercial@agrobridge.space"
             style={{
               color: "var(--green)",
               textDecoration: "underline",
             }}
           >
-            paulocosta.contato1@gmail.com
+            comercial@agrobridge.space
           </a>
         </p>
       </div>

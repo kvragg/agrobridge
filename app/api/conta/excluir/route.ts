@@ -151,7 +151,7 @@ export async function POST(request: NextRequest) {
         ok: false,
         email_enviado: false,
         mensagem:
-          'Não conseguimos enviar o e-mail agora. Tente novamente em alguns minutos ou fale com paulocosta.contato1@gmail.com.',
+          'Não conseguimos enviar o e-mail agora. Tente novamente em alguns minutos ou fale com suporte@agrobridge.space.',
       },
       { status: 502 }
     )

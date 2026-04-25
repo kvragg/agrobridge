@@ -211,8 +211,8 @@ export default function TermosPage() {
             <strong>Responsável:</strong> Paulo Costa
             <br />
             <strong>E-mail:</strong>{" "}
-            <a href="mailto:paulocosta.contato1@gmail.com">
-              paulocosta.contato1@gmail.com
+            <a href="mailto:suporte@agrobridge.space">
+              suporte@agrobridge.space
             </a>
           </p>
         </section>
