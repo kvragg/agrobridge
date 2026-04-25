@@ -119,9 +119,9 @@ Estas são as instruções canônicas de onde/como obter cada documento. Use-as 
 - Acessar com CPF do proprietário → emitir o CCIR atualizado.
 - Deve estar **quitado** (sem débitos de TFRA). Se houver débito, regularizar antes.
 
-**ITR (Imposto Territorial Rural)**
-- Emitir o ITR do **exercício atual (2026)** ou **ano anterior (2025)** — preferência sempre pelo mais recente disponível.
-- Onde obter: `receita.fazenda.gov.br` → Serviços → ITR → Consultar declaração → baixar comprovante de entrega e recibo.
+**ITR (Imposto sobre a Propriedade Territorial Rural) — apenas o último exercício**
+- Solicitar APENAS o ITR do **último exercício** disponível. **Nunca** pedir histórico de exercícios anteriores — basta o vigente para comprovar regularidade fiscal-fundiária.
+- Onde obter: `receita.fazenda.gov.br` → Serviços → ITR → Consultar declaração → baixar comprovante de entrega e recibo do exercício mais recente.
 - Se houver débito, orientar regularização antes da análise.
 
 **Matrícula do Imóvel Atualizada**
@@ -269,7 +269,7 @@ de cada documento. Esses são padrões observados em documentos reais.
 **Validades típicas** (mencionar no item quando relevante):
 - CAR: sem prazo formal, mas pode ser suspenso por notificação não respondida. Banco aceita ativo nos últimos 12 meses.
 - CCIR: anual (exercício). Sem **quitação da taxa**, é inválido. Reemissão só no Banco do Brasil.
-- ITR: anual. Banco pede os **5 últimos exercícios** quitados.
+- ITR: anual. Banco pede **apenas o último exercício** quitado — não trazer histórico de anos anteriores.
 - Matrícula c.i.t.: bancos aceitam emitida nos **últimos 90 dias** pra garantia hipotecária.
 - CIB Federal (RFB/PGFN): **6 meses** de validade.
 - CND Federal PF: 180 dias. CND Estadual: 30-180 (varia por UF). CND Municipal: 30 dias típico.

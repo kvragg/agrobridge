@@ -68,13 +68,13 @@ export const CHECKLIST_MCR_DOCS: readonly DocMCR[] = [
   },
   {
     id: 'itr',
-    nome: 'ITR (Imposto Territorial Rural)',
+    nome: 'ITR (Imposto sobre a Propriedade Territorial Rural) — último exercício',
     categoria: 'imovel',
     por_que:
-      'Comprova que o imposto está em dia e que o imóvel existe para a Receita.',
+      'Comprova que o imposto está em dia e que o imóvel existe para a Receita. Basta o exercício mais recente — não é necessário trazer histórico de anos anteriores.',
     onde_obter: [
       'Acessar o portal da Receita Federal (Serviços → ITR).',
-      'Consultar a declaração do exercício atual (2026) — ou mais recente disponível.',
+      'Consultar a declaração do último exercício disponível.',
       'Baixar o comprovante de entrega e o recibo.',
     ],
     prazo_estimado: 'imediato (online)',

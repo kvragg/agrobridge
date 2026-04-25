@@ -49,7 +49,7 @@ export const CADASTRO_NIVEIS: CadastroNivel[] = [
       'IR em dia',
     ],
     requisitos_faltantes: [
-      'Sem CAR regular E ITR dos últimos 5 exercícios',
+      'Sem CAR regular E ITR do último exercício em dia',
       'Sem matrícula atualizada (>90 dias) E extrato SCR 24 meses',
       'Sem certidões negativas completas (Federal/Estadual/Municipal/FGTS/Trabalhista)',
     ],

@@ -524,7 +524,7 @@ export async function enviarPagamentoConfirmado(input: {
     }
     return dicaValor(
       'Comece a separar 5 documentos antes da análise',
-      `CPF + comprovante de residência + ITR dos últimos 5 anos + matrícula atualizada + CAR. Esses 5 cobrem 80% do dossiê — todos têm passo-a-passo no <a href="${url}" style="color:${T.green};">/checklist</a>.`,
+      `CPF + comprovante de residência + ITR do último exercício + matrícula atualizada + CAR. Esses 5 cobrem 80% do dossiê — todos têm passo-a-passo no <a href="${url}" style="color:${T.green};">/checklist</a>.`,
     )
   })()
 

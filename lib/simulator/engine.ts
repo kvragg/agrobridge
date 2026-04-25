@@ -298,7 +298,7 @@ export function simular(
     })
   }
   if (!input.itr_em_dia) {
-    regrasDurasViolades.push('ITR em atraso (5 últimos exercícios).')
+    regrasDurasViolades.push('ITR em atraso (último exercício).')
     deltas.push({
       fator: 'regra_dura_itr',
       delta: -40,
@@ -576,7 +576,7 @@ function montarPlanoSubida(
   // ITR/IR
   if (!input.itr_em_dia) {
     acoes.push({
-      acao: 'Quitar ITR (5 últimos exercícios) na Receita',
+      acao: 'Quitar ITR (último exercício) na Receita',
       ganho_estimado: 40,
       prazo_dias: 7,
     })

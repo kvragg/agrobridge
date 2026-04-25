@@ -132,12 +132,12 @@ export const CHECKLIST_PADRAO: ItemChecklistPadrao[] = [
   },
   {
     id: "itr",
-    nome: "ITR — últimos 5 exercícios",
+    nome: "ITR — Imposto sobre a Propriedade Territorial Rural (último exercício)",
     sigla: "ITR",
     categoria: "fiscal",
     obrigatorio: true,
     descricao:
-      "Comprovante de pagamento ou de declaração do Imposto Territorial Rural dos 5 últimos anos. ITR atrasado é regra dura — comitê de crédito não aprova.",
+      "Comprovante de pagamento ou de declaração do ITR do último exercício. ITR atrasado é regra dura — comitê de crédito não aprova.",
     origem: {
       orgao: "Receita Federal",
       portal: "e-CAC",
@@ -146,7 +146,7 @@ export const CHECKLIST_PADRAO: ItemChecklistPadrao[] = [
     passos: [
       "Entre no e-CAC com certificado digital ou conta gov.br nível prata/ouro.",
       "Vá em ‘Declarações e Demonstrativos’ → ‘ITR’.",
-      "Baixe os DARFs pagos dos últimos 5 anos (ou as declarações com isenção, se imune).",
+      "Baixe o DARF pago do último exercício (ou a declaração com isenção, se imune). Não é necessário trazer histórico de exercícios anteriores.",
       "Imóvel em nome de outro (espólio, sociedade, arrendamento) — o ITR é do PROPRIETÁRIO. Peça a cópia.",
       "ITR em atraso? Quite na própria Receita antes de protocolar — não tem como contornar.",
     ],

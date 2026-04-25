@@ -25,8 +25,8 @@ const DOCUMENTOS: Record<string, DocumentoCritico> = {
   },
   itr: {
     id: 'itr',
-    nome: 'ITR dos ultimos 5 exercicios',
-    por_que: 'Comprova que o imposto esta em dia e que o imovel existe para a Receita.',
+    nome: 'ITR (Imposto sobre a Propriedade Territorial Rural) — ultimo exercicio',
+    por_que: 'Comprova que o imposto esta em dia e que o imovel existe para a Receita. Apenas o exercicio mais recente — historico nao e necessario.',
   },
   matricula: {
     id: 'matricula',
