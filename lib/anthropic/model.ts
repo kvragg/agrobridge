@@ -1,3 +1,5 @@
+import 'server-only'
+
 // Modelo único da AgroBridge (2026-04-22+) — Sonnet 4.6 em todas as rotas IA.
 // Antes tínhamos haiku pra entrevista, sonnet pra checklist/dossiê.
 // Paulo decidiu uniformizar pra qualidade máxima em tudo, com mitigação de

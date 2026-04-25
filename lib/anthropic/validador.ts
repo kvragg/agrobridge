@@ -1,3 +1,5 @@
+import 'server-only'
+
 // Server-only — valida documentos via Claude Sonnet (vision/pdf).
 import Anthropic from '@anthropic-ai/sdk'
 import fs from 'fs'

@@ -1,3 +1,5 @@
+import 'server-only'
+
 // Server-only — cliente Anthropic + stream do chat único com memória.
 //
 // IA v2.1 (Onda 3): system prompt em blocos com cache_control, montado

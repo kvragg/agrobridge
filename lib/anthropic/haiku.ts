@@ -1,3 +1,5 @@
+import 'server-only'
+
 // Server-only — nunca importar de client components (expõe ANTHROPIC_API_KEY).
 // Nome "haiku" é legado — o modelo agora é Sonnet 4.6 pra toda a entrevista.
 // Mantido como arquivo de compatibilidade até refactor completo (2026-Q3).

@@ -1,3 +1,5 @@
+import 'server-only'
+
 // Server-only — nunca importar de client components (expõe ANTHROPIC_API_KEY).
 import Anthropic from '@anthropic-ai/sdk'
 import fs from 'fs'

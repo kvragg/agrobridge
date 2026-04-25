@@ -1,3 +1,5 @@
+import 'server-only'
+
 // Server-only — nunca importar de client components.
 // Envio de email transacional via API HTTP do Resend (usa fetch direto).
 // Visual dark premium alinhado com a landing (tokens: #070809, #4ea884, #c9a86a).
