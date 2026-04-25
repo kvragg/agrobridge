@@ -130,13 +130,25 @@ export async function POST(request: NextRequest) {
       extra: { etapa: 'notificar_lead' },
     })
   }
-  void enviarBoasVindas({ emailPrincipal: email, nome }).catch((e) =>
+  // AWAIT (não fire-and-forget) — em serverless, Promise pendente morre
+  // quando o handler retorna a response. Resend leva ~500ms, custo
+  // aceitável pra garantir entrega + erro logado se falhar.
+  try {
+    const resBoasVindas = await enviarBoasVindas({ emailPrincipal: email, nome })
+    if (!resBoasVindas.ok) {
+      logger.warn({
+        msg: 'boas-vindas falhou — não bloqueia cadastro',
+        modulo: 'signup',
+        extra: { erro: resBoasVindas.error },
+      })
+    }
+  } catch (e) {
     capturarErroProducao(e, {
       modulo: 'signup',
       userId: data.user?.id ?? null,
       extra: { etapa: 'enviar_boas_vindas' },
-    }),
-  )
+    })
+  }
 
   // Audit (E4): fire-and-forget.
   void logAuditEvent({
