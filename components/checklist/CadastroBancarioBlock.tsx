@@ -140,7 +140,7 @@ export function CadastroBancarioBlock({ tier = "free" }: Props) {
             borderTop: "1px solid rgba(201,168,106,0.18)",
           }}
         >
-          {/* 4 checagens críticas */}
+          {/* 6 checagens críticas */}
           <div style={{ paddingTop: 18 }}>
             <div
               className="mono"
@@ -152,13 +152,26 @@ export function CadastroBancarioBlock({ tier = "free" }: Props) {
                 marginBottom: 10,
               }}
             >
-              4 itens que decidem a aprovação
+              6 itens que decidem a aprovação
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               <ItemCadastro
                 titulo="Renda real declarada (não a do IR antigo)"
-                descricao="Se você produz mais hoje do que declarou no último IR, o banco trabalha com a renda menor — e isso reduz seu teto de crédito. Atualize a renda atual no formulário do banco antes de pedir."
+                descricao="Se você produz mais hoje do que declarou no último IR, o banco trabalha com a renda menor — e isso reduz seu teto de crédito. Atualize a renda atual no formulário do banco antes de pedir, com NF de venda da safra atual, contratos de comercialização, relatórios da integradora."
+              />
+              <ItemCadastro
+                titulo="Patrimônio COMPLETO listado (não só os imóveis)"
+                destacar
+                descricao={
+                  <>
+                    <strong style={{ color: "#fff" }}>Não esqueça nada:</strong> casas,
+                    lotes, máquinas, carros, empresas (participações), fazendas,
+                    investimentos (CDB, ações, fundos), semoventes (gado),
+                    implementos agrícolas, recebíveis. O comitê olha o conjunto.
+                    Faltou item = patrimônio menor = crédito menor.
+                  </>
+                }
               />
               <ItemCadastro
                 titulo="Patrimônio em valor de mercado (não valor da matrícula)"
@@ -183,6 +196,21 @@ export function CadastroBancarioBlock({ tier = "free" }: Props) {
                     índice oficial — quase sempre fica MUITO abaixo do mercado. Antes de
                     qualquer pedido, faça <strong style={{ color: "#fff" }}>atualização patrimonial</strong>:
                     bens, máquinas, semoventes (gado), tudo a valor de mercado.
+                  </>
+                }
+              />
+              <ItemCadastro
+                titulo="Confira o cadastro DEPOIS — gerente e analista podem errar"
+                destacar
+                descricao={
+                  <>
+                    O gerente pode esquecer item, o analista de cadastro pode usar valor
+                    automático do IR/matrícula. <strong style={{ color: "#fff" }}>Quem perde
+                    é você</strong>, então é sua obrigação conferir <em>depois</em> que o
+                    cadastro foi feito — peça pra ver a tela do cadastro com o gerente,
+                    confira renda, patrimônio item por item, e cobre correção se faltar
+                    qualquer coisa. Não confie só na palavra: <strong
+                    style={{ color: "var(--gold)" }}>peça pra ver a tela</strong>.
                   </>
                 }
               />

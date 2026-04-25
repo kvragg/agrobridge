@@ -7,17 +7,23 @@ import { useRotator } from "@/hooks/use-rotator"
 interface Slide {
   /** Número visível na tag superior. */
   numero: string
+  /** Tag de "ato" — agrupa slides por contexto. */
+  ato: "cadastro" | "patrimonio" | "documentacao"
+  atoLabel: string
   /** Título curto e direto — manchete que prende. */
   titulo: ReactNode
-  /** Corpo do slide — frase clara, max 2-3 linhas. */
+  /** Corpo do slide — frase clara, max 3-4 linhas. */
   corpo: ReactNode
   /** Cor temática do slide. */
   cor: "gold" | "danger" | "green"
 }
 
 const SLIDES: Slide[] = [
+  // ═══ ATO 1 — CADASTRO (alma do negócio + erros em cascata) ═══
   {
     numero: "01",
+    ato: "cadastro",
+    atoLabel: "Cadastro · alma do negócio",
     titulo: (
       <>
         Antes do papel, o <span style={{ color: "var(--gold)" }}>cadastro</span>.
@@ -25,16 +31,64 @@ const SLIDES: Slide[] = [
     ),
     corpo: (
       <>
-        O cadastro do produtor no banco/cooperativa é a <strong style={{ color: "#fff" }}>alma do
-        negócio</strong>. Sem ele atualizado, dossiê perfeito é reprovado mesmo
-        assim. Antes de juntar CAR, ITR ou matrícula — confira se o seu
-        cadastro está 100% atual.
+        O cadastro do produtor no banco/cooperativa é a <strong style={{ color: "#fff" }}>alma
+        do negócio</strong>. Sem ele 100% atualizado, dossiê perfeito é
+        reprovado mesmo assim. É o <strong style={{ color: "var(--danger)" }}>maior
+        motivo de reprovação de crédito rural hoje</strong> — mais que
+        documento faltando.
       </>
     ),
     cor: "gold",
   },
   {
     numero: "02",
+    ato: "cadastro",
+    atoLabel: "Cadastro · alma do negócio",
+    titulo: (
+      <>
+        Erro pode vir de <span style={{ color: "var(--danger)" }}>3 lados</span> — atenção.
+      </>
+    ),
+    corpo: (
+      <>
+        <strong style={{ color: "#fff" }}>O gerente pode errar</strong> — esquecer
+        item, não pedir tudo, digitar valor errado.{" "}
+        <strong style={{ color: "#fff" }}>O analista de cadastro pode errar</strong> —
+        usar valor automático do IR ou matrícula em vez do real.{" "}
+        <strong style={{ color: "#fff" }}>Você também pode errar</strong> achando que
+        &ldquo;o que já mandei é suficiente&rdquo; — quase nunca é. <span
+        style={{ color: "var(--gold)" }}>Não confie em ninguém — confira</span>.
+      </>
+    ),
+    cor: "danger",
+  },
+  {
+    numero: "03",
+    ato: "cadastro",
+    atoLabel: "Cadastro · alma do negócio",
+    titulo: (
+      <>
+        Você é o <span style={{ color: "var(--gold)" }}>interessado principal</span>{" "}
+        — a obrigação é sua.
+      </>
+    ),
+    corpo: (
+      <>
+        Quem perde se o cadastro tá errado é você — não o gerente, não
+        o analista, não a AgroBridge. Por isso é{" "}
+        <strong style={{ color: "#fff" }}>obrigação sua</strong>: conferir
+        cada item do cadastro, mandar TUDO (não pula nada), e cobrar
+        seu gerente quando faltar atualização. Banco trabalha pra fechar
+        operações — você trabalha pra <strong style={{ color: "var(--gold)" }}>ter
+        sua operação aprovada</strong>.
+      </>
+    ),
+    cor: "danger",
+  },
+  {
+    numero: "04",
+    ato: "cadastro",
+    atoLabel: "Cadastro · alma do negócio",
     titulo: (
       <>
         Renda <span style={{ color: "var(--gold)" }}>real</span>, não a do IR antigo.
@@ -43,50 +97,63 @@ const SLIDES: Slide[] = [
     corpo: (
       <>
         Se sua produção cresceu desde o último IR, o banco trabalha com a
-        renda menor — e seu teto de crédito cai. <strong style={{ color: "#fff" }}>Atualize a renda
-        atual</strong> no formulário do banco antes de pedir.
+        renda menor — e seu teto de crédito cai. <strong style={{ color: "#fff" }}>Atualize
+        a renda atual</strong> no formulário do banco antes de pedir,
+        com documentos da safra/produção atual (NF de venda, contratos,
+        relatórios da integradora).
+      </>
+    ),
+    cor: "gold",
+  },
+
+  // ═══ ATO 2 — PATRIMÔNIO REAL ═══
+  {
+    numero: "05",
+    ato: "patrimonio",
+    atoLabel: "Patrimônio · valor de mercado",
+    titulo: (
+      <>
+        Patrimônio em <span style={{ color: "var(--gold)" }}>valor de mercado</span>,
+        nunca da matrícula nem do IR.
+      </>
+    ),
+    corpo: (
+      <>
+        Matrícula traz valor histórico (geralmente bem abaixo do real). IR
+        traz valor declarado atualizado por índice — também abaixo do mercado.
+        O banco pode usar esses valores automaticamente, e seu patrimônio
+        aparece muito menor do que é. <strong style={{ color: "var(--danger)" }}>Resultado:
+        crédito menor ou reprovação</strong>. Peça reavaliação com laudo
+        recente ou avaliação CRECI.
+      </>
+    ),
+    cor: "danger",
+  },
+  {
+    numero: "06",
+    ato: "patrimonio",
+    atoLabel: "Patrimônio · valor de mercado",
+    titulo: (
+      <>
+        Patrimônio real é <span style={{ color: "var(--gold)" }}>tudo isso</span>{" "}
+        — não esqueça nenhum.
+      </>
+    ),
+    corpo: (
+      <>
+        Casas, lotes, máquinas, carros, empresas, fazendas, investimentos
+        — <strong style={{ color: "#fff" }}>tudo a valor de mercado, atualizado</strong>.
+        Inclua semoventes (gado), implementos, participações em cooperativas,
+        recebíveis. O comitê de crédito olha o conjunto. Faltou item =
+        patrimônio menor = crédito menor.
       </>
     ),
     cor: "gold",
   },
   {
-    numero: "03",
-    titulo: (
-      <>
-        Patrimônio em <span style={{ color: "var(--gold)" }}>valor de mercado</span>,
-        nunca da matrícula.
-      </>
-    ),
-    corpo: (
-      <>
-        A matrícula traz valor histórico — geralmente bem abaixo do real.
-        O banco pode usar esse valor automaticamente, e seu patrimônio
-        aparece menor do que é. <strong style={{ color: "var(--danger)" }}>Resultado:
-        crédito menor ou reprovação direta</strong>. Peça reavaliação com
-        laudo recente ou avaliação CRECI.
-      </>
-    ),
-    cor: "danger",
-  },
-  {
-    numero: "04",
-    titulo: (
-      <>
-        IR também tem essa armadilha — <span style={{ color: "var(--gold)" }}>cuidado</span>.
-      </>
-    ),
-    corpo: (
-      <>
-        Bens declarados no IR ficam em valor histórico atualizado por índice
-        oficial — quase sempre MUITO abaixo do mercado. <strong style={{ color: "#fff" }}>Faça
-        atualização patrimonial completa</strong>: imóveis, máquinas, semoventes
-        (gado), tudo a valor de mercado, antes de qualquer pedido.
-      </>
-    ),
-    cor: "danger",
-  },
-  {
-    numero: "05",
+    numero: "07",
+    ato: "patrimonio",
+    atoLabel: "Patrimônio · valor de mercado",
     titulo: (
       <>
         Pergunte direto pro seu <span style={{ color: "var(--gold)" }}>gerente</span>.
@@ -95,29 +162,59 @@ const SLIDES: Slide[] = [
     corpo: (
       <>
         Antes de protocolar qualquer crédito, faça essa pergunta exata: <em
-        style={{ color: "#fff" }}>&ldquo;Meu cadastro está atualizado com renda real e
-        patrimônio em valor de mercado, ou está usando valor do IR e
-        matrícula?&rdquo;</em>. Se for a segunda — pare e atualize antes.
-        É o <strong style={{ color: "var(--danger)" }}>maior motivo de reprovação
-        de crédito rural hoje</strong>.
+        style={{ color: "#fff" }}>&ldquo;Meu cadastro está com renda real e patrimônio
+        em valor de mercado, ou tá usando valor do IR e matrícula?&rdquo;</em>.
+        Se for a segunda — <strong style={{ color: "var(--danger)" }}>pare e atualize
+        antes</strong>. Documento perfeito sobre cadastro errado = reprovação.
       </>
     ),
     cor: "danger",
   },
+
+  // ═══ ATO 3 — DOCUMENTAÇÃO + DOSSIÊ ═══
   {
-    numero: "06",
+    numero: "08",
+    ato: "documentacao",
+    atoLabel: "Depois do cadastro · documentação",
     titulo: (
       <>
-        Como o fluxo funciona aqui na <span style={{ color: "var(--gold)" }}>AgroBridge</span>.
+        Cadastro 100%? <span style={{ color: "var(--gold)" }}>Aí sim</span>{" "}
+        partimos pros documentos.
       </>
     ),
     corpo: (
       <>
-        <strong style={{ color: "#fff" }}>1.</strong> Conversa com a IA pra mapear
-        seu caso · <strong style={{ color: "#fff" }}>2.</strong> Atualiza o cadastro
-        no banco (essa página guia) · <strong style={{ color: "#fff" }}>3.</strong> Anexa
-        ou tira documentos um a um (link site-a-site) · <strong style={{ color: "#fff" }}>4.</strong> IA
-        analisa profundamente e gera o PDF do dossiê pro comitê.
+        Com cadastro perfeito, juntamos os documentos do crédito rural:
+        CAR, CCIR, ITR, matrícula, certidões negativas, projeto+croqui se
+        investimento, anuência de arrendamento, comprovantes de produção.
+        Cada item você anexa aqui ou recebe o passo-a-passo de onde tirar
+        — <strong style={{ color: "#fff" }}>te guiamos site a site</strong>, sem
+        mistério.
+      </>
+    ),
+    cor: "green",
+  },
+  {
+    numero: "09",
+    ato: "documentacao",
+    atoLabel: "Depois do cadastro · documentação",
+    titulo: (
+      <>
+        Análise profunda + <span style={{ color: "var(--gold)" }}>Dossiê PDF</span>{" "}
+        completo.
+      </>
+    ),
+    corpo: (
+      <>
+        Com tudo na mão, a AgroBridge gera o dossiê em PDF cobrindo:{" "}
+        <strong style={{ color: "#fff" }}>história do produtor</strong>,{" "}
+        <strong style={{ color: "#fff" }}>referências comerciais</strong>,{" "}
+        <strong style={{ color: "#fff" }}>defesa técnica do crédito</strong>{" "}
+        em linguagem de comitê,{" "}
+        <strong style={{ color: "#fff" }}>roteiro de como falar com o gerente</strong>,{" "}
+        <strong style={{ color: "#fff" }}>análise da área de garantia</strong>{" "}
+        e <strong style={{ color: "#fff" }}>área beneficiada</strong>.
+        Disponível nos planos <span style={{ color: "var(--gold)" }}>Prata e Ouro</span>.
       </>
     ),
     cor: "green",
@@ -130,24 +227,39 @@ interface Props {
 }
 
 /**
- * Carrossel educativo no topo da aba Documentos. Substitui a estética
- * "lista monolítica de avisos" por mensagens diretas, uma por vez.
- * Aprendido com a fundação (14 anos no SFN): cadastro errado é o maior
- * motivo de reprovação. Lead PRECISA ouvir essa mensagem antes de gastar
- * energia juntando papel.
+ * Carrossel educativo no topo da aba Documentos. 9 slides em 3 atos
+ * narrativos:
+ *
+ *  ATO 1 (slides 1-4) — CADASTRO é alma do negócio
+ *    Slides curados pelo fundador (14 anos no SFN). Mensagem central:
+ *    cadastro errado é o maior motivo de reprovação hoje. Erros podem
+ *    vir do gerente, do analista de cadastro, OU do próprio cliente
+ *    achando que "o que mandou é suficiente". Cliente é o interessado
+ *    principal — obrigação dele conferir + cobrar.
+ *
+ *  ATO 2 (slides 5-7) — PATRIMÔNIO em valor de mercado
+ *    Por que matrícula/IR enganam. Lista completa do que conta como
+ *    patrimônio (casas, lotes, máquinas, carros, empresas, fazendas,
+ *    investimentos). Pergunta exata pro gerente.
+ *
+ *  ATO 3 (slides 8-9) — DOCUMENTAÇÃO + DOSSIÊ
+ *    Só depois do cadastro 100% partimos pros documentos. Lista o
+ *    conteúdo do dossiê PDF (história, referências comerciais, defesa
+ *    técnica, roteiro pra falar com gerente, análise de garantia +
+ *    área beneficiada). Diferencial Ouro = 1:1 com fundador.
  *
  * Características:
- *  - 6 slides curados (cadastro · renda real · patrimônio mercado x
- *    matrícula x IR · pergunta gerente · fluxo AgroBridge)
- *  - Auto-rotação 8s, pausa por hover, controles manuais discretos
- *  - Visual: glasscard dourado/vermelho/verde por contexto do slide
+ *  - Auto-rotação 9s, pausa por hover, controles manuais discretos
+ *  - Tag de ato visível no topo (orienta narrativa em 3 partes)
+ *  - Visual: glasscard cor-do-ato (gold/danger/green)
  *  - Respeita prefers-reduced-motion (não gira sozinho)
  *  - Bullets clicáveis pra navegar
+ *  - Ouro: bloco extra "1:1 com fundador" no slide 9
  */
 export function CarrosselEducativo({ tier = "free" }: Props) {
   const total = SLIDES.length
   const rotator = useRotator(total, {
-    intervalMs: 8500,
+    intervalMs: 9000,
     autoplay: true,
     respectReducedMotion: true,
   })
@@ -157,9 +269,9 @@ export function CarrosselEducativo({ tier = "free" }: Props) {
   const isOuro = tier === "Ouro"
 
   const cor = {
-    gold: { bg: "rgba(201,168,106,0.10)", border: "rgba(201,168,106,0.40)", accent: "var(--gold)" },
-    danger: { bg: "rgba(212,113,88,0.10)", border: "rgba(212,113,88,0.40)", accent: "var(--danger)" },
-    green: { bg: "rgba(78,168,132,0.10)", border: "rgba(78,168,132,0.40)", accent: "var(--green)" },
+    gold: { bg: "rgba(201,168,106,0.10)", border: "rgba(201,168,106,0.40)", accent: "var(--gold)", glow: "rgba(201,168,106,0.18)" },
+    danger: { bg: "rgba(212,113,88,0.10)", border: "rgba(212,113,88,0.40)", accent: "var(--danger)", glow: "rgba(212,113,88,0.18)" },
+    green: { bg: "rgba(78,168,132,0.10)", border: "rgba(78,168,132,0.40)", accent: "var(--green)", glow: "rgba(78,168,132,0.18)" },
   }[slideAtual.cor]
 
   return (
@@ -178,15 +290,16 @@ export function CarrosselEducativo({ tier = "free" }: Props) {
         borderRadius: 18,
         background: `linear-gradient(180deg, ${cor.bg} 0%, rgba(255,255,255,0.02) 100%)`,
         border: `1px solid ${cor.border}`,
-        boxShadow: `0 0 0 1px rgba(255,255,255,0.04) inset, 0 18px 40px -16px ${cor.accent.replace("var(--", "rgba(").replace(")", ", 0.18)")}`,
+        boxShadow: `0 0 0 1px rgba(255,255,255,0.04) inset, 0 18px 40px -16px ${cor.glow}`,
         overflow: "hidden",
-        transition: "background .4s, border-color .4s",
+        transition: "background .4s, border-color .4s, box-shadow .4s",
+        minHeight: 280,
       }}
       role="region"
       aria-label="Mensagens essenciais sobre crédito rural"
       aria-roledescription="carrossel"
     >
-      {/* Barra de progresso dourada no topo */}
+      {/* Barra de progresso colorida no topo */}
       <div
         aria-hidden
         style={{
@@ -209,7 +322,7 @@ export function CarrosselEducativo({ tier = "free" }: Props) {
       </div>
 
       <div style={{ padding: "26px 28px 22px" }}>
-        {/* Tag superior */}
+        {/* Tag superior — ato + número + controles */}
         <div
           style={{
             display: "flex",
@@ -217,6 +330,7 @@ export function CarrosselEducativo({ tier = "free" }: Props) {
             justifyContent: "space-between",
             gap: 12,
             marginBottom: 14,
+            flexWrap: "wrap",
           }}
         >
           <div
@@ -230,6 +344,7 @@ export function CarrosselEducativo({ tier = "free" }: Props) {
               display: "inline-flex",
               alignItems: "center",
               gap: 8,
+              minHeight: 16,
             }}
           >
             <span
@@ -242,7 +357,7 @@ export function CarrosselEducativo({ tier = "free" }: Props) {
                 boxShadow: `0 0 8px ${cor.accent}`,
               }}
             />
-            Essencial · {slideAtual.numero} de {String(total).padStart(2, "0")}
+            {slideAtual.atoLabel} · {slideAtual.numero} de {String(total).padStart(2, "0")}
           </div>
 
           {/* Controles discretos */}
@@ -306,17 +421,17 @@ export function CarrosselEducativo({ tier = "free" }: Props) {
             style={{
               margin: 0,
               fontSize: 15,
-              lineHeight: 1.6,
+              lineHeight: 1.65,
               color: "var(--ink-2)",
-              maxWidth: 780,
+              maxWidth: 820,
               letterSpacing: "-0.005em",
             }}
           >
             {slideAtual.corpo}
           </p>
 
-          {/* CTA Ouro no slide 6 */}
-          {isOuro && rotator.index === 5 && (
+          {/* CTA Ouro no slide 9 (último, dossiê) */}
+          {isOuro && rotator.index === 8 && (
             <div
               style={{
                 marginTop: 18,
@@ -330,62 +445,91 @@ export function CarrosselEducativo({ tier = "free" }: Props) {
                 color: "#fff",
                 fontSize: 13.5,
                 lineHeight: 1.5,
+                maxWidth: 720,
               }}
             >
-              <span aria-hidden style={{ color: "var(--green)" }}>
+              <span aria-hidden style={{ color: "var(--green)", flexShrink: 0 }}>
                 {Icon.user(15)}
               </span>
-              Você é Ouro — posso te acompanhar pessoalmente em qualquer
-              etapa. Agende em{" "}
-              <a
-                href="mailto:comercial@agrobridge.space"
-                style={{ color: "var(--green)", textDecoration: "none", fontWeight: 500 }}
-              >
-                comercial@agrobridge.space
-              </a>
-              .
+              <span>
+                <strong style={{ color: "var(--green)", fontWeight: 500 }}>
+                  Você é Ouro.
+                </strong>{" "}
+                Atendimento 1:1 com o fundador (14 anos no SFN) pra
+                assuntos profundos: revisão cadastral junto ao banco,
+                redação da defesa de crédito, conversa estratégica antes
+                do comitê. Agende em{" "}
+                <a
+                  href="mailto:comercial@agrobridge.space"
+                  style={{ color: "var(--green)", textDecoration: "none", fontWeight: 500 }}
+                >
+                  comercial@agrobridge.space
+                </a>
+                .
+              </span>
             </div>
           )}
         </div>
 
-        {/* Bullets de navegação */}
+        {/* Bullets de navegação — agrupados por ato */}
         <div
           style={{
             display: "flex",
-            gap: 6,
-            marginTop: 22,
+            gap: 4,
+            marginTop: 24,
             justifyContent: "center",
+            flexWrap: "wrap",
+            alignItems: "center",
           }}
           role="tablist"
           aria-label="Ir para slide específico"
         >
           {SLIDES.map((s, i) => {
             const ativo = i === rotator.index
+            const corSlide = {
+              gold: "var(--gold)",
+              danger: "var(--danger)",
+              green: "var(--green)",
+            }[s.cor]
+            // Separador visual entre atos
+            const slideAnterior = SLIDES[i - 1]
+            const novoAto = i > 0 && slideAnterior.ato !== s.ato
             return (
-              <button
-                key={s.numero}
-                type="button"
-                role="tab"
-                aria-selected={ativo}
-                aria-label={`Slide ${s.numero}`}
-                onClick={() => {
-                  // Navega manualmente — usa rotator.next/prev em loop
-                  const diff = i - rotator.index
-                  if (diff === 0) return
-                  if (diff > 0) for (let k = 0; k < diff; k++) rotator.next()
-                  else for (let k = 0; k < -diff; k++) rotator.prev()
-                }}
-                style={{
-                  width: ativo ? 26 : 8,
-                  height: 8,
-                  borderRadius: 999,
-                  background: ativo ? cor.accent : "var(--line-2)",
-                  border: 0,
-                  cursor: "pointer",
-                  padding: 0,
-                  transition: "all .25s",
-                }}
-              />
+              <Fragment key={s.numero}>
+                {novoAto && (
+                  <span
+                    aria-hidden
+                    style={{
+                      width: 1,
+                      height: 16,
+                      background: "var(--line-2)",
+                      marginInline: 4,
+                    }}
+                  />
+                )}
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={ativo}
+                  aria-label={`Slide ${s.numero}: ${s.atoLabel}`}
+                  onClick={() => {
+                    const diff = i - rotator.index
+                    if (diff === 0) return
+                    if (diff > 0) for (let k = 0; k < diff; k++) rotator.next()
+                    else for (let k = 0; k < -diff; k++) rotator.prev()
+                  }}
+                  style={{
+                    width: ativo ? 26 : 8,
+                    height: 8,
+                    borderRadius: 999,
+                    background: ativo ? corSlide : "var(--line-2)",
+                    border: 0,
+                    cursor: "pointer",
+                    padding: 0,
+                    transition: "all .25s",
+                  }}
+                />
+              </Fragment>
             )
           })}
         </div>
@@ -446,4 +590,8 @@ function ControlBtn({
       {icon}
     </button>
   )
+}
+
+function Fragment({ children }: { children: React.ReactNode }) {
+  return <>{children}</>
 }
