@@ -6,7 +6,6 @@ import {
   Button,
   Eyebrow,
   GlassCard,
-  Icon,
 } from "@/components/landing/primitives"
 import {
   JornadaFluxograma,
@@ -140,7 +139,16 @@ export default async function ComoFuncionaPage() {
             </p>
           </div>
           <Button variant="accent" size="lg" href="/planos">
-            Ver planos e preços {Icon.arrow(15)}
+            Ver planos e preços{" "}
+            <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden>
+              <path
+                d="M3 8h10m-4-4 4 4-4 4"
+                stroke="currentColor"
+                strokeWidth="1.4"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
           </Button>
         </div>
       </GlassCard>
