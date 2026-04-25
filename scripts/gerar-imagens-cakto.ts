@@ -210,7 +210,6 @@ function svgThumb(p: ProdutoImg): string {
   const bg = '#070809'
   const bgSoft = '#0e1012'
   const ink = '#f3f4f2'
-  const ink2 = '#c9ccc8'
   const muted = '#8f8f88'
 
   return `<?xml version="1.0" encoding="UTF-8"?>

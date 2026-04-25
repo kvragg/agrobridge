@@ -375,8 +375,8 @@ export function finalizePageChrome(doc: PDFDoc, ctx: PageContext): void {
       .strokeColor(COLOR.line)
       .stroke()
 
-    // Rodapé — fio + crédito + paginação
-    const footY = height - 40
+    // Rodapé — fio + crédito + paginação + watermark
+    const footY = height - 52
     doc
       .moveTo(SPACE.margin, footY - 8)
       .lineTo(width - SPACE.margin, footY - 8)
@@ -384,6 +384,7 @@ export function finalizePageChrome(doc: PDFDoc, ctx: PageContext): void {
       .strokeColor(COLOR.line)
       .stroke()
 
+    // Linha 1 do footer: produto AgroBridge à esq + paginação à dir
     doc
       .font(FONT.mono)
       .fontSize(6.5)
@@ -405,7 +406,54 @@ export function finalizePageChrome(doc: PDFDoc, ctx: PageContext): void {
         characterSpacing: 1.4,
         lineBreak: false,
       })
+
+    // Linha 2 do footer: WATERMARK rastreabilidade (full width, centralizado).
+    // Personaliza cada cópia do PDF com identificação do destinatário —
+    // desincentiva revenda/compartilhamento e dá rastro pra contestação
+    // de chargeback abusivo (CDC art. 49 já lastrado nas descrições Cakto).
+    const wmY = height - 36
+    doc
+      .font(FONT.sansItalic)
+      .fontSize(6)
+      .fillColor(COLOR.muted)
+      .text(
+        watermarkText(ctx),
+        SPACE.margin,
+        wmY,
+        {
+          width: width - SPACE.margin * 2,
+          align: 'center',
+          lineBreak: false,
+        },
+      )
   }
+}
+
+/**
+ * Texto de watermark personalizado pra cópia única.
+ * CPF mascarado parcialmente — visível pra rastreio sem expor totalmente.
+ * Formato: 987.654.321-00 → 987.***.***-00
+ */
+function watermarkText(ctx: PageContext): string {
+  const nome = (ctx.produtor.nome || 'Produtor').slice(0, 80)
+  const cpfMask = mascararCpf(ctx.produtor.cpf || '')
+  const proc = (ctx.processoId || '').slice(0, 8).toUpperCase()
+  const dataEmissao = new Date().toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  })
+  const id = `${proc} · ${dataEmissao}`
+  return `Cópia personalizada — emitida para ${nome}${
+    cpfMask ? ` · CPF ${cpfMask}` : ''
+  } · Processo ${id} · uso pessoal não-transferível`
+}
+
+function mascararCpf(cpf: string): string {
+  if (!cpf) return ''
+  const onlyDigits = cpf.replace(/\D/g, '')
+  if (onlyDigits.length !== 11) return cpf
+  return `${onlyDigits.slice(0, 3)}.***.***-${onlyDigits.slice(9, 11)}`
 }
 
 // ── Rodapé de upsell (bronze → prata, prata → ouro) ────────────────────────
