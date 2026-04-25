@@ -8,6 +8,7 @@ import {
   Logo,
 } from "@/components/landing/primitives"
 import { useWidgetIA } from "./WidgetIAProvider"
+import { BotaoConcluirEntrevista } from "@/components/entrevista/BotaoConcluirEntrevista"
 
 export type WidgetIATier = "free" | "Bronze" | "Prata" | "Ouro"
 
@@ -742,6 +743,38 @@ function ChatPanel({
             !streamingText &&
             mensagens.length > 0 &&
             mensagens[mensagens.length - 1].role === "user" && <TypingDots />}
+
+          {/* Botão "Concluir entrevista" — aparece após 4 mensagens
+              (2 trocas user/assistant) no widget. Mais permissivo que
+              ChatClient porque widget é menor e usuário ali é Bronze+
+              (Free vê modal upgrade antes). */}
+          {!enviando &&
+            mensagens.length >= 4 &&
+            mensagens[mensagens.length - 1].role === "assistant" && (
+              <div
+                style={{
+                  marginTop: 8,
+                  padding: "12px 14px",
+                  background: "rgba(201,168,106,0.08)",
+                  border: "1px solid rgba(201,168,106,0.28)",
+                  borderRadius: 10,
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 8,
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: 12,
+                    color: "var(--ink-2)",
+                    lineHeight: 1.5,
+                  }}
+                >
+                  Achou que já tem o suficiente? Posso montar seu checklist personalizado.
+                </div>
+                <BotaoConcluirEntrevista variante="compacto" />
+              </div>
+            )}
 
           {erro && (
             <div

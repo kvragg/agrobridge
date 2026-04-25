@@ -10,6 +10,7 @@ import {
   Logo,
 } from "@/components/landing/primitives"
 import { Alert } from "@/components/shell/Alert"
+import { BotaoConcluirEntrevista } from "@/components/entrevista/BotaoConcluirEntrevista"
 
 interface Mensagem {
   role: "user" | "assistant"
@@ -196,6 +197,36 @@ export function ChatClient(props: Props) {
         limite={props.limite}
         mostraContador={mostraContador}
       />
+
+      {/* Botão "Concluir entrevista" — aparece após 3 trocas user/IA
+          (mensagens.length >= 6 = 3 user + 3 assistant). Não aparece
+          em gate freemium (lá já tem CTA de planos). Único ponto de
+          fim explícito da entrevista (25/04/2026 — fix do gargalo
+          checklist eternamente bloqueado). */}
+      {mensagens.length >= 6 && !gate && (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "flex-end",
+            alignItems: "center",
+            gap: 12,
+            flexWrap: "wrap",
+          }}
+        >
+          <span
+            style={{
+              fontSize: 13,
+              color: "var(--ink-2)",
+              maxWidth: 360,
+              lineHeight: 1.5,
+              textAlign: "right",
+            }}
+          >
+            Já me deu informação suficiente? Posso montar seu checklist personalizado agora.
+          </span>
+          <BotaoConcluirEntrevista variante="default" />
+        </div>
+      )}
 
       <GlassCard
         glow="green"
