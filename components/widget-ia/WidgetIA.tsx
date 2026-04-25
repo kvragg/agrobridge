@@ -13,6 +13,50 @@ export type WidgetIATier = "free" | "Bronze" | "Prata" | "Ouro"
 
 type Mensagem = { role: "user" | "assistant"; content: string }
 
+// sessionStorage: persiste a thread enquanto a aba está aberta. Sobrevive a
+// minimizar/maximizar e a navegação entre rotas. Limpa ao fechar a aba (intencional).
+const THREAD_KEY = "widget_ia_thread_v1"
+const UNREAD_KEY = "widget_ia_unread_v1"
+
+function readThread(): Mensagem[] {
+  if (typeof window === "undefined") return []
+  try {
+    const raw = sessionStorage.getItem(THREAD_KEY)
+    if (!raw) return []
+    const parsed = JSON.parse(raw) as Mensagem[]
+    return Array.isArray(parsed) ? parsed.slice(-100) : []
+  } catch {
+    return []
+  }
+}
+
+function writeThread(msgs: Mensagem[]): void {
+  if (typeof window === "undefined") return
+  try {
+    sessionStorage.setItem(THREAD_KEY, JSON.stringify(msgs.slice(-100)))
+  } catch {
+    /* ignore quota */
+  }
+}
+
+function readUnread(): number {
+  if (typeof window === "undefined") return 0
+  try {
+    return Number(sessionStorage.getItem(UNREAD_KEY) ?? 0) || 0
+  } catch {
+    return 0
+  }
+}
+
+function writeUnread(n: number): void {
+  if (typeof window === "undefined") return
+  try {
+    sessionStorage.setItem(UNREAD_KEY, String(n))
+  } catch {
+    /* ignore */
+  }
+}
+
 interface WidgetIAProps {
   /** Tier comercial do usuário — controla gating e rate-limit. */
   tier: WidgetIATier
@@ -41,22 +85,134 @@ const PANEL_HEIGHT = 640
 export function WidgetIA({ tier, nomeCurto, hidden = false }: WidgetIAProps) {
   const widget = useWidgetIA()
   const [showUpgrade, setShowUpgrade] = useState(false)
+  // Lazy init lê sessionStorage só no client (no SSR retorna 0). Reset
+  // on-open via callback explícito, NÃO em useEffect — React 19 strict
+  // proíbe setState em effect (cascading renders).
+  const [unread, setUnread] = useState<number>(() => readUnread())
 
   if (hidden) return null
 
   const isFree = tier === "free"
+
+  function zerarUnread() {
+    setUnread(0)
+    writeUnread(0)
+  }
 
   function handleFabClick() {
     if (isFree) {
       setShowUpgrade(true)
       return
     }
-    widget.toggle()
+    if (widget.state === "open") {
+      widget.close()
+    } else {
+      zerarUnread()
+      widget.open()
+    }
+  }
+
+  // Estado MINIMIZED: pílula horizontal compacta no canto inf-direito,
+  // mostrando logo + texto + contador de não-lidas (se houver). Clique
+  // restaura o painel sem perder a thread (sessionStorage).
+  if (widget.state === "minimized" && !isFree) {
+    return (
+      <>
+        <button
+          type="button"
+          aria-label={
+            unread > 0
+              ? `Restaurar chat IA — ${unread} mensagem${unread === 1 ? "" : "s"} não lida${unread === 1 ? "" : "s"}`
+              : "Restaurar chat IA"
+          }
+          onClick={() => {
+            zerarUnread()
+            widget.open()
+          }}
+          className="widget-ia-pill"
+          style={{
+            position: "fixed",
+            right: 24,
+            bottom: 24,
+            zIndex: 70,
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 10,
+            padding: "10px 16px 10px 12px",
+            borderRadius: 999,
+            border: "1px solid rgba(78,168,132,0.32)",
+            background:
+              "linear-gradient(180deg, rgba(22,26,30,0.96) 0%, rgba(12,15,18,0.98) 100%)",
+            color: "var(--ink)",
+            cursor: "pointer",
+            boxShadow:
+              "0 0 0 1px rgba(255,255,255,0.05) inset," +
+              "0 10px 30px -8px rgba(0,0,0,0.7)," +
+              "0 0 0 3px rgba(78,168,132,0.12)",
+            backdropFilter: "blur(12px)",
+            transition: "transform .2s, box-shadow .2s",
+            fontFamily: "inherit",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = "translateY(-2px)"
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = "none"
+          }}
+        >
+          <span
+            style={{
+              width: 28,
+              height: 28,
+              borderRadius: "50%",
+              background: "linear-gradient(180deg,#5cbd95,#2f7a5c)",
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+            }}
+          >
+            <Logo size={14} color="#07120d" accent="#07120d" />
+          </span>
+          <span
+            style={{
+              fontSize: 13,
+              fontWeight: 500,
+              letterSpacing: "-0.005em",
+              color: "var(--ink)",
+            }}
+          >
+            IA AgroBridge
+          </span>
+          {unread > 0 && (
+            <span
+              aria-label={`${unread} não lidas`}
+              style={{
+                minWidth: 20,
+                height: 20,
+                padding: "0 6px",
+                borderRadius: 999,
+                background: "var(--gold)",
+                color: "#1a140a",
+                fontSize: 11,
+                fontWeight: 600,
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                marginLeft: 2,
+              }}
+            >
+              {unread > 9 ? "9+" : unread}
+            </span>
+          )}
+        </button>
+      </>
+    )
   }
 
   return (
     <>
-      {/* FAB fixo bottom-right */}
+      {/* FAB fixo bottom-right (estado closed) */}
       <button
         type="button"
         aria-label={widget.state === "open" ? "Fechar chat IA" : "Abrir chat IA"}
@@ -88,7 +244,31 @@ export function WidgetIA({ tier, nomeCurto, hidden = false }: WidgetIAProps) {
         }}
       >
         {isFree ? Icon.lock(22) : <Logo size={24} color="#07120d" accent="#07120d" />}
-        {widget.pulsing && !isFree && (
+        {(widget.pulsing || unread > 0) && !isFree && (
+          <span
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              top: -2,
+              right: -2,
+              minWidth: 18,
+              height: 18,
+              padding: "0 5px",
+              borderRadius: 999,
+              background: "var(--gold)",
+              color: "#1a140a",
+              fontSize: 10,
+              fontWeight: 600,
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              border: "2px solid #07120d",
+            }}
+          >
+            {unread > 0 ? (unread > 9 ? "9+" : unread) : "•"}
+          </span>
+        )}
+        {widget.pulsing && unread === 0 && !isFree && (
           <span
             aria-hidden="true"
             style={{
@@ -105,7 +285,7 @@ export function WidgetIA({ tier, nomeCurto, hidden = false }: WidgetIAProps) {
 
       {/* Panel aberto */}
       {widget.state === "open" && !isFree && (
-        <ChatPanel tier={tier} nomeCurto={nomeCurto} onClose={widget.close} />
+        <ChatPanel tier={tier} nomeCurto={nomeCurto} />
       )}
 
       {/* Modal upgrade (Free) */}
@@ -129,19 +309,21 @@ export function WidgetIA({ tier, nomeCurto, hidden = false }: WidgetIAProps) {
 function ChatPanel({
   tier,
   nomeCurto,
-  onClose,
 }: {
   tier: WidgetIATier
   nomeCurto?: string
-  onClose: () => void
 }) {
   const widget = useWidgetIA()
-  const [mensagens, setMensagens] = useState<Mensagem[]>([])
+  // Hidrata mensagens do sessionStorage primeiro — sobrevive a
+  // minimizar/restaurar e a navegação entre rotas (mesma aba).
+  const [mensagens, setMensagens] = useState<Mensagem[]>(() => readThread())
   const [texto, setTexto] = useState("")
   const [enviando, setEnviando] = useState(false)
   const [streamingText, setStreamingText] = useState("")
   const [erro, setErro] = useState<string | null>(null)
-  const [historicoCarregado, setHistoricoCarregado] = useState(false)
+  const [historicoCarregado, setHistoricoCarregado] = useState(
+    () => readThread().length > 0,
+  )
   const [enviandoAnexo, setEnviandoAnexo] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
@@ -161,8 +343,11 @@ function ChatPanel({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Carrega histórico ao abrir (só 1 vez)
+  // Carrega histórico ao abrir — apenas se sessionStorage estava vazio.
+  // Quando user já tem thread em memória (sessionStorage), confiamos nela
+  // pra evitar piscar / sobrescrever streaming em curso.
   useEffect(() => {
+    if (historicoCarregado) return
     ;(async () => {
       try {
         const res = await fetch("/api/widget-ia/historico", {
@@ -170,7 +355,9 @@ function ChatPanel({
         })
         if (res.ok) {
           const data = (await res.json()) as { mensagens: Mensagem[] }
-          setMensagens(data.mensagens ?? [])
+          const msgs = data.mensagens ?? []
+          setMensagens(msgs)
+          writeThread(msgs)
         }
       } catch {
         /* silencioso — começa vazio */
@@ -178,7 +365,12 @@ function ChatPanel({
         setHistoricoCarregado(true)
       }
     })()
-  }, [])
+  }, [historicoCarregado])
+
+  // Persiste em sessionStorage sempre que mensagens mudam
+  useEffect(() => {
+    if (mensagens.length > 0) writeThread(mensagens)
+  }, [mensagens])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -345,7 +537,8 @@ function ChatPanel({
 
   return (
     <>
-      <div className="widget-ia-backdrop" onClick={onClose} aria-hidden="true" />
+      {/* Backdrop só no mobile — clique minimiza (preserva thread) em vez de fechar */}
+      <div className="widget-ia-backdrop" onClick={widget.minimize} aria-hidden="true" />
       <div
         role="dialog"
         aria-label="Chat com a IA AgroBridge"
@@ -433,8 +626,39 @@ function ChatPanel({
           </Link>
           <button
             type="button"
+            aria-label="Minimizar"
+            title="Minimizar (mantém a conversa)"
+            onClick={widget.minimize}
+            style={{
+              background: "transparent",
+              border: 0,
+              color: "var(--muted)",
+              cursor: "pointer",
+              padding: 6,
+              borderRadius: 6,
+              display: "inline-flex",
+            }}
+            onMouseEnter={(e) =>
+              (e.currentTarget.style.color = "var(--ink)")
+            }
+            onMouseLeave={(e) =>
+              (e.currentTarget.style.color = "var(--muted)")
+            }
+          >
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+              <path
+                d="M3 8h10"
+                stroke="currentColor"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+              />
+            </svg>
+          </button>
+          <button
+            type="button"
             aria-label="Fechar"
-            onClick={onClose}
+            title="Fechar (limpa a aba ao recarregar)"
+            onClick={widget.close}
             style={{
               background: "transparent",
               border: 0,
