@@ -20,11 +20,11 @@ const SITE_URL =
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "AgroBridge — Crédito rural aprovado",
+    default: "AgroBridge — Mais Crédito Aprovado, Menos Burocracia",
     template: "%s · AgroBridge",
   },
   description:
-    "Consultoria especializada em crédito rural. Entrevista com IA, checklist personalizado e laudo técnico no padrão que o banco aprova.",
+    "Documento certo, no lugar certo, com a defesa técnica certa. Assessoria completa pra produtor que quer parar de perder tempo e começar a aprovar mais financiamento.",
   applicationName: "AgroBridge",
   authors: [{ name: "AgroBridge" }],
   openGraph: {
@@ -32,17 +32,17 @@ export const metadata: Metadata = {
     locale: "pt_BR",
     url: SITE_URL,
     siteName: "AgroBridge",
-    title: "AgroBridge — Crédito rural aprovado",
+    title: "AgroBridge — Mais Crédito Aprovado, Menos Burocracia",
     description:
-      "Entrevista com IA, checklist personalizado e dossiê técnico pronto pra banco.",
-    // images: injetadas automaticamente do app/opengraph-image.tsx
+      "Documento certo, no lugar certo, com a defesa técnica certa. Assessoria completa pra produtor que quer parar de perder tempo e começar a aprovar mais financiamento.",
+    // images: injetadas automaticamente do app/opengraph-image.png
   },
   twitter: {
     card: "summary_large_image",
-    title: "AgroBridge — Crédito rural aprovado",
+    title: "AgroBridge — Mais Crédito Aprovado, Menos Burocracia",
     description:
-      "Entrevista com IA, checklist personalizado e dossiê técnico pronto pra banco.",
-    // images: injetadas automaticamente do app/twitter-image.tsx
+      "Documento certo, no lugar certo, com a defesa técnica certa. Assessoria completa pra produtor que quer parar de perder tempo e começar a aprovar mais financiamento.",
+    // images: injetadas automaticamente do app/twitter-image.png
   },
   // icons: removido — Next 16 injeta automaticamente baseado em
   // app/icon.tsx (favicon 32×32) e app/apple-icon.tsx (180×180).
