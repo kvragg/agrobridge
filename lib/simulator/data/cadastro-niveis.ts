@@ -1,6 +1,6 @@
 // Os 3 níveis de "cadastro AgroBridge" com teto de score por nível.
-// Padrão AgroBridge é o pacote completo que a mesa técnica monta —
-// é o produto principal pago da plataforma.
+// Padrão AgroBridge é o pacote completo que a consultoria especializada
+// monta — é o produto principal pago da plataforma.
 
 export type CadastroNivelId =
   | 'desatualizado'
@@ -74,7 +74,7 @@ export const CADASTRO_NIVEIS: CadastroNivel[] = [
     ],
     requisitos_faltantes: [],
     resumo_curto:
-      'Pacote completo da mesa técnica AgroBridge. Score destrava até 100 e bônus +15.',
+      'Pacote completo da consultoria especializada AgroBridge. Score destrava até 100 e bônus +15.',
   },
 ]
 

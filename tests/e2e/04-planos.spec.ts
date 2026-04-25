@@ -22,12 +22,12 @@ test.describe('Planos (comercial)', () => {
       page.getByRole('heading', { name: /^doss[iî][eê] banc[aá]rio completo$/i })
     ).toBeVisible()
     await expect(
-      page.getByRole('heading', { name: /mesa de cr[eé]dito/i })
+      page.getByRole('heading', { name: /assessoria premium/i })
     ).toBeVisible()
 
     const html = (await page.content()).toLowerCase()
-    expect(html).toMatch(/29,99/)
-    expect(html).toMatch(/297,99/)
-    expect(html).toMatch(/697,99/)
+    expect(html).toMatch(/79,99/)
+    expect(html).toMatch(/397,00/)
+    expect(html).toMatch(/1\.497,00/)
   })
 })

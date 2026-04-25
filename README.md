@@ -94,8 +94,9 @@ proxy.ts              Middleware Next 16 (auth + headers + no-store)
 
 1. Produtor cadastra em `/cadastro` → confirma email.
 2. `/entrevista/nova` → Haiku coleta perfil estruturado.
-3. `/planos` → escolhe Bronze (R$29,99) / Prata (R$297,99) / Ouro
-   (R$697,99) → Cakto checkout → webhook confirma pagamento.
+3. `/planos` → escolhe Bronze (R$ 79,99) / Prata (R$ 397,00) / Ouro
+   (R$ 1.497,00) → Cakto checkout → webhook confirma pagamento.
+   Todos com garantia incondicional de 7 dias.
 4. `/checklist/[id]` → Sonnet gera lista personalizada com links
    oficiais (CAR, CCIR, ITR, CNDs, etc.).
 5. Upload de documentos → validação IA (magic bytes + Sonnet).

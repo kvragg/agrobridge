@@ -103,7 +103,7 @@ export function simular(
     deltas.push({
       fator: `cadastro_${nivel.id}`,
       delta: nivel.delta_adicional,
-      motivo: `Cadastro ${nivel.nome} — pacote completo da mesa.`,
+      motivo: `Cadastro ${nivel.nome} — pacote completo da consultoria.`,
     })
   }
 

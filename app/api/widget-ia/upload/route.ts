@@ -225,7 +225,7 @@ export async function POST(request: NextRequest) {
       tamanho_kb: Math.round(file.size / 1024),
       nome_arquivo: file.name,
       validacao_status: 'pendente_manual',
-      mensagem_ia: `Arquivo "${file.name}" armazenado. Maior que 20MB — validação automática não é possível nesse tamanho. A mesa técnica revisa manualmente. O documento já está vinculado ao seu dossiê.`,
+      mensagem_ia: `Arquivo "${file.name}" armazenado. Maior que 20MB — validação automática não é possível nesse tamanho. A consultoria especializada revisa manualmente. O documento já está vinculado ao seu dossiê.`,
     })
   }
 

@@ -1,5 +1,5 @@
 /**
- * PDF Ouro · Mesa de Crédito (Mentoria)
+ * PDF Ouro · Assessoria Premium 1:1 (Mentoria)
  *
  * Wrapper thin sobre `pdf-v06.ts` (template único Verde Agro Premium).
  * Ouro renderiza 6 páginas base + 3 exclusivas (gargalos ocultos,

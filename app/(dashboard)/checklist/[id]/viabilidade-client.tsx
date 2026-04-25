@@ -76,7 +76,7 @@ export default function ViabilidadeClient({
           Seu Parecer de Viabilidade
         </h1>
         <p className="mt-1 text-sm text-gray-500">
-          Leitura técnica do seu caso, no padrão de mesa de crédito. Curto, direto e útil.
+          Leitura técnica do seu caso, no padrão de comitê de crédito. Curto, direto e útil.
         </p>
       </div>
 

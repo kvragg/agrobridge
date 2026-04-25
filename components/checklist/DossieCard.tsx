@@ -111,7 +111,7 @@ export default function DossieCard({
     setTimeout(() => setCopiado(false), 2000)
   }
 
-  const valorBRL = `R$ ${((pagamento?.valor_centavos ?? 29799) / 100).toLocaleString(
+  const valorBRL = `R$ ${((pagamento?.valor_centavos ?? 39700) / 100).toLocaleString(
     'pt-BR',
     { minimumFractionDigits: 2 }
   )}`

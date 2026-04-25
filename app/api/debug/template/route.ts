@@ -96,7 +96,7 @@ export async function POST(request: NextRequest) {
       return enviarPagamentoConfirmado({
         to: destino,
         nome: nomeFake,
-        valor: 297.99,
+        valor: 397.0,
         processoId: processoFake,
         tierNome: 'Prata',
       })

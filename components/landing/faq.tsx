@@ -25,7 +25,7 @@ const FAQS = [
   },
   {
     q: "Quanto custa?",
-    a: "O Diagnóstico (R$ 29,99) é a porta de entrada. A partir daí, Dossiê (R$ 297,99) entrega o documento institucional, e Mesa de Crédito (R$ 697,99) acompanha até a aprovação. Pagamento único em todos os planos — nenhuma mensalidade.",
+    a: "O Diagnóstico Rápido (R$ 79,99) é a porta de entrada. A partir daí, Dossiê Bancário Completo (R$ 397,00) entrega o documento institucional, e a Assessoria Premium 1:1 (R$ 1.497,00) acompanha você pessoalmente até a aprovação. Pagamento único em todos os planos — nenhuma mensalidade. Garantia incondicional de 7 dias.",
   },
   {
     q: "Quais linhas de crédito vocês atendem?",
@@ -93,7 +93,7 @@ export function Faq() {
               técnicas do seu caso. Tratativa humana com o fundador entra
               no plano{" "}
               <span style={{ color: "var(--gold)", fontWeight: 500 }}>
-                Acesso à Mesa de Crédito
+                Assessoria Premium 1:1
               </span>
               .
             </p>

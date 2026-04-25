@@ -124,7 +124,7 @@ Ponto de atenção: o crédito rural ativo (saldo R$ 480.000,00) coexistindo com
 
 ## Próximo passo natural
 
-O próximo passo natural pro seu caso é o **Dossiê Bancário Completo (plano Prata, R$ 297,99)**. Ele inclui o checklist documental personalizado com passo a passo de obtenção, a defesa técnica de crédito redigida em linguagem de comitê, o roteiro de visita técnica do analista e o PDF consolidado pronto pra entregar ao gerente.
+O próximo passo natural pro seu caso é o **Dossiê Bancário Completo (plano Prata, R$ 397,00)**. Ele inclui o checklist documental personalizado com passo a passo de obtenção, a defesa técnica de crédito redigida em linguagem de comitê, o roteiro de visita técnica do analista e o PDF consolidado pronto pra entregar ao gerente. Garantia incondicional de 7 dias.
 `
 
 const laudoPrata = `## Análise técnica geral

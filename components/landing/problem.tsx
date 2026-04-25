@@ -73,7 +73,7 @@ export function Problem() {
               Você produz no campo.
               <br />
               <span style={{ color: "var(--muted)" }}>
-                Mas perde dinheiro na mesa do gerente.
+                Mas perde dinheiro no balcão do banco.
               </span>
             </h2>
           </div>

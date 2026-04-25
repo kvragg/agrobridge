@@ -65,9 +65,9 @@ export function FreePaywall({
           O simulador completo com radar, plano de subida, comparador de
           cenários e histórico — desbloqueia a partir do{" "}
           <strong style={{ color: "var(--gold)" }}>
-            Diagnóstico Rápido (R$ 29,99)
+            Diagnóstico Rápido (R$ 79,99)
           </strong>
-          . Pagamento único.
+          . Pagamento único, garantia de 7 dias.
         </p>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
           <Button variant="accent" size="lg" href="/planos">

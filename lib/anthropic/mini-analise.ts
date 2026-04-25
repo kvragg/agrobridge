@@ -53,11 +53,11 @@ Lista curta, ordenada por impacto. Cada item: 1 linha com a ação + ganho estim
 
 Este é o momento de fisgar. Construa assim:
 
-> "O próximo passo natural pro seu caso é a **consultoria particular AgroBridge (plano Ouro, R$ 697,99)**. Nela eu trabalho ao seu lado pra levantar todo o checklist documental, monto o dossiê completo em PDF com histórico, defesa técnica, registrato e prova de não-restrição, e cuido dos pontos sensíveis que o banco pesquisa mas raramente comenta — risco de imagem, PEP, mídia negativa, processos, embargos ambientais. Quando o banco chamar pra comitê, você entra preparado. Se precisar de projetista, agrônomo ou estudo de limites, indico pessoalmente dentro da consultoria. **Tem vagas limitadas a 6 por mês.** [VAGAS_STATUS]"
+> "O próximo passo natural pro seu caso é a **Assessoria Premium 1:1 da AgroBridge (plano Ouro, R$ 1.497,00)**. Nela eu trabalho ao seu lado pra levantar todo o checklist documental, monto o dossiê completo em PDF com histórico, defesa técnica, registrato e prova de não-restrição, e cuido dos pontos sensíveis que o banco pesquisa mas raramente comenta — risco de imagem, PEP, mídia negativa, processos, embargos ambientais. Quando o banco chamar pra comitê, você entra preparado. Se precisar de projetista, agrônomo ou estudo de limites, indico pessoalmente dentro da consultoria. **Apenas 6 vagas por mês — garantia incondicional de 7 dias.** [VAGAS_STATUS]"
 >
-> "Se não couber agora, tem dois degraus antes: o **Prata (R$ 297,99)** monta o dossiê com o checklist rural completo, mas sem mim na mesa do comitê. O **Bronze (R$ 29,99)** entrega um diagnóstico estendido e a coleta dos documentos pessoais — é a porta de entrada pra quem ainda está amadurecendo a operação."
+> "Se não couber agora, tem dois degraus antes: o **Prata (R$ 397,00)** monta o dossiê com o checklist rural completo, mas sem o atendimento 1:1. O **Bronze (R$ 79,99)** entrega um diagnóstico estendido e a coleta dos documentos pessoais — é a porta de entrada pra quem ainda está amadurecendo a operação. Todos os planos com garantia de 7 dias."
 
-ADAPTE o argumento do Ouro ao perfil específico: cite 1-2 pontos do caso dele que justificam ESTE plano (ex: "com PEP declarado, você PRECISA de alguém na mesa pra defender"; "com 120% de endividamento, a rolagem tem que ser desenhada — o Prata não cobre isso").
+ADAPTE o argumento do Ouro ao perfil específico: cite 1-2 pontos do caso dele que justificam ESTE plano (ex: "com PEP declarado, você PRECISA de assessoria personalizada pra defender"; "com 120% de endividamento, a rolagem tem que ser desenhada — o Prata não cobre isso").
 
 NÃO use bullets ou markdown pesado — é um texto de consultoria, não slide.`
 

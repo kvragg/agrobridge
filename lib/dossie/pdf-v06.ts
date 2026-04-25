@@ -201,29 +201,29 @@ function nomeProduto(tier: TierLaudo): string {
     case 'dossie':
       return 'Dossiê Bancário Completo'
     case 'mentoria':
-      return 'Mesa de Crédito'
+      return 'Assessoria Premium 1:1'
   }
 }
 
 function precoTier(tier: TierLaudo): string {
   switch (tier) {
     case 'diagnostico':
-      return 'R$ 29,99'
+      return 'R$ 79,99'
     case 'dossie':
-      return 'R$ 297,99'
+      return 'R$ 397,00'
     case 'mentoria':
-      return 'R$ 697,99'
+      return 'R$ 1.497,00'
   }
 }
 
 function taglineTier(tier: TierLaudo): string {
   switch (tier) {
     case 'diagnostico':
-      return 'Pra chegar na agência sabendo o que falar.'
+      return 'Pra chegar na agência sabendo exatamente o que falar.'
     case 'dossie':
-      return 'O pedido pronto pra sentar na mesa do comitê.'
+      return 'O pedido pronto pra entregar ao comitê de crédito.'
     case 'mentoria':
-      return 'Revisão cirúrgica direto com quem sentava na mesa.'
+      return 'Acompanhamento pessoal direto com o fundador.'
   }
 }
 
@@ -520,11 +520,11 @@ function renderSumarioExecutivo(doc: PDFDoc, input: LaudoInput): void {
 
   doc.moveDown(0.8)
 
-  // Pull quote com parecer da mesa
+  // Pull quote com parecer da consultoria
   renderPullQuote(
     doc,
     `"${pullQuoteSumario(ga.parecer)}"`,
-    'Mesa Técnica AgroBridge · Parecer preliminar',
+    'Consultoria Especializada AgroBridge · Parecer preliminar',
   )
 
   doc.moveDown(0.8)
@@ -762,7 +762,7 @@ function renderParecer(doc: PDFDoc, input: LaudoInput): void {
     .fontSize(9.5)
     .fillColor(V06.ink2)
     .text(
-      'Mesa Técnica de Crédito · consultoria especializada em crédito rural.',
+      'Consultoria Especializada em Crédito Rural · Assessoria de crédito.',
       rx,
       y0 + 42,
       { width: colW, lineGap: 3 },
@@ -798,7 +798,7 @@ function renderParecer(doc: PDFDoc, input: LaudoInput): void {
     .font(F.mono)
     .fontSize(7.5)
     .fillColor(V06.muted)
-    .text('Mesa Técnica · AgroBridge', MARGIN, sigY + 36, {
+    .text('Consultoria AgroBridge · responsável técnico', MARGIN, sigY + 36, {
       width: sigColW,
       characterSpacing: 1.2,
       lineBreak: false,
@@ -1013,7 +1013,7 @@ function renderRoteiroComite(doc: PDFDoc, input: LaudoInput): void {
     .fontSize(10)
     .fillColor(V06.muted)
     .text(
-      'Quando o gerente leva o pedido pra mesa, a defesa oral conta tanto quanto o dossiê. Este roteiro estrutura o que dizer — na ordem em que o comitê pergunta — pra deixar a operação pronta pra aprovação.',
+      'Quando o gerente leva o pedido ao comitê de crédito, a defesa oral conta tanto quanto o dossiê. Este roteiro estrutura o que dizer — na ordem em que o comitê pergunta — pra deixar a operação pronta pra aprovação.',
       MARGIN,
       doc.y + 14,
       { width: CONTENT_W, align: 'justify', lineGap: 2 },
@@ -1656,7 +1656,7 @@ function tituloCapa(tier: TierLaudo): string {
     return 'Diagnóstico\nde viabilidade\nde {{em}}crédito.'
   }
   if (tier === 'mentoria') {
-    return 'Parecer\nestratégico\npara a {{em}}mesa.'
+    return 'Parecer\nestratégico\nde {{em}}crédito.'
   }
   return 'Crédito rural\nno padrão\ndo {{em}}comitê.'
 }
@@ -1667,14 +1667,14 @@ function ledeCapa(input: LaudoInput): string {
     return `Leitura preliminar da viabilidade de crédito rural pleiteada por ${nome}, com base no perfil autodeclarado em entrevista. Não substitui o dossiê completo com defesa de crédito.`
   }
   if (input.tier === 'mentoria') {
-    return `Revisão cirúrgica do dossiê de ${nome} conduzida pela Mesa Técnica — identificação de gargalos ocultos, parecer estratégico e roteiro de defesa oral em comitê.`
+    return `Revisão cirúrgica do dossiê de ${nome} conduzida pela Consultoria Especializada — identificação de gargalos ocultos, parecer estratégico e roteiro de defesa oral em comitê.`
   }
   return `Laudo técnico institucional — caracterização da propriedade, análise de viabilidade, estrutura de garantias e parecer conclusivo sobre a operação pleiteada por ${nome}.`
 }
 
 function kickerTier(tier: TierLaudo): string {
   if (tier === 'diagnostico') return 'Diagnóstico de viabilidade'
-  if (tier === 'mentoria') return 'Mesa de Crédito · Plano Ouro'
+  if (tier === 'mentoria') return 'Assessoria Premium · Plano Ouro'
   return 'Operação de crédito rural'
 }
 

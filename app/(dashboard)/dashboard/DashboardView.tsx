@@ -492,7 +492,7 @@ function calcularProximaAcao(ctx: {
       variant: "acao",
       titulo: "Sua análise gratuita está pronta. Hora do dossiê.",
       descricao:
-        "Escolha entre Diagnóstico Rápido (R$ 29,99), Dossiê Completo (R$ 297,99) ou Mesa de Crédito (R$ 697,99).",
+        "Escolha entre Diagnóstico Rápido (R$ 79,99), Dossiê Completo (R$ 397,00) ou Assessoria Premium 1:1 (R$ 1.497,00). Garantia incondicional de 7 dias.",
       cta: { label: "Ver planos", href: "/planos" },
     }
   }

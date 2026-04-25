@@ -49,54 +49,81 @@ const PLANOS: Plano[] = [
   {
     id: "diagnostico",
     nome: "Diagnóstico Rápido",
-    tagline: "Pra chegar na agência sabendo o que falar.",
-    preco: "29,99",
+    tagline: "Pra chegar na agência sabendo exatamente o que falar.",
+    preco: "79,99",
     accent: "muted",
     features: [
-      { text: "Liberação imediata da IA para entrevista técnica" },
-      { text: "PDF tático de posicionamento bancário" },
+      { text: "Entrevista técnica completa com IA estratégica" },
+      { text: "Diagnóstico tático em PDF — posicionamento bancário" },
       { text: "Roteiro do que dizer — e do que NÃO falar — ao gerente" },
-      { text: "Leitura crítica do seu perfil em linguagem de comitê" },
+      { text: "Leitura crítica do perfil em linguagem de comitê" },
+      { text: "Garantia incondicional de 7 dias", destaque: true },
     ],
-    cta: "Quero o diagnóstico",
+    cta: "Quero clareza antes do banco",
     href: CAKTO_DIAGNOSTICO,
   },
   {
     id: "dossie",
     nome: "Dossiê Bancário Completo",
-    tagline: "O pedido pronto pra sentar na mesa do comitê.",
-    preco: "297,99",
+    tagline: "O pedido pronto pra entregar ao comitê de crédito.",
+    preco: "397,00",
     accent: "green",
     destaque: true,
     badge: "Mais escolhido",
     features: [
       { text: "Tudo do Diagnóstico Rápido", destaque: true },
       { text: "Dossiê Bancário profissional em PDF" },
-      { text: "Sumário executivo e checklist 100% ordenado" },
-      { text: "Documentos anexados no padrão do banco" },
+      { text: "Checklist 100% ordenado conforme MCR" },
+      { text: "Validação por IA de cada documento anexado" },
       { text: "Defesa de Crédito em linguagem de comitê" },
       { text: "Roteiro de Visita Técnica do analista na fazenda" },
+      { text: "Garantia incondicional de 7 dias", destaque: true },
     ],
     cta: "Quero o dossiê completo",
     href: CAKTO_DOSSIE,
   },
   {
     id: "mentoria",
-    nome: "Acesso à Mesa de Crédito",
-    tagline: "Revisão cirúrgica direto com quem sentava na mesa.",
-    preco: "697,99",
+    nome: "Assessoria Premium 1:1",
+    tagline: "Acompanhamento pessoal direto com o fundador.",
+    preco: "1.497,00",
     accent: "gold",
     features: [
       { text: "Tudo do Dossiê Completo", destaque: true },
-      { text: "Consultoria pessoal e direta com o fundador" },
-      { text: "Revisão minuciosa do seu dossiê" },
-      { text: "Correção de gargalos ocultos antes do banco ver" },
-      {
-        text: "Alinhamento estratégico com a ótica de quem passou 14 anos no SFN",
-      },
+      { text: "Sessão 1:1 (45 min) com o fundador" },
+      { text: "Revisão cirúrgica do seu dossiê pessoalmente" },
+      { text: "Análise de gargalos ocultos que o comitê pesquisa" },
+      { text: "Parecer estratégico assinado anexo ao dossiê" },
+      { text: "Roteiro de defesa oral em comitê personalizado" },
+      { text: "Vaga garantida no mês — apenas 6 produtores" },
+      { text: "Garantia incondicional de 7 dias", destaque: true },
     ],
-    cta: "Quero a mentoria",
+    cta: "Quero a vaga deste mês",
     href: CAKTO_MENTORIA,
+  },
+]
+
+interface AddOn {
+  nome: string
+  preco: string
+  desc: string
+}
+
+const ADDONS: AddOn[] = [
+  {
+    nome: "Revisão jurídica de matrícula",
+    preco: "+R$ 150",
+    desc: "Análise dominial e de ônus pra cada matrícula do seu imóvel",
+  },
+  {
+    nome: "Análise de saldo de rebanho",
+    preco: "+R$ 200",
+    desc: "Leitura técnica do seu saldo Iagro/AgroDefesa pra crédito pecuário",
+  },
+  {
+    nome: "WhatsApp prioritário · 30 dias",
+    preco: "+R$ 99",
+    desc: "Resposta em até 1h em horário comercial direto comigo",
   },
 ]
 
@@ -214,9 +241,10 @@ export default function PlanosClient({
                 maxWidth: 480,
               }}
             >
-              Pagamento único, sem fidelidade. Cada nível foi desenhado por quem
-              passou 14 anos no SFN gerindo carteira Agro em banco privado —
-              você leva o pedido pronto pra mesa e segue com a sua safra.
+              Pagamento único, sem fidelidade, garantia de 7 dias. Cada nível
+              foi desenhado por quem passou 14 anos no Sistema Financeiro
+              Nacional gerindo carteira Agro em banco privado — assessoria de
+              crédito rural construída a partir de dentro do balcão.
             </p>
           </div>
         </div>
@@ -253,11 +281,86 @@ export default function PlanosClient({
           ))}
         </div>
 
+        {/* Bloco de add-ons opcionais (Prata e Ouro) */}
+        <div style={{ marginTop: 64 }}>
+          <Eyebrow>Adicionais sob consulta · Prata e Ouro</Eyebrow>
+          <h2
+            style={{
+              margin: "12px 0 8px",
+              fontSize: 22,
+              fontWeight: 500,
+              letterSpacing: "-0.02em",
+              color: "#fff",
+            }}
+          >
+            Personalize sua assessoria
+          </h2>
+          <p
+            style={{
+              fontSize: 14,
+              color: "var(--ink-2)",
+              maxWidth: 640,
+              lineHeight: 1.55,
+              margin: "0 0 20px",
+            }}
+          >
+            Opções pra reforçar pontos específicos do seu caso. Solicite junto
+            do plano via email ou WhatsApp — adicionamos no checkout final.
+          </p>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(3, 1fr)",
+              gap: 16,
+            }}
+            className="planos-addons"
+          >
+            {ADDONS.map((a) => (
+              <GlassCard key={a.nome} glow="none" padding={20} hover={false}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12 }}>
+                  <div
+                    className="mono"
+                    style={{
+                      fontSize: 11,
+                      letterSpacing: "0.14em",
+                      textTransform: "uppercase",
+                      color: "var(--gold)",
+                    }}
+                  >
+                    {a.preco}
+                  </div>
+                </div>
+                <div
+                  style={{
+                    marginTop: 8,
+                    fontSize: 15,
+                    fontWeight: 500,
+                    color: "#fff",
+                    letterSpacing: "-0.01em",
+                  }}
+                >
+                  {a.nome}
+                </div>
+                <div
+                  style={{
+                    marginTop: 8,
+                    fontSize: 12.5,
+                    color: "var(--ink-2)",
+                    lineHeight: 1.5,
+                  }}
+                >
+                  {a.desc}
+                </div>
+              </GlassCard>
+            ))}
+          </div>
+        </div>
+
         <div
           style={{
             marginTop: 56,
             display: "grid",
-            gridTemplateColumns: "repeat(3, 1fr)",
+            gridTemplateColumns: "repeat(4, 1fr)",
             gap: 16,
           }}
           className="planos-trust"
@@ -274,6 +377,11 @@ export default function PlanosClient({
           />
           <TrustCard
             icon={Icon.doc(16)}
+            label="Garantia 7 dias"
+            sub="Devolvemos 100% se não atender, sem perguntas"
+          />
+          <TrustCard
+            icon={Icon.spark(16)}
             label="Pagamento único"
             sub="Nenhuma cobrança recorrente"
           />
@@ -304,9 +412,12 @@ export default function PlanosClient({
         @media (max-width: 1080px){
           .planos-grid{ grid-template-columns: 1fr !important; max-width: 560px; margin: 0 auto !important }
           .planos-header{ grid-template-columns: 1fr !important; gap: 32px !important; align-items: flex-start !important }
+          .planos-addons{ grid-template-columns: 1fr 1fr !important }
+          .planos-trust{ grid-template-columns: 1fr 1fr !important }
         }
         @media (max-width: 760px){
           .planos-trust{ grid-template-columns: 1fr !important }
+          .planos-addons{ grid-template-columns: 1fr !important }
         }
       `}</style>
     </DashboardShell>

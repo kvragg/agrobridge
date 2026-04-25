@@ -191,7 +191,7 @@ describe('[PDF2] Prata · Dossiê Bancário Completo', () => {
 
 })
 
-describe('[PDF3] Ouro · Mesa de Crédito (Mentoria)', () => {
+describe('[PDF3] Ouro · Assessoria Premium 1:1 (Mentoria)', () => {
   it('gera PDF válido dentro do range esperado', async () => {
     const pdf = await montarMentoriaPDF({
       produtor,

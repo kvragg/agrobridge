@@ -964,7 +964,7 @@ function UpgradeModal({ onClose }: { onClose: () => void }) {
           }}
         >
           A partir do <strong style={{ color: "var(--gold)" }}>Diagnóstico
-          Rápido (R$ 29,99)</strong> você libera a IA AgroBridge em todas as
+          Rápido (R$ 79,99)</strong> você libera a IA AgroBridge em todas as
           telas — consulta, anexo de documentos e guia por cada doc.
         </p>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>

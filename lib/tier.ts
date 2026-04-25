@@ -1,10 +1,14 @@
 // Tier de produto pago — define o que cada usuário pode acessar.
 // Salvo em `processos.perfil_json._tier` pelo webhook do Cakto.
 //
-// Hierarquia (cumulativa):
-//   diagnostico (R$29,99)  → Entrevista + Análise de Viabilidade (PDF curto)
-//   dossie      (R$297,99) → Tudo acima + Checklist + Dossiê + Defesa
-//   mentoria    (R$697,99) → Tudo acima + 30min consultoria + revisão dossiê
+// Hierarquia (cumulativa) — preços vigentes a partir de 2026-04-24:
+//   diagnostico (R$ 79,99)    → Entrevista + Diagnóstico de Viabilidade
+//   dossie      (R$ 397,00)   → Tudo acima + Checklist + Dossiê + Defesa
+//   mentoria    (R$ 1.497,00) → Tudo acima + Assessoria 1:1 com o fundador
+//
+// IMPORTANTE: o preço cobrado é o configurado no Cakto (CAKTO_PRODUTO_*).
+// Esta tabela é fallback/referência interna — atualizar produtos no
+// painel Cakto quando alterar valores aqui.
 
 export type Tier = 'diagnostico' | 'dossie' | 'mentoria'
 
@@ -15,15 +19,15 @@ export const TIER_NIVEL: Record<Tier, number> = {
 }
 
 export const TIER_PRECO_CENTAVOS: Record<Tier, number> = {
-  diagnostico: 2999,
-  dossie: 29799,
-  mentoria: 69799,
+  diagnostico: 7999,
+  dossie: 39700,
+  mentoria: 149700,
 }
 
 export const TIER_NOME: Record<Tier, string> = {
   diagnostico: 'Diagnóstico Rápido',
   dossie: 'Dossiê Bancário Completo',
-  mentoria: 'Acesso à Mesa de Crédito',
+  mentoria: 'Assessoria Premium 1:1',
 }
 
 export function isTier(value: unknown): value is Tier {
