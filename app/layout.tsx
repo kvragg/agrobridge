@@ -35,20 +35,17 @@ export const metadata: Metadata = {
     title: "AgroBridge — Crédito rural aprovado",
     description:
       "Entrevista com IA, checklist personalizado e dossiê técnico pronto pra banco.",
-    // TODO(Paulo): exportar public/og-image.png (1200×630) do Figma e ligar aqui.
-    // images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "AgroBridge" }],
+    // images: injetadas automaticamente do app/opengraph-image.tsx
   },
   twitter: {
     card: "summary_large_image",
     title: "AgroBridge — Crédito rural aprovado",
     description:
       "Entrevista com IA, checklist personalizado e dossiê técnico pronto pra banco.",
+    // images: injetadas automaticamente do app/twitter-image.tsx
   },
-  icons: {
-    icon: "/favicon.ico",
-    shortcut: "/favicon.ico",
-    // TODO(Paulo): apple-icon.png 180×180 quando disponível.
-  },
+  // icons: removido — Next 16 injeta automaticamente baseado em
+  // app/icon.tsx (favicon 32×32) e app/apple-icon.tsx (180×180).
 };
 
 export const viewport = {
