@@ -443,7 +443,7 @@ export function SimuladorClient({
             onChange={(v) => patch({ cpf_cnpj_regular: v })}
           />
           <Toggle
-            label="ITR em dia (5 últimos exercícios)"
+            label="ITR em dia (último exercício)"
             value={input.itr_em_dia}
             onChange={(v) => patch({ itr_em_dia: v })}
           />

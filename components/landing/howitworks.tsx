@@ -32,7 +32,7 @@ const STEPS: Phase[] = [
     items: [
       "CAR — Cadastro Ambiental Rural",
       "CCIR atualizado",
-      "ITR dos últimos 5 exercícios",
+      "ITR do último exercício",
       "Contrato de arrendamento registrado",
       "DAP ou declaração de aptidão",
     ],
