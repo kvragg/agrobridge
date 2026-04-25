@@ -96,6 +96,7 @@ export function ChecklistGenerico({
 
   const [abertos, setAbertos] = useState<Set<string>>(new Set())
   const [concluidos, setConcluidos] = useState<Set<string>>(new Set())
+  const [hidratado, setHidratado] = useState(false)
   const [socioModal, setSocioModal] = useState<SocioPJ | "novo" | null>(null)
   const [tipoModalAberto, setTipoModalAberto] = useState(false)
 
@@ -107,10 +108,13 @@ export function ChecklistGenerico({
     } catch {
       // localStorage indisponível (modo privado etc) — ignora.
     }
+    setHidratado(true)
   }, [])
 
-  // Salva sempre que muda.
+  // Salva sempre que muda — só DEPOIS da hidratação inicial pra não
+  // sobrescrever o localStorage com Set vazio antes do load terminar.
   useEffect(() => {
+    if (!hidratado) return
     try {
       localStorage.setItem(
         "agro_chk_concluidos",
@@ -119,7 +123,7 @@ export function ChecklistGenerico({
     } catch {
       // ignore
     }
-  }, [concluidos])
+  }, [concluidos, hidratado])
 
   function toggle(id: string) {
     setAbertos((s) => {
@@ -303,7 +307,7 @@ export function ChecklistGenerico({
             onEditSocio={(s) => setSocioModal(s)}
             onRemoveSocio={async (id) => {
               const conf = window.confirm(
-                "Remover esse sócio? Os documentos já anexados ficam preservados em backup por 30 dias caso volte atrás.",
+                "Remover esse sócio? Os documentos já anexados ficam preservados — dá pra recadastrar depois se for engano.",
               )
               if (!conf) return
               const r = await fetch(`/api/conta/socios?id=${encodeURIComponent(id)}`, {
@@ -381,6 +385,7 @@ export function ChecklistGenerico({
       {tipoModalAberto && (
         <ModalTipoLead
           atual={leadType}
+          temSocios={socios.length > 0}
           onClose={() => setTipoModalAberto(false)}
           onSalvo={(novo) => {
             setLeadType(novo)
@@ -940,7 +945,7 @@ function SociosBloco({
                       item={item}
                       aberto={abertos.has(item.id)}
                       concluido={concluidos.has(item.id)}
-                      quickWin={QUICK_WIN_SLUGS.has(item.id.replace(/^socio_[^_]+_/, "socio_"))}
+                      quickWin={QUICK_WIN_SLUGS.has(item.id.replace(/^socio_[^_]+_/, ""))}
                       onToggle={() => toggle(item.id)}
                       onConcluir={(v) => marcarConcluido(item.id, v)}
                       compact
@@ -1345,10 +1350,12 @@ function ModalShell({
 
 function ModalTipoLead({
   atual,
+  temSocios,
   onClose,
   onSalvo,
 }: {
   atual: LeadType
+  temSocios: boolean
   onClose: () => void
   onSalvo: (novo: LeadType) => void
 }) {
@@ -1359,6 +1366,15 @@ function ModalTipoLead({
   const [erro, setErro] = useState<string | null>(null)
 
   async function salvar() {
+    // Aviso explícito quando trocar PJ → PF com sócios cadastrados —
+    // os sócios não somem do banco (soft kept), mas saem da UI até voltar.
+    if (atual === "pj" && tipo === "pf" && temSocios) {
+      const ok = window.confirm(
+        "Trocar pra Pessoa Física vai esconder os sócios já cadastrados. " +
+          "Eles continuam guardados — se você voltar pra PJ, reaparecem. Continuar?",
+      )
+      if (!ok) return
+    }
     setSalvando(true)
     setErro(null)
     const body =
