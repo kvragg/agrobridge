@@ -46,7 +46,7 @@ export default defineConfig({
     // 3. Specs autenticados: carregam o storageState do setup.
     {
       name: 'autenticado',
-      testMatch: /(04-planos|05-conta-dados|06-dashboard-free|07-chat-2-msgs|08-simulador)\.spec\.ts/,
+      testMatch: /(04-planos|05-conta-dados|06-dashboard-free|07-chat-2-msgs|08-simulador|09-checklist-generico|10-widget-ia|11-email-alternativo)\.spec\.ts/,
       use: {
         ...devices['Desktop Chrome'],
         storageState,

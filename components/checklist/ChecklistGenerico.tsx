@@ -489,6 +489,49 @@ function ItemCard({
                 </li>
               ))}
             </ol>
+
+            {item.nota_instabilidade && (
+              <div
+                role="note"
+                aria-label="Aviso de instabilidade do portal"
+                style={{
+                  marginTop: 16,
+                  padding: "12px 14px",
+                  background: "rgba(201,168,106,0.08)",
+                  border: "1px solid rgba(201,168,106,0.28)",
+                  borderLeft: "3px solid var(--gold)",
+                  borderRadius: 8,
+                  display: "flex",
+                  gap: 10,
+                  alignItems: "flex-start",
+                }}
+              >
+                <span
+                  aria-hidden
+                  style={{
+                    color: "var(--gold)",
+                    flexShrink: 0,
+                    marginTop: 1,
+                    lineHeight: 1,
+                  }}
+                >
+                  {Icon.spark(14)}
+                </span>
+                <div
+                  style={{
+                    fontSize: 12.5,
+                    lineHeight: 1.55,
+                    color: "var(--ink-2)",
+                    letterSpacing: "-0.005em",
+                  }}
+                >
+                  <strong style={{ color: "var(--gold)", fontWeight: 500 }}>
+                    Plano B se o portal não abrir:{" "}
+                  </strong>
+                  {item.nota_instabilidade}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

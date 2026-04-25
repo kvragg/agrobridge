@@ -36,6 +36,10 @@ export interface ItemChecklistPadrao {
     pronaf?: boolean
     todos?: boolean
   }
+  /** Aviso sutil quando o portal oficial é conhecido por ficar fora do ar
+   *  com frequência (CAF Online, ONR, alguns sistemas estaduais). Mostra
+   *  no expand do item junto com fallback de contato. */
+  nota_instabilidade?: string
 }
 
 export const CATEGORIA_CHECKLIST_LABEL: Record<CategoriaChecklist, string> = {
@@ -168,6 +172,8 @@ export const CHECKLIST_PADRAO: ItemChecklistPadrao[] = [
       "Validade: 30 dias. Se demorou, peça outra antes de protocolar.",
     ],
     aplica_se: { todos: true },
+    nota_instabilidade:
+      "O portal ONR fica instável com frequência. Se não abrir, tente em outro horário (madrugada costuma funcionar) ou vá direto ao cartório do município do imóvel — o serviço presencial é equivalente.",
   },
   {
     id: "cnds",
@@ -207,6 +213,8 @@ export const CHECKLIST_PADRAO: ItemChecklistPadrao[] = [
       "Validade do CAF: 2 anos. Renove antes de protocolar Pronaf novo.",
     ],
     aplica_se: { pronaf: true },
+    nota_instabilidade:
+      "O portal CAF Online (caf.cnae.gov.br) fica fora do ar com frequência. Solução melhor que esperar: vai direto no sindicato rural ou na EMATER do seu município — eles emitem o CAF gratuitamente e mais rápido que pelo portal.",
   },
   {
     id: "comprovante_producao",

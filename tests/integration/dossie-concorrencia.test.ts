@@ -62,6 +62,17 @@ vi.mock("@/lib/email/resend", () => ({
   enviarPagamentoConfirmado: vi.fn(),
 }));
 
+// getEnderecosUsuario faz query Supabase admin (auth.admin.getUserById +
+// perfis_lead) — sem mock trava em network real até timeout. Retornamos
+// dados estáticos coerentes com o seed.
+vi.mock("@/lib/email/enderecos", () => ({
+  getEnderecosUsuario: vi.fn(async () => ({
+    emailPrincipal: "lead@teste.local",
+    emailAlternativo: null,
+    nome: "Lead Teste",
+  })),
+}));
+
 // Rate-limit interfere com teste de concorrência: a 6ª request seria 429
 // antes de exercitar o lock CAS. Como o objetivo aqui é o lock, deixamos
 // OK (rate-limit é coberto por rate-limit-upstash.test.ts).
