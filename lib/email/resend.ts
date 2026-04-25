@@ -226,6 +226,31 @@ function divider(): string {
   return `<div style="height:1px;background:${T.line};margin:24px 0;"></div>`
 }
 
+// Bloco "dica de valor" — destaca em ouro com borda lateral. Usar pra
+// passar 1 informação útil concreta (ex: como tirar CAR, etiqueta
+// MCR, próximo passo). É o que diferencia email genérico de email de
+// alto valor — sempre entregar 1 coisa útil pro produtor além do CTA.
+function dicaValor(titulo: string, corpoHtml: string): string {
+  return `<div style="background:${T.goldDim};border-left:3px solid ${T.gold};padding:14px 16px;border-radius:8px;margin:20px 0;">
+    <p style="margin:0 0 6px;font-family:${T.fontStack};font-size:12.5px;color:${T.gold};font-weight:500;letter-spacing:-0.005em;">${escapeHtml(titulo)}</p>
+    <div style="margin:0;font-family:${T.fontStack};font-size:13.5px;line-height:1.6;color:${T.ink2};">${corpoHtml}</div>
+  </div>`
+}
+
+// Assinatura institucional padrão — vai no fim do CARD (não no footer).
+// Tom: humana mas sem expor pessoa. "Equipe AgroBridge" é tratada como
+// time consolidado (decisão de produto 25/04/2026).
+function assinaturaEquipe(): string {
+  return `<div style="margin-top:28px;padding-top:20px;border-top:1px solid ${T.line};">
+    <p style="margin:0 0 4px;font-family:${T.fontStack};font-size:14px;color:${T.ink};font-weight:500;letter-spacing:-0.005em;">— Equipe AgroBridge</p>
+    <p style="margin:0;font-family:${T.fontStack};font-size:12.5px;color:${T.muted};line-height:1.5;">
+      Dúvida, sugestão ou ajuda em qualquer documento?
+      Responda este e-mail ou escreva pra
+      <a href="mailto:suporte@agrobridge.space" style="color:${T.green};text-decoration:none;">suporte@agrobridge.space</a>.
+    </p>
+  </div>`
+}
+
 function escapeHtml(s: string): string {
   return String(s ?? '')
     .replace(/&/g, '&amp;')
@@ -235,7 +260,139 @@ function escapeHtml(s: string): string {
     .replace(/'/g, '&#39;')
 }
 
+// Pega só o primeiro nome — pra subjects e saudações ("Carlos, …" vs
+// "Carlos da Silva Santos, …"). Se nome vier vazio, devolve fallback.
+function primeiroNome(nome: string, fallback = 'produtor'): string {
+  const n = (nome ?? '').trim().split(/\s+/)[0]
+  return n || fallback
+}
+
+// ── Envio multi-destinatário com fallback corporativo ─────────────
+//
+// Quando o email principal é corporativo (Sicredi, BB, gov etc), envio
+// duplo automático pra principal + alternativo. Isso aumenta drasticamente
+// taxa de entrega pra leads com email institucional bloqueado.
+//
+// Detecção: lib/email/dominios-corporativos.ts. Cliente usa esta função
+// helper em vez de chamar enviarEmail direto pra ter o duplo automático.
+import {
+  isEmailCorporativo,
+  type TipoDominio,
+  tipoDominio,
+} from './dominios-corporativos'
+
+interface EnvioMultiInput {
+  /** Email principal (cadastrado na conta). */
+  emailPrincipal: string
+  /** Email alternativo opcional (pessoal) — só usado se principal é corporativo. */
+  emailAlternativo?: string | null
+  subject: string
+  html: string
+  reply_to?: string
+}
+
+/**
+ * Envia pra principal + alternativo (se principal corporativo). Cada
+ * envio é uma chamada Resend separada (Resend trata `to` como array como
+ * lista de bcc-style — todos veem todos). Pra preservar privacidade entre
+ * destinatários e ter rastro independente, fazemos chamadas paralelas.
+ *
+ * Retorno: success se PELO MENOS UM envio passou. Loga falha do outro.
+ */
+export async function enviarComFallbackCorporativo(
+  input: EnvioMultiInput,
+): Promise<EmailResult> {
+  const { emailPrincipal, emailAlternativo, subject, html, reply_to } = input
+  const corporativo = isEmailCorporativo(emailPrincipal)
+  const usarAlternativo =
+    corporativo && emailAlternativo && emailAlternativo !== emailPrincipal
+
+  const principalPromise = enviarEmail({ to: emailPrincipal, subject, html, reply_to })
+  const alternativaPromise = usarAlternativo
+    ? enviarEmail({ to: emailAlternativo, subject, html, reply_to })
+    : Promise.resolve<EmailResult>({ ok: true, resendId: null })
+
+  const [principalRes, alternativaRes] = await Promise.all([
+    principalPromise,
+    alternativaPromise,
+  ])
+
+  if (!principalRes.ok && usarAlternativo && alternativaRes.ok) {
+    console.warn(
+      '[Resend] entrega no principal falhou mas alternativo OK',
+      { principal: emailPrincipal, motivo: principalRes.error },
+    )
+    return alternativaRes
+  }
+  if (!principalRes.ok && !alternativaRes.ok) {
+    console.error('[Resend] AMBOS os envios falharam', {
+      principal: principalRes.error,
+      alternativo: alternativaRes.ok ? null : alternativaRes.error,
+    })
+    return principalRes
+  }
+  return principalRes
+}
+
+export type { TipoDominio }
+export { tipoDominio, isEmailCorporativo }
+
 // ── Templates ─────────────────────────────────────────────────────
+
+// Template: boas_vindas_apos_cadastro
+// Dispara IMEDIATAMENTE depois do signup (mailer_autoconfirm=true desde
+// 25/04 — Supabase não envia mais email de confirmação). Função: marcar
+// presença, dar contexto, mostrar próximo passo concreto. Não pede pra
+// "confirmar email" porque já está confirmado automaticamente.
+export async function enviarBoasVindas(input: {
+  emailPrincipal: string
+  emailAlternativo?: string | null
+  nome: string
+}): Promise<EmailResult> {
+  const { nome, emailPrincipal, emailAlternativo } = input
+  const siteUrl =
+    process.env.NEXT_PUBLIC_SITE_URL ?? 'https://agrobridge.space'
+  const primeiro = primeiroNome(nome)
+
+  const content = `
+    ${eyebrow('Bem-vindo · próximos 7 minutos', T.green)}
+    ${h1(`${escapeHtml(primeiro)}, sua conta tá ativa.`)}
+    ${p(
+      `Você acaba de entrar na AgroBridge — assessoria especializada de crédito rural construída por quem passou 14 anos dentro do Sistema Financeiro Nacional gerindo carteira Agro. O objetivo aqui é simples: <strong style="color:${T.ink};">menos burocracia, mais aprovação</strong>.`,
+      true,
+    )}
+    ${p(
+      `Pra começar, recomendo a entrevista com a IA — leva ~10 minutos, é gratuita, e gera um <strong style="color:${T.ink};">parecer técnico personalizado</strong> do seu caso (linha provável, perfil de risco, gargalos prováveis no comitê de crédito).`,
+      true,
+    )}
+    ${button(`${siteUrl}/entrevista`, 'Iniciar entrevista (10 min)')}
+
+    ${dicaValor(
+      'Já sabe que precisa do CAR?',
+      `Acesse <a href="https://www.car.gov.br" style="color:${T.green};">car.gov.br</a> com seu CPF e número da matrícula em mãos. O demonstrativo do CAR (PDF com mapa e área) é o documento que o banco pede — leva ~3 minutos pra baixar se o imóvel já está cadastrado.`,
+    )}
+
+    ${divider()}
+    <p style="margin:0 0 10px;font-family:${T.monoStack};font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:${T.muted};">O que você pode fazer agora</p>
+    <ul style="margin:0;padding-left:20px;font-family:${T.fontStack};font-size:14px;line-height:1.7;color:${T.ink2};">
+      <li><a href="${siteUrl}/entrevista" style="color:${T.green};text-decoration:none;">Iniciar a entrevista com a IA</a> — gratuita, gera parecer técnico</li>
+      <li><a href="${siteUrl}/checklist" style="color:${T.green};text-decoration:none;">Ver o checklist de documentos</a> — começar a separar enquanto isso</li>
+      <li><a href="${siteUrl}/simulador" style="color:${T.green};text-decoration:none;">Simulador de viabilidade</a> — ver score do seu cenário (Bronze+)</li>
+    </ul>
+
+    ${assinaturaEquipe()}
+  `
+
+  const subject = `${primeiro}, sua conta AgroBridge está ativa — próximo passo em 10 min`
+  const preheader = `Bem-vindo. Comece pela entrevista de 10 min — gera um parecer técnico personalizado pro seu caso.`
+
+  return enviarComFallbackCorporativo({
+    emailPrincipal,
+    emailAlternativo,
+    subject,
+    html: wrap(content, preheader),
+  })
+}
 
 // Template: alerta_admin_novo_signup
 // Dispara quando um novo lead se cadastra — vai para o admin monitorar o funil.
@@ -277,36 +434,48 @@ export async function enviarLeadNotification(dados: DadosLead): Promise<EmailRes
 // Template: dossie_pronto
 // Dispara quando o dossiê final (PDF) é gerado com sucesso.
 export async function enviarDossiePronto(input: {
-  to: string
+  emailPrincipal: string
+  emailAlternativo?: string | null
   nome: string
   processoId: string
 }): Promise<EmailResult> {
-  const { nome, processoId, to } = input
+  const { nome, processoId, emailPrincipal, emailAlternativo } = input
   const url = `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://agrobridge.space'}/checklist/${processoId}`
+  const primeiro = primeiroNome(nome)
   const content = `
-    ${eyebrow('Dossiê pronto · pronto pro comitê', T.green)}
-    ${h1(`${escapeHtml(nome)}, seu dossiê bancário está pronto.`)}
+    ${eyebrow('Dossiê pronto · padrão de comitê', T.green)}
+    ${h1(`${escapeHtml(primeiro)}, seu dossiê está pronto pra protocolar.`)}
     ${p(
-      `O PDF traz a defesa de crédito em linguagem de comitê, o checklist personalizado do seu perfil e todos os documentos anexados — no padrão que o analista de crédito espera receber.`,
+      `O PDF traz três coisas que o analista de crédito olha primeiro: a <strong style="color:${T.ink};">defesa técnica do seu pedido</strong> em linguagem de comitê, o checklist personalizado do seu perfil, e o índice cruzado com cada documento anexado.`,
       true,
     )}
-    ${p(
-      `Preparado pela consultoria sênior da AgroBridge: 14 anos no Sistema Financeiro Nacional gerindo carteira Agro em banco privado. Cada linha do MCR conhecida de dentro.`,
-      true,
+    ${button(url, 'Abrir e baixar o dossiê em PDF')}
+
+    ${dicaValor(
+      'Antes de entregar — leia a página da defesa primeiro',
+      `A seção <strong style="color:${T.ink};">"Defesa de Crédito"</strong> (geralmente página 7 ou 8) é o argumento central — ela traduz seus dados em formato que o analista usa pra defender seu pedido internamente. Conferir essa página antes de entregar evita perguntas no comitê.`,
     )}
-    ${button(url, 'Abrir e baixar o dossiê')}
+
     ${divider()}
-    <p style="margin:0 0 8px;font-family:${T.monoStack};font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:${T.gold};">Próximos passos</p>
+    <p style="margin:0 0 10px;font-family:${T.monoStack};font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:${T.gold};">Como entregar bem</p>
     <ol style="margin:0;padding-left:20px;font-family:${T.fontStack};font-size:14px;line-height:1.7;color:${T.ink2};">
-      <li>Revisar o PDF e conferir se reflete o seu caso.</li>
-      <li>Agendar horário com o gerente no banco ou cooperativa.</li>
-      <li>Entregar o dossiê presencial ou por e-mail formal.</li>
+      <li><strong style="color:${T.ink};">Imprima 2 vias</strong> — uma fica com o gerente, outra com você (o gerente pede assinatura na cópia).</li>
+      <li><strong style="color:${T.ink};">Agende horário</strong> com o gerente. Não chegue sem aviso — o crédito rural precisa de 30-60 min de conversa.</li>
+      <li><strong style="color:${T.ink};">Entregue presencial</strong> sempre que possível. Se for por email institucional, pergunte antes pra qual endereço enviar.</li>
+      <li><strong style="color:${T.ink};">Acompanhe</strong> em até 7 dias úteis — se não houver retorno, peça status do comitê.</li>
     </ol>
+
+    ${assinaturaEquipe()}
   `
-  return enviarEmail({
-    to,
-    subject: 'AgroBridge · seu dossiê de crédito está pronto',
-    html: wrap(content, 'Dossiê pronto pra protocolar no banco'),
+
+  const subject = `${primeiro}, seu dossiê está pronto — leve isto pro banco`
+  const preheader = `PDF do dossiê de crédito rural pronto pra protocolar — defesa técnica + checklist personalizado.`
+
+  return enviarComFallbackCorporativo({
+    emailPrincipal,
+    emailAlternativo,
+    subject,
+    html: wrap(content, preheader),
   })
 }
 
@@ -314,60 +483,97 @@ export async function enviarDossiePronto(input: {
 // Dispara quando o webhook Cakto confirma pagamento. Serve como
 // comprovante + onboarding — mostra o próximo passo conforme o tier.
 export async function enviarPagamentoConfirmado(input: {
-  to: string
+  emailPrincipal: string
+  emailAlternativo?: string | null
   nome: string
   valor: number
   processoId: string
   tierNome?: string // "Bronze" | "Prata" | "Ouro"
 }): Promise<EmailResult> {
-  const { nome, valor, processoId, to, tierNome } = input
+  const { nome, valor, processoId, emailPrincipal, emailAlternativo, tierNome } = input
   const url = `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://agrobridge.space'}/checklist/${processoId}`
   const valorFmt = `R$ ${valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
   const tierLabel = tierNome ? `plano ${escapeHtml(tierNome)}` : 'plano contratado'
+  const primeiro = primeiroNome(nome)
 
   const proximoPasso = (() => {
     if (tierNome === 'Bronze') {
-      return 'O próximo passo é abrir sua Análise de Viabilidade — ela indica com qual linha de crédito e faixa de taxa seguir, em linguagem de comitê.'
+      return `O próximo passo é abrir sua <strong style="color:${T.ink};">Análise de Viabilidade</strong> — em até 24h indicamos linha de crédito provável, faixa de taxa esperada e os 3 maiores riscos do seu cenário em linguagem de comitê.`
     }
     if (tierNome === 'Ouro') {
-      return 'O próximo passo é abrir sua conta e agendar a tratativa direta com o fundador (14 anos no SFN). Seu dossiê completo também começa a ser preparado agora.'
+      return `O próximo passo é <strong style="color:${T.ink};">agendar sua sessão 1:1 com o fundador</strong> (14 anos no SFN). Em paralelo, seu dossiê completo já começa a ser preparado pelo time. Disponibilidade nas próximas 48h.`
     }
-    return 'O próximo passo é abrir sua conta, concluir o checklist e acompanhar a montagem do dossiê completo — com a defesa técnica pronta pra entregar ao gerente.'
+    if (tierNome === 'Prata') {
+      return `O próximo passo é <strong style="color:${T.ink};">enviar seus documentos pelo checklist personalizado</strong>. Após receber tudo, o time AgroBridge monta o dossiê completo com defesa técnica em até 5 dias úteis.`
+    }
+    return `O próximo passo é abrir sua conta, concluir o checklist e acompanhar a montagem do dossiê completo — com a defesa técnica pronta pra entregar ao gerente.`
+  })()
+
+  const dicaTier = (() => {
+    if (tierNome === 'Ouro') {
+      return dicaValor(
+        'Sua sessão 1:1 vai render mais se você chegar com 3 coisas',
+        `<ol style="margin:0;padding-left:18px;line-height:1.6;"><li>Valor exato pretendido + linha que você imagina</li><li>Garantias que tem disponíveis (imóvel, CPR, alienação fiduciária)</li><li>Histórico bancário recente — qualquer recusa ou restrição que você queira enquadrar</li></ol>`,
+      )
+    }
+    if (tierNome === 'Prata') {
+      return dicaValor(
+        'Comece pelo CAR — é o documento que mais trava no comitê',
+        `Acesse <a href="https://www.car.gov.br" style="color:${T.green};">car.gov.br</a> com CPF + matrícula. O demonstrativo (PDF com mapa) é o que o banco pede. Se houver pendência ambiental, regularize via PRA antes de protocolar.`,
+      )
+    }
+    return dicaValor(
+      'Comece a separar 5 documentos antes da análise',
+      `CPF + comprovante de residência + ITR dos últimos 5 anos + matrícula atualizada + CAR. Esses 5 cobrem 80% do dossiê — todos têm passo-a-passo no <a href="${url}" style="color:${T.green};">/checklist</a>.`,
+    )
   })()
 
   const content = `
     ${eyebrow('Pagamento confirmado · bem-vindo', T.green)}
-    ${h1(`${escapeHtml(nome)}, sua conta no ${tierLabel} está ativa.`)}
+    ${h1(`${escapeHtml(primeiro)}, seu ${tierLabel} está ativo.`)}
     ${p(
-      `Pagamento de <strong style="color:${T.ink};">${valorFmt}</strong> confirmado. Acesso liberado agora.`,
+      `Pagamento de <strong style="color:${T.ink};">${valorFmt}</strong> confirmado. Acesso já liberado.`,
       true,
     )}
     ${p(proximoPasso, true)}
     ${button(url, 'Abrir minha conta')}
+
+    ${dicaTier}
+
     ${divider()}
-    <p style="margin:0 0 6px;font-family:${T.fontStack};font-size:12px;line-height:1.55;color:${T.muted};">
-      Guarde este e-mail como comprovante. Nota fiscal sai em até 5 dias úteis, quando aplicável.
+    <p style="margin:0 0 6px;font-family:${T.monoStack};font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:${T.muted};">Comprovante</p>
+    <p style="margin:0 0 6px;font-family:${T.fontStack};font-size:12.5px;line-height:1.55;color:${T.muted};">
+      Guarde este e-mail. Nota fiscal sai em até 5 dias úteis, quando aplicável.
     </p>
-    <p style="margin:0;font-family:${T.fontStack};font-size:12px;line-height:1.55;color:${T.muted};">
+    <p style="margin:0;font-family:${T.fontStack};font-size:12.5px;line-height:1.55;color:${T.muted};">
       Se o pagamento não foi você, responda este e-mail imediatamente.
     </p>
+
+    ${assinaturaEquipe()}
   `
-  return enviarEmail({
-    to,
-    subject: `AgroBridge · pagamento confirmado${tierNome ? ` · plano ${tierNome}` : ''}`,
-    html: wrap(content, `Pagamento de ${valorFmt} confirmado`),
+
+  const subject = `${primeiro}, seu ${tierNome ?? 'plano'} está ativo — próximo passo aqui`
+  const preheader = `Pagamento de ${valorFmt} confirmado. Acesso liberado. Veja o próximo passo do seu plano.`
+
+  return enviarComFallbackCorporativo({
+    emailPrincipal,
+    emailAlternativo,
+    subject,
+    html: wrap(content, preheader),
   })
 }
 
 // Template: lembrete_documentos_pendentes
 export async function enviarLembreteDocumentos(input: {
-  to: string
+  emailPrincipal: string
+  emailAlternativo?: string | null
   nome: string
   pendentes: string[]
   processoId: string
 }): Promise<EmailResult> {
-  const { nome, pendentes, processoId, to } = input
+  const { nome, pendentes, processoId, emailPrincipal, emailAlternativo } = input
   const url = `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://agrobridge.space'}/checklist/${processoId}`
+  const primeiro = primeiroNome(nome)
   const lista = pendentes
     .slice(0, 12)
     .map(
@@ -376,45 +582,62 @@ export async function enviarLembreteDocumentos(input: {
     )
     .join('')
 
+  const qtd = pendentes.length
+
   const content = `
-    ${eyebrow('Documentos pendentes', T.gold)}
-    ${h1('Falta pouco pro dossiê fechar.')}
-    ${p(`Olá, ${escapeHtml(nome)}.`, true)}
+    ${eyebrow(`${qtd} documento${qtd === 1 ? '' : 's'} pendente${qtd === 1 ? '' : 's'}`, T.gold)}
+    ${h1(`${escapeHtml(primeiro)}, falta pouco pro dossiê fechar.`)}
     ${p(
-      'Sem esses documentos o dossiê não fecha — e a janela do banco pra decidir costuma ser curta. Envie quando puder:',
+      `A janela do comitê de crédito costuma ser curta — quanto antes você fechar a documentação, mais rápido o time AgroBridge entrega o dossiê pronto pra protocolar.`,
       true,
     )}
-    <ul style="margin:16px 0;padding-left:20px;">${lista}</ul>
-    ${button(url, 'Enviar documentos pendentes')}
+    <p style="margin:0 0 8px;font-family:${T.monoStack};font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:${T.muted};">Pendentes</p>
+    <ul style="margin:0 0 18px;padding-left:20px;">${lista}</ul>
+    ${button(url, 'Abrir checklist e enviar')}
+
+    ${dicaValor(
+      'Travou em algum documento?',
+      `Cada item do checklist tem o passo-a-passo de onde emitir e o que clicar no portal oficial. Se mesmo assim travar, abre o chat IA no canto inferior do app — ela te guia em tempo real, com link e orientação específica do seu caso.`,
+    )}
+
+    ${assinaturaEquipe()}
   `
-  return enviarEmail({
-    to,
-    subject: 'AgroBridge · documentos pendentes para seu dossiê',
-    html: wrap(content, 'Faltam documentos pro dossiê fechar'),
+
+  const subject = `${primeiro}, ${qtd} documento${qtd === 1 ? '' : 's'} faltando pro seu dossiê`
+  const preheader = `Sem esses documentos o dossiê não fecha — janela do banco costuma ser curta.`
+
+  return enviarComFallbackCorporativo({
+    emailPrincipal,
+    emailAlternativo,
+    subject,
+    html: wrap(content, preheader),
   })
 }
 
 // ── LGPD — Exclusão de conta (dupla confirmação) ─────────────────
 export async function enviarConfirmacaoExclusao(input: {
-  to: string
+  emailPrincipal: string
+  emailAlternativo?: string | null
   nome: string
   urlConfirmacao: string
   expiraEmMinutos: number
 }): Promise<EmailResult> {
-  const { nome, urlConfirmacao, expiraEmMinutos, to } = input
+  const { nome, urlConfirmacao, expiraEmMinutos, emailPrincipal, emailAlternativo } =
+    input
+  const primeiro = primeiroNome(nome)
   const content = `
     ${eyebrow('Ação sensível · LGPD Art. 18', T.danger)}
-    ${h1(`${escapeHtml(nome)}, confirme a exclusão da sua conta.`)}
+    ${h1(`${escapeHtml(primeiro)}, confirme a exclusão da sua conta.`)}
     ${p(
-      `Recebemos um pedido para excluir sua conta AgroBridge. Para garantir que foi você, clique no botão abaixo <strong style="color:${T.ink};">dentro dos próximos ${expiraEmMinutos} minutos</strong>. Depois disso o link expira.`,
+      `Recebemos um pedido pra excluir sua conta AgroBridge. Pra garantir que foi você, clique no botão abaixo <strong style="color:${T.ink};">dentro dos próximos ${expiraEmMinutos} minutos</strong>. Depois disso o link expira automaticamente.`,
       true,
     )}
-    ${button(urlConfirmacao, 'Confirmar exclusão', 'danger')}
+    ${button(urlConfirmacao, 'Confirmar exclusão da conta', 'danger')}
 
     <div style="background:${T.goldDim};border-left:3px solid ${T.gold};padding:14px 16px;border-radius:8px;margin:24px 0;">
       <p style="margin:0 0 6px;font-family:${T.fontStack};font-size:13px;color:${T.gold};font-weight:500;">Não foi você que pediu?</p>
       <p style="margin:0;font-family:${T.fontStack};font-size:13px;line-height:1.55;color:${T.ink2};">
-        Ignore este e-mail — nada acontece sem o clique. Se desconfiar de acesso indevido, troque sua senha em /resetar-senha imediatamente.
+        Ignore este e-mail — nada acontece sem o clique. Se desconfiar de acesso indevido, troque sua senha em <a href="${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://agrobridge.space'}/resetar-senha" style="color:${T.green};">/resetar-senha</a> imediatamente.
       </p>
     </div>
 
@@ -424,43 +647,67 @@ export async function enviarConfirmacaoExclusao(input: {
       Perfil, entrevistas, checklists, uploads e mensagens ficam invisíveis e bloqueados — seu acesso à plataforma é encerrado.
     </p>
     <p style="margin:0 0 6px;font-family:${T.monoStack};font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:${T.muted};">O que fica arquivado (obrigação fiscal)</p>
-    <p style="margin:0;font-family:${T.fontStack};font-size:13px;line-height:1.55;color:${T.ink2};">
+    <p style="margin:0 0 16px;font-family:${T.fontStack};font-size:13px;line-height:1.55;color:${T.ink2};">
       Registros financeiros (compras, notas fiscais, webhooks de pagamento) ficam em modo arquivado anonimizado por até 5 anos — exigência do CTN, art. 174.
     </p>
+
+    ${assinaturaEquipe()}
   `
-  return enviarEmail({
-    to,
-    subject: 'AgroBridge · confirme a exclusão da sua conta',
-    html: wrap(content, 'Pedido de exclusão de conta precisa de confirmação'),
+
+  const subject = `${primeiro}, confirme a exclusão da sua conta — link expira em ${expiraEmMinutos} min`
+  const preheader = `Pedido de exclusão recebido. Confirme em ${expiraEmMinutos} minutos ou ignore.`
+
+  return enviarComFallbackCorporativo({
+    emailPrincipal,
+    emailAlternativo,
+    subject,
+    html: wrap(content, preheader),
   })
 }
 
 // Template: exportacao_pronta (LGPD)
 export async function enviarExportacaoPronta(input: {
-  to: string
+  emailPrincipal: string
+  emailAlternativo?: string | null
   nome: string
 }): Promise<EmailResult> {
-  const { nome, to } = input
+  const { nome, emailPrincipal, emailAlternativo } = input
+  const primeiro = primeiroNome(nome)
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://agrobridge.space'
   const content = `
     ${eyebrow('LGPD Art. 18 · exportação', T.green)}
     ${h1('Exportação de dados concluída.')}
-    ${p(`Olá, ${escapeHtml(nome)}.`, true)}
     ${p(
-      'Sua exportação de dados foi gerada com sucesso e baixada pelo seu navegador.',
+      `${escapeHtml(primeiro)}, sua exportação de dados foi gerada com sucesso e baixada pelo seu navegador.`,
       true,
     )}
     ${p(
-      `Se não foi você que solicitou, redefina sua senha imediatamente em <a href="${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://agrobridge.space'}/resetar-senha" style="color:${T.green};text-decoration:underline;">/resetar-senha</a>.`,
+      `O arquivo JSON contém todo o histórico de atividade da sua conta — perfil, entrevistas, checklists, mensagens, processos e compras. Mantenha em local seguro.`,
       true,
     )}
+
+    <div style="background:${T.goldDim};border-left:3px solid ${T.gold};padding:14px 16px;border-radius:8px;margin:20px 0;">
+      <p style="margin:0 0 6px;font-family:${T.fontStack};font-size:13px;color:${T.gold};font-weight:500;">Não foi você que solicitou?</p>
+      <p style="margin:0;font-family:${T.fontStack};font-size:13px;line-height:1.55;color:${T.ink2};">
+        Redefina sua senha imediatamente em <a href="${siteUrl}/resetar-senha" style="color:${T.green};">/resetar-senha</a> e responda este email — verificamos junto.
+      </p>
+    </div>
+
     ${divider()}
     <p style="margin:0;font-family:${T.fontStack};font-size:12px;line-height:1.55;color:${T.muted};">
       Este e-mail é só uma confirmação — ele não contém o arquivo exportado.
     </p>
+
+    ${assinaturaEquipe()}
   `
-  return enviarEmail({
-    to,
-    subject: 'AgroBridge · exportação de dados concluída',
-    html: wrap(content, 'Exportação LGPD concluída'),
+
+  const subject = `${primeiro}, sua exportação de dados está pronta`
+  const preheader = `Arquivo JSON com todo o histórico da sua conta foi gerado e baixado.`
+
+  return enviarComFallbackCorporativo({
+    emailPrincipal,
+    emailAlternativo,
+    subject,
+    html: wrap(content, preheader),
   })
 }

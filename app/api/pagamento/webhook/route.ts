@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import crypto from 'node:crypto'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { enviarPagamentoConfirmado } from '@/lib/email/resend'
+import { getEnderecosUsuario } from '@/lib/email/enderecos'
 import { logAuditEvent } from '@/lib/audit'
 import { capturarErroProducao, logger } from '@/lib/logger'
 import { type Tier, TIER_PRECO_CENTAVOS } from '@/lib/tier'
@@ -245,13 +246,16 @@ export async function POST(request: NextRequest) {
 
   // Email de confirmação — só na PRIMEIRA confirmação
   if (row.email) {
+    const enderecos = row.user_id ? await getEnderecosUsuario(row.user_id) : null
     const nome =
       data.customer?.name?.trim() ||
+      enderecos?.nome ||
       row.email.split('@')[0]
     try {
       const planoLabel = tierParaPlano(tier)
       await enviarPagamentoConfirmado({
-        to: row.email,
+        emailPrincipal: row.email,
+        emailAlternativo: enderecos?.emailAlternativo,
         nome,
         valor: valorCentavos / 100,
         processoId,

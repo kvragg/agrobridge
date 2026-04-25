@@ -5,6 +5,7 @@ import { rateLimitRemoto } from '@/lib/rate-limit-upstash'
 import { logAuditEvent } from '@/lib/audit'
 import { capturarErroProducao } from '@/lib/logger'
 import { enviarExportacaoPronta } from '@/lib/email/resend'
+import { getEnderecosUsuario } from '@/lib/email/enderecos'
 
 export const runtime = 'nodejs'
 export const maxDuration = 30
@@ -163,10 +164,16 @@ export async function GET(request: NextRequest) {
   })
 
   if (user.email) {
+    const enderecos = await getEnderecosUsuario(user.id)
     const nome =
+      enderecos?.nome ||
       (typeof user.user_metadata?.nome === 'string' && user.user_metadata.nome) ||
       user.email.split('@')[0]
-    void enviarExportacaoPronta({ to: user.email, nome }).catch((err) =>
+    void enviarExportacaoPronta({
+      emailPrincipal: user.email,
+      emailAlternativo: enderecos?.emailAlternativo,
+      nome,
+    }).catch((err) =>
       capturarErroProducao(err, {
         modulo: 'conta/exportar',
         userId: user.id,

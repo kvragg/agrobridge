@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getAdminUser } from '@/lib/admin-auth'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { enviarPagamentoConfirmado } from '@/lib/email/resend'
+import { getEnderecosUsuario } from '@/lib/email/enderecos'
 import { logAuditEvent } from '@/lib/audit'
 import { capturarErroProducao } from '@/lib/logger'
 import type { Tier } from '@/lib/tier'
@@ -196,9 +197,11 @@ export async function POST(request: NextRequest) {
   if (row?.first_time && row.email) {
     try {
       const planoLabel = tierParaPlano(tier)
+      const enderecos = row.user_id ? await getEnderecosUsuario(row.user_id) : null
       await enviarPagamentoConfirmado({
-        to: row.email,
-        nome: row.email.split('@')[0],
+        emailPrincipal: row.email,
+        emailAlternativo: enderecos?.emailAlternativo,
+        nome: enderecos?.nome ?? row.email.split('@')[0],
         valor: amountCents / 100,
         processoId,
         tierNome: planoLabel === 'Free' ? undefined : planoLabel,

@@ -3,6 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import type { PlanoComercial } from "@/lib/plano"
+import type { TipoDominio } from "@/lib/email/dominios-corporativos"
 import { DashboardShell } from "@/components/shell/DashboardShell"
 import { Alert } from "@/components/shell/Alert"
 import {
@@ -26,11 +27,15 @@ export default function ContaDadosClient({
   email,
   plano,
   userId,
+  emailAlternativo,
+  tipoEmailPrincipal,
 }: {
   nome: string
   email: string
   plano: PlanoComercial
   userId?: string | null
+  emailAlternativo?: string | null
+  tipoEmailPrincipal?: TipoDominio
 }) {
   return (
     <DashboardShell
@@ -68,6 +73,11 @@ export default function ContaDadosClient({
       </div>
 
       <div style={{ display: "grid", gap: 20 }}>
+        <EmailAlternativoBlock
+          emailPrincipal={email}
+          emailAlternativoInicial={emailAlternativo ?? null}
+          tipoEmailPrincipal={tipoEmailPrincipal ?? "outro"}
+        />
         <ExportarBlock />
         <SimulacoesBlock />
         <ExcluirBlock email={email} />
@@ -515,6 +525,246 @@ function ExcluirBlock({ email }: { email: string }) {
                 : "Solicitar exclusão"}
             </Button>
           </div>
+        </div>
+      </div>
+    </GlassCard>
+  )
+}
+
+// ─── Email alternativo (entrega duplicada pra emails corporativos) ──
+function EmailAlternativoBlock({
+  emailPrincipal,
+  emailAlternativoInicial,
+  tipoEmailPrincipal,
+}: {
+  emailPrincipal: string
+  emailAlternativoInicial: string | null
+  tipoEmailPrincipal: TipoDominio
+}) {
+  const [email, setEmail] = useState(emailAlternativoInicial ?? "")
+  const [salvo, setSalvo] = useState<string | null>(emailAlternativoInicial)
+  const [estado, setEstado] = useState<"idle" | "salvando" | "ok" | "erro" | "removendo">(
+    "idle",
+  )
+  const [mensagem, setMensagem] = useState<string | null>(null)
+
+  const isCorporativo =
+    tipoEmailPrincipal === "corporativo_banco" ||
+    tipoEmailPrincipal === "corporativo_gov" ||
+    tipoEmailPrincipal === "corporativo_agro"
+
+  const labelDominio = {
+    corporativo_banco: "banco/cooperativa",
+    corporativo_gov: "instituição pública",
+    corporativo_agro: "integradora/cooperativa agro",
+    pessoal_alta_entrega: "pessoal",
+    outro: "domínio próprio",
+  }[tipoEmailPrincipal]
+
+  async function salvar() {
+    if (!email.trim()) {
+      setEstado("erro")
+      setMensagem("Informe um email válido.")
+      return
+    }
+    setEstado("salvando")
+    setMensagem(null)
+    try {
+      const res = await fetch("/api/conta/email-alternativo", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim() }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setEstado("erro")
+        setMensagem(data?.erro ?? "Falha ao salvar.")
+        return
+      }
+      setSalvo(data.email_alternativo ?? email.trim())
+      setEstado("ok")
+      setMensagem("Email alternativo salvo. Vamos enviar cópias dos emails importantes pra ele também.")
+    } catch {
+      setEstado("erro")
+      setMensagem("Falha de rede. Tente de novo.")
+    }
+  }
+
+  async function remover() {
+    setEstado("removendo")
+    setMensagem(null)
+    try {
+      const res = await fetch("/api/conta/email-alternativo", { method: "DELETE" })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        setEstado("erro")
+        setMensagem(data?.erro ?? "Falha ao remover.")
+        return
+      }
+      setSalvo(null)
+      setEmail("")
+      setEstado("idle")
+      setMensagem("Email alternativo removido.")
+    } catch {
+      setEstado("erro")
+      setMensagem("Falha de rede. Tente de novo.")
+    }
+  }
+
+  return (
+    <GlassCard
+      glow={isCorporativo && !salvo ? "gold" : "green"}
+      padding={28}
+      hover={false}
+    >
+      <div style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
+        <div
+          style={{
+            width: 44,
+            height: 44,
+            borderRadius: 12,
+            background: isCorporativo && !salvo
+              ? "rgba(201,168,106,0.14)"
+              : "rgba(78,168,132,0.12)",
+            border: isCorporativo && !salvo
+              ? "1px solid rgba(201,168,106,0.30)"
+              : "1px solid rgba(78,168,132,0.25)",
+            color: isCorporativo && !salvo ? "var(--gold)" : "var(--green)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexShrink: 0,
+          }}
+        >
+          {Icon.mail(20)}
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <h3
+            style={{
+              margin: "0 0 6px",
+              fontSize: 18,
+              fontWeight: 500,
+              letterSpacing: "-0.018em",
+              color: "#fff",
+            }}
+          >
+            Email alternativo {salvo ? "(ativo)" : "(opcional)"}
+          </h3>
+          <p
+            style={{
+              margin: "0 0 14px",
+              fontSize: 13.5,
+              color: "var(--ink-2)",
+              lineHeight: 1.6,
+            }}
+          >
+            {isCorporativo && !salvo ? (
+              <>
+                Seu email principal é <strong style={{ color: "var(--gold)" }}>{labelDominio}</strong> (@{emailPrincipal.split("@")[1]}).
+                Esse tipo de domínio costuma bloquear emails externos no firewall —
+                você pode <strong style={{ color: "#fff" }}>perder pagamento confirmado, dossiê pronto ou lembretes importantes</strong>.
+                Cadastre um email pessoal (gmail/outlook) abaixo pra receber cópias.
+              </>
+            ) : isCorporativo && salvo ? (
+              <>
+                Vamos enviar cópias dos emails importantes (boas-vindas, pagamento confirmado,
+                dossiê pronto, lembretes) tanto pro seu <strong style={{ color: "#fff" }}>{emailPrincipal}</strong> quanto
+                pro alternativo <strong style={{ color: "var(--green)" }}>{salvo}</strong>.
+              </>
+            ) : (
+              <>
+                Recebe cópias dos emails importantes em um segundo endereço. Útil se você
+                quer que cônjuge, contador ou sócio também acompanhe.
+              </>
+            )}
+          </p>
+
+          {salvo && estado !== "salvando" && estado !== "removendo" ? (
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                padding: "10px 14px",
+                background: "rgba(78,168,132,0.08)",
+                border: "1px solid rgba(78,168,132,0.25)",
+                borderRadius: 10,
+                marginBottom: 12,
+              }}
+            >
+              <span
+                aria-hidden
+                style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: "50%",
+                  background: "var(--green)",
+                  boxShadow: "0 0 8px var(--green)",
+                  flexShrink: 0,
+                }}
+              />
+              <span style={{ flex: 1, fontSize: 14, color: "var(--ink)", letterSpacing: "-0.005em" }}>
+                {salvo}
+              </span>
+              <button
+                type="button"
+                onClick={remover}
+                style={{
+                  background: "transparent",
+                  border: 0,
+                  color: "var(--muted)",
+                  cursor: "pointer",
+                  fontSize: 12.5,
+                  padding: 4,
+                }}
+              >
+                Remover
+              </button>
+            </div>
+          ) : (
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="seu-email-pessoal@gmail.com"
+                disabled={estado === "salvando"}
+                style={{
+                  flex: 1,
+                  minWidth: 220,
+                  padding: "10px 12px",
+                  background: "rgba(255,255,255,0.03)",
+                  border: "1px solid var(--line-2)",
+                  borderRadius: 8,
+                  color: "var(--ink)",
+                  fontSize: 14,
+                  fontFamily: "inherit",
+                  outline: "none",
+                }}
+              />
+              <Button
+                variant="accent"
+                size="md"
+                onClick={salvar}
+                disabled={estado === "salvando" || !email.trim()}
+              >
+                {estado === "salvando" ? "Salvando…" : salvo ? "Atualizar" : "Salvar"}
+              </Button>
+            </div>
+          )}
+
+          {mensagem && (
+            <div
+              style={{
+                marginTop: 10,
+                fontSize: 12.5,
+                color: estado === "erro" ? "var(--danger)" : "var(--green)",
+                lineHeight: 1.5,
+              }}
+            >
+              {mensagem}
+            </div>
+          )}
         </div>
       </div>
     </GlassCard>

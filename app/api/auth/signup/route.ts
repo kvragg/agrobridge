@@ -10,7 +10,7 @@ import {
   validarSenha,
   validarWhatsApp,
 } from '@/lib/validation'
-import { enviarLeadNotification } from '@/lib/email/resend'
+import { enviarLeadNotification, enviarBoasVindas } from '@/lib/email/resend'
 import { logAuditEvent } from '@/lib/audit'
 import { capturarErroProducao, logger } from '@/lib/logger'
 
@@ -117,7 +117,10 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  // Notifica lead — falha não bloqueia cadastro
+  // Notifica admin (interno) + boas-vindas pro lead — ambos fire-and-forget
+  // pra não bloquear cadastro. Boas-vindas usa enviarComFallbackCorporativo
+  // por dentro mas como user acabou de cadastrar, ainda não tem
+  // email_alternativo na perfis_lead — só envia pro principal.
   try {
     await enviarLeadNotification({ nome, email, whatsapp })
   } catch (e) {
@@ -127,6 +130,13 @@ export async function POST(request: NextRequest) {
       extra: { etapa: 'notificar_lead' },
     })
   }
+  void enviarBoasVindas({ emailPrincipal: email, nome }).catch((e) =>
+    capturarErroProducao(e, {
+      modulo: 'signup',
+      userId: data.user?.id ?? null,
+      extra: { etapa: 'enviar_boas_vindas' },
+    }),
+  )
 
   // Audit (E4): fire-and-forget.
   void logAuditEvent({

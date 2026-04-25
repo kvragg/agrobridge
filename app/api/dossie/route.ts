@@ -4,6 +4,7 @@ import { montarDossiePDF } from '@/lib/dossie/pdf'
 import { montarMentoriaPDF } from '@/lib/dossie/pdf-mentoria'
 import { calcularCompletude } from '@/lib/dossie/status'
 import { enviarDossiePronto } from '@/lib/email/resend'
+import { getEnderecosUsuario } from '@/lib/email/enderecos'
 import { logAuditEvent } from '@/lib/audit'
 import { rateLimitRemoto } from '@/lib/rate-limit-upstash'
 import { capturarErroProducao } from '@/lib/logger'
@@ -264,9 +265,15 @@ export async function POST(request: NextRequest) {
     // 6. Email apenas na PRIMEIRA geração (was_first_generation).
     if (finRow?.was_first_generation && user.email) {
       const perfilBloco = (perfilJson.perfil ?? {}) as { nome?: string }
-      const nome = perfilBloco.nome || user.email.split('@')[0]
+      const enderecos = await getEnderecosUsuario(user.id)
+      const nome = perfilBloco.nome || enderecos?.nome || user.email.split('@')[0]
       try {
-        await enviarDossiePronto({ to: user.email, nome, processoId })
+        await enviarDossiePronto({
+          emailPrincipal: user.email,
+          emailAlternativo: enderecos?.emailAlternativo,
+          nome,
+          processoId,
+        })
       } catch (err) {
         capturarErroProducao(err, {
           modulo: 'dossie',

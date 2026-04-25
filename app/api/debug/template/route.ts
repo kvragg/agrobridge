@@ -87,14 +87,14 @@ export async function POST(request: NextRequest) {
     }
     if (template === 'dossie_pronto') {
       return enviarDossiePronto({
-        to: destino,
+        emailPrincipal: destino,
         nome: nomeFake,
         processoId: processoFake,
       })
     }
     if (template === 'boas_vindas_apos_compra') {
       return enviarPagamentoConfirmado({
-        to: destino,
+        emailPrincipal: destino,
         nome: nomeFake,
         valor: 397.0,
         processoId: processoFake,
@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
       })
     }
     return enviarConfirmacaoExclusao({
-      to: destino,
+      emailPrincipal: destino,
       nome: nomeFake,
       urlConfirmacao: `${siteUrl}/conta/excluir/confirmar?token=teste`,
       expiraEmMinutos: 30,

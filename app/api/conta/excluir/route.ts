@@ -6,6 +6,7 @@ import { rateLimitRemoto } from '@/lib/rate-limit-upstash'
 import { logAuditEvent } from '@/lib/audit'
 import { capturarErroProducao } from '@/lib/logger'
 import { enviarConfirmacaoExclusao } from '@/lib/email/resend'
+import { getEnderecosUsuario } from '@/lib/email/enderecos'
 
 export const runtime = 'nodejs'
 export const maxDuration = 30
@@ -107,7 +108,9 @@ export async function POST(request: NextRequest) {
   let emailEnviado = false
   let emailErro: string | null = null
   if (user.email) {
+    const enderecos = await getEnderecosUsuario(user.id)
     const nome =
+      enderecos?.nome ||
       (typeof user.user_metadata?.nome === 'string' && user.user_metadata.nome) ||
       user.email.split('@')[0]
     const urlConfirmacao = `${baseUrl()}/conta/excluir/confirmar?t=${encodeURIComponent(
@@ -115,7 +118,8 @@ export async function POST(request: NextRequest) {
     )}`
     try {
       const result = await enviarConfirmacaoExclusao({
-        to: user.email,
+        emailPrincipal: user.email,
+        emailAlternativo: enderecos?.emailAlternativo,
         nome,
         urlConfirmacao,
         expiraEmMinutos: TTL_MIN,
