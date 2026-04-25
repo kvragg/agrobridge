@@ -80,11 +80,31 @@ export async function POST(request: NextRequest) {
 
   if (error) {
     if (error.message === 'User already registered') {
-      // Anti-enumeração (E5/APEX-SEC): resposta indistinguível do
-      // caminho de sucesso. Nunca confirmar nem negar existência do
-      // e-mail. Atacante perde o oráculo; usuário legítimo encontra os
-      // botões "Reenviar confirmação" e "Fazer login" na tela de
-      // confirmação. Lead notification NÃO é disparada (canal lateral).
+      // E-mail já cadastrado. Pra preservar anti-enumeração (E5) sem
+      // deixar o lead legítimo esperando email que nunca vem (Bug A
+      // 2026-04-25), tentamos autenticar com a senha que ele já forneceu:
+      //  - Se senha correta + email confirmado: criamos sessão e
+      //    sinalizamos temSessao=true → frontend vai pra /planos (mesmo
+      //    caminho de cadastro novo com sessão imediata).
+      //  - Se senha errada OU email não-confirmado: respondemos
+      //    indistinguível do caminho de sucesso (anti-enumeração mantida
+      //    — atacante sem senha continua sem oráculo).
+      const { data: signInData, error: signInError } =
+        await supabase.auth.signInWithPassword({ email, password: senha })
+      if (!signInError && signInData.session) {
+        logger.info({
+          msg: 're-registro com senha válida → login automático',
+          modulo: 'signup',
+        })
+        void logAuditEvent({
+          userId: signInData.user?.id ?? null,
+          eventType: 'signup_resignup_logged_in',
+          request,
+          payload: { ja_existia: true, ja_confirmado: true },
+        })
+        return NextResponse.json({ ok: true, temSessao: true, jaExistia: true })
+      }
+
       logger.info({
         msg: 'tentativa de re-registro silenciosamente ignorada',
         modulo: 'signup',

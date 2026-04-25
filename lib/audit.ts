@@ -21,6 +21,8 @@ export type AuditEventType =
   | 'chat_mensagem'
   | 'upload_via_widget'
   | 'admin_debug_email'
+  | 'signup_resignup_logged_in'
+  | 'tier_upgrade_manual'
 
 interface LogParams {
   userId: string | null

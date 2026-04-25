@@ -63,56 +63,59 @@ export function DashboardShell({
   const widgetEscondido = rotaSemWidget(pathname)
 
   return (
-    <div
-      className="landing-root dashboard-shell"
-      style={{
-        minHeight: "100vh",
-        background: "var(--bg)",
-      }}
+    // WidgetIAProvider envolve o shell INTEIRO (não só o <WidgetIA />),
+    // pra rotas como /simulador poderem chamar useWidgetIA() —
+    // SimuladorClient notifica simulação salva via notificarSimulacaoSalva.
+    <WidgetIAProvider
+      userId={userId ?? null}
+      autoOpenDiario={!widgetEscondido}
     >
-      <AppSidebar
-        mobileOpen={mobileOpen}
-        onClose={() => setMobileOpen(false)}
-        isAdmin={Boolean(isAdmin)}
-      />
-
       <div
-        className="dashboard-shell__main"
+        className="landing-root dashboard-shell"
         style={{
           minHeight: "100vh",
-          display: "flex",
-          flexDirection: "column",
-          paddingLeft: 248,
+          background: "var(--bg)",
         }}
       >
-        <Topbar
-          nome={nome}
-          email={email}
-          tier={tier}
-          center={center}
-          onMenuClick={() => setMobileOpen(true)}
+        <AppSidebar
+          mobileOpen={mobileOpen}
+          onClose={() => setMobileOpen(false)}
+          isAdmin={Boolean(isAdmin)}
         />
-        <main style={{ flex: 1, paddingTop: 40, paddingBottom: 80 }}>
-          <Container style={containerStyle}>{children}</Container>
-        </main>
-      </div>
 
-      <WidgetIAProvider
-        userId={userId ?? null}
-        autoOpenDiario={!widgetEscondido}
-      >
+        <div
+          className="dashboard-shell__main"
+          style={{
+            minHeight: "100vh",
+            display: "flex",
+            flexDirection: "column",
+            paddingLeft: 248,
+          }}
+        >
+          <Topbar
+            nome={nome}
+            email={email}
+            tier={tier}
+            center={center}
+            onMenuClick={() => setMobileOpen(true)}
+          />
+          <main style={{ flex: 1, paddingTop: 40, paddingBottom: 80 }}>
+            <Container style={containerStyle}>{children}</Container>
+          </main>
+        </div>
+
         <WidgetIA
           tier={tierToWidget(tier)}
           nomeCurto={nome ?? undefined}
           hidden={widgetEscondido}
         />
-      </WidgetIAProvider>
 
-      <style>{`
-        @media (max-width: 960px) {
-          .dashboard-shell__main { padding-left: 0 !important; }
-        }
-      `}</style>
-    </div>
+        <style>{`
+          @media (max-width: 960px) {
+            .dashboard-shell__main { padding-left: 0 !important; }
+          }
+        `}</style>
+      </div>
+    </WidgetIAProvider>
   )
 }
