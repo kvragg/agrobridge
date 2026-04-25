@@ -11,6 +11,8 @@ import {
 } from "@/components/landing/primitives"
 import { Alert } from "@/components/shell/Alert"
 import { BotaoConcluirEntrevista } from "@/components/entrevista/BotaoConcluirEntrevista"
+import { useRouter } from "next/navigation"
+import { deveAutoConcluir } from "@/lib/entrevista/detectar-fim"
 
 interface Mensagem {
   role: "user" | "assistant"
@@ -28,6 +30,7 @@ interface Props {
 }
 
 export function ChatClient(props: Props) {
+  const router = useRouter()
   const [mensagens, setMensagens] = useState<Mensagem[]>(props.historicoInicial)
   const [texto, setTexto] = useState("")
   const [enviando, setEnviando] = useState(false)
@@ -40,6 +43,7 @@ export function ChatClient(props: Props) {
   const [gate, setGate] = useState(props.gateAtivo)
   const [carregandoAnalise, setCarregandoAnalise] = useState(false)
   const [erroAnalise, setErroAnalise] = useState<string | null>(null)
+  const [autoConcluindo, setAutoConcluindo] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -161,6 +165,39 @@ export function ChatClient(props: Props) {
             return novo
           })
         }
+
+        // Auto-concluir entrevista por intent — se user pediu "concluir/
+        // checklist/rever tudo" OU IA respondeu com "podemos concluir/perfil
+        // completo", dispara /api/entrevista/concluir e redireciona. Sem
+        // precisar clicar no botão. Backend protege via leadTemPerfilMinimo.
+        // Não roda em gate freemium (lá tem CTA de planos próprio).
+        if (!props.isFree && deveAutoConcluir(mensagemUser, full)) {
+          setAutoConcluindo(true)
+          try {
+            const res = await fetch("/api/entrevista/concluir", {
+              method: "POST",
+            })
+            const data = (await res.json().catch(() => ({}))) as {
+              ok?: boolean
+              redirect_para?: string
+              erro?: string
+            }
+            if (res.ok && data.redirect_para) {
+              router.push(data.redirect_para)
+              router.refresh()
+              return
+            }
+            // 422 perfil insuficiente ou outro erro: cancela auto e mostra
+            // mensagem amigável (botão manual continua disponível pra retry).
+            setAutoConcluindo(false)
+            if (data?.erro) setErro(data.erro)
+          } catch {
+            setAutoConcluindo(false)
+            setErro(
+              "Não consegui concluir agora. Tente clicar no botão dourado acima.",
+            )
+          }
+        }
       } catch (e) {
         console.error("[chat] erro:", e)
         setErro(e instanceof Error ? e.message : "Erro inesperado.")
@@ -168,7 +205,7 @@ export function ChatClient(props: Props) {
         setEnviando(false)
       }
     },
-    [props.isFree, props.limite],
+    [props.isFree, props.limite, router],
   )
 
   async function handleEnviar(e: React.FormEvent) {
@@ -197,6 +234,53 @@ export function ChatClient(props: Props) {
         limite={props.limite}
         mostraContador={mostraContador}
       />
+
+      {/* Overlay visível quando auto-conclusão dispara — bloqueia
+          interação enquanto monta processo + redireciona pro checklist. */}
+      {autoConcluindo && (
+        <div
+          role="status"
+          aria-live="polite"
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 200,
+            background: "rgba(7,8,9,0.92)",
+            backdropFilter: "blur(8px)",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 18,
+            padding: 32,
+          }}
+        >
+          <div style={{ color: "var(--gold)" }}>{Icon.spinner(40)}</div>
+          <div
+            style={{
+              fontSize: 18,
+              fontWeight: 500,
+              color: "var(--ink)",
+              letterSpacing: "-0.015em",
+              textAlign: "center",
+            }}
+          >
+            Concluindo entrevista — montando seu checklist…
+          </div>
+          <div
+            style={{
+              fontSize: 13,
+              color: "var(--muted)",
+              maxWidth: 360,
+              lineHeight: 1.55,
+              textAlign: "center",
+            }}
+          >
+            Salvando seu perfil completo e gerando a lista personalizada de
+            documentos. Isso leva uns segundos.
+          </div>
+        </div>
+      )}
 
       {/* Botão "Concluir entrevista" — visível desde a 2ª mensagem
           (1 user + 1 assistant). Threshold baixo intencional: melhor

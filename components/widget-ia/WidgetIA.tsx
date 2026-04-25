@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useEffect, useRef, useState, type CSSProperties } from "react"
 import {
   Button,
@@ -9,6 +10,7 @@ import {
 } from "@/components/landing/primitives"
 import { useWidgetIA } from "./WidgetIAProvider"
 import { BotaoConcluirEntrevista } from "@/components/entrevista/BotaoConcluirEntrevista"
+import { deveAutoConcluir } from "@/lib/entrevista/detectar-fim"
 
 export type WidgetIATier = "free" | "Bronze" | "Prata" | "Ouro"
 
@@ -315,6 +317,7 @@ function ChatPanel({
   nomeCurto?: string
 }) {
   const widget = useWidgetIA()
+  const router = useRouter()
   // Hidrata mensagens do sessionStorage primeiro — sobrevive a
   // minimizar/restaurar e a navegação entre rotas (mesma aba).
   const [mensagens, setMensagens] = useState<Mensagem[]>(() => readThread())
@@ -326,6 +329,7 @@ function ChatPanel({
     () => readThread().length > 0,
   )
   const [enviandoAnexo, setEnviandoAnexo] = useState(false)
+  const [autoConcluindo, setAutoConcluindo] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -445,6 +449,38 @@ function ChatPanel({
 
       setMensagens((m) => [...m, { role: "assistant", content: full }])
       setStreamingText("")
+
+      // Auto-concluir entrevista por intent — espelha lógica do
+      // ChatClient (lib/entrevista/detectar-fim.ts). Quando o widget
+      // detecta pedido claro de conclusão (do user) OU oferta clara
+      // da IA, dispara /api/entrevista/concluir e redireciona pro
+      // checklist sem precisar clicar no botão dourado embaixo.
+      if (deveAutoConcluir(mensagemUser, full)) {
+        setAutoConcluindo(true)
+        try {
+          const res = await fetch("/api/entrevista/concluir", {
+            method: "POST",
+          })
+          const data = (await res.json().catch(() => ({}))) as {
+            ok?: boolean
+            redirect_para?: string
+            erro?: string
+          }
+          if (res.ok && data.redirect_para) {
+            widget.close()
+            router.push(data.redirect_para)
+            router.refresh()
+            return
+          }
+          setAutoConcluindo(false)
+          if (data?.erro) setErro(data.erro)
+        } catch {
+          setAutoConcluindo(false)
+          setErro(
+            "Não consegui concluir agora. Use o botão dourado abaixo.",
+          )
+        }
+      }
     } catch (e) {
       console.error("[widget-ia] erro:", e)
       setErro(e instanceof Error ? e.message : "Erro inesperado.")
@@ -546,6 +582,53 @@ function ChatPanel({
         className="widget-ia-panel"
         style={painelStyles}
       >
+        {/* Overlay de auto-conclusão — cobre só o panel, deixa o app
+            atrás visível pra contexto. Tira ao redirecionar. */}
+        {autoConcluindo && (
+          <div
+            role="status"
+            aria-live="polite"
+            style={{
+              position: "absolute",
+              inset: 0,
+              zIndex: 30,
+              background: "rgba(7,8,9,0.95)",
+              backdropFilter: "blur(6px)",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 14,
+              padding: 24,
+              borderRadius: "inherit",
+            }}
+          >
+            <div style={{ color: "var(--gold)" }}>{Icon.spinner(36)}</div>
+            <div
+              style={{
+                fontSize: 15,
+                fontWeight: 500,
+                color: "var(--ink)",
+                textAlign: "center",
+                letterSpacing: "-0.005em",
+              }}
+            >
+              Concluindo entrevista…
+            </div>
+            <div
+              style={{
+                fontSize: 12,
+                color: "var(--muted)",
+                maxWidth: 260,
+                lineHeight: 1.5,
+                textAlign: "center",
+              }}
+            >
+              Salvando perfil e abrindo seu checklist personalizado.
+            </div>
+          </div>
+        )}
+
         {/* Header */}
         <div
           style={{
