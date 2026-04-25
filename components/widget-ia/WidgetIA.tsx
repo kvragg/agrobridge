@@ -744,23 +744,28 @@ function ChatPanel({
             mensagens.length > 0 &&
             mensagens[mensagens.length - 1].role === "user" && <TypingDots />}
 
-          {/* Botão "Concluir entrevista" — aparece após 4 mensagens
-              (2 trocas user/assistant) no widget. Mais permissivo que
-              ChatClient porque widget é menor e usuário ali é Bronze+
-              (Free vê modal upgrade antes). */}
+          {/* Botão "Concluir entrevista" — visível desde a 2ª troca
+              (mensagens.length >= 2 = 1 user + 1 assistant). Threshold
+              baixo intencional: lead pago paga R$79+ pra ter acesso ao
+              checklist; melhor mostrar cedo demais que tarde demais.
+              Backend (/api/entrevista/concluir) tem proteção própria
+              via leadTemPerfilMinimo() — se faltar perfil, retorna 422
+              com mensagem amigável. */}
           {!enviando &&
-            mensagens.length >= 4 &&
+            !streamingText &&
+            mensagens.length >= 2 &&
             mensagens[mensagens.length - 1].role === "assistant" && (
               <div
                 style={{
                   marginTop: 8,
                   padding: "12px 14px",
-                  background: "rgba(201,168,106,0.08)",
-                  border: "1px solid rgba(201,168,106,0.28)",
+                  background: "rgba(201,168,106,0.10)",
+                  border: "1px solid rgba(201,168,106,0.35)",
                   borderRadius: 10,
                   display: "flex",
                   flexDirection: "column",
                   gap: 8,
+                  boxShadow: "0 4px 12px -4px rgba(201,168,106,0.2)",
                 }}
               >
                 <div
@@ -770,7 +775,7 @@ function ChatPanel({
                     lineHeight: 1.5,
                   }}
                 >
-                  Achou que já tem o suficiente? Posso montar seu checklist personalizado.
+                  Já tem o suficiente? Concluo a entrevista e te mostro o checklist personalizado.
                 </div>
                 <BotaoConcluirEntrevista variante="compacto" />
               </div>

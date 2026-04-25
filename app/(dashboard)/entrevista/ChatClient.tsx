@@ -198,12 +198,12 @@ export function ChatClient(props: Props) {
         mostraContador={mostraContador}
       />
 
-      {/* Botão "Concluir entrevista" — aparece após 3 trocas user/IA
-          (mensagens.length >= 6 = 3 user + 3 assistant). Não aparece
-          em gate freemium (lá já tem CTA de planos). Único ponto de
-          fim explícito da entrevista (25/04/2026 — fix do gargalo
-          checklist eternamente bloqueado). */}
-      {mensagens.length >= 6 && !gate && (
+      {/* Botão "Concluir entrevista" — visível desde a 2ª mensagem
+          (1 user + 1 assistant). Threshold baixo intencional: melhor
+          mostrar cedo demais que esconder. Backend valida perfil
+          mínimo via /api/entrevista/concluir → 422 amigável se falta.
+          Não aparece em gate freemium (lá já tem CTA de planos). */}
+      {mensagens.length >= 2 && !gate && (
         <div
           style={{
             display: "flex",
@@ -211,6 +211,10 @@ export function ChatClient(props: Props) {
             alignItems: "center",
             gap: 12,
             flexWrap: "wrap",
+            padding: "10px 14px",
+            background: "rgba(201,168,106,0.06)",
+            border: "1px solid rgba(201,168,106,0.22)",
+            borderRadius: 12,
           }}
         >
           <span
@@ -222,7 +226,7 @@ export function ChatClient(props: Props) {
               textAlign: "right",
             }}
           >
-            Já me deu informação suficiente? Posso montar seu checklist personalizado agora.
+            Já tem o suficiente? Concluo a entrevista e te mostro o checklist personalizado.
           </span>
           <BotaoConcluirEntrevista variante="default" />
         </div>
