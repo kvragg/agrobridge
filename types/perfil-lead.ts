@@ -1,6 +1,28 @@
 // Tipo do registro perfis_lead (1:1 com auth.users). Representa o conhecimento
 // acumulado da IA AgroBridge sobre cada lead.
 
+export type LeadType = 'pf' | 'pj'
+
+export type EstadoCivilSocio =
+  | 'solteiro'
+  | 'casado'
+  | 'uniao_estavel'
+  | 'divorciado'
+  | 'viuvo'
+
+/** Sócio da PJ — 1 linha por sócio na public.perfil_socios. */
+export interface SocioPJ {
+  id: string
+  user_id: string
+  display_order: number
+  full_name: string
+  cpf: string
+  estado_civil: EstadoCivilSocio
+  created_at: string
+  updated_at: string
+  deleted_at: string | null
+}
+
 export interface PerfilLead {
   user_id: string
   nome: string | null
@@ -22,6 +44,13 @@ export interface PerfilLead {
   criado_em: string
   atualizado_em: string
   deleted_at: string | null
+  /** Pessoa Física (pf) ou Pessoa Jurídica (pj). Default 'pf'. */
+  lead_type: LeadType
+  /** Só preenchido se lead_type='pj'. */
+  cnpj: string | null
+  /** Só preenchido se lead_type='pj'. */
+  razao_social: string | null
+  email_alternativo: string | null
 }
 
 // Campos do perfil que podem ser sobrescritos direto pela extracao de fatos.
