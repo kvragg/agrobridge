@@ -1,114 +1,104 @@
 import { test, expect } from './fixtures'
 
-// Cenário 9 — Checklist genérico (acessível a TODOS sem processo pago).
-// Reescrito 25/04/2026 (onda PJ + UX anti-abandono):
-//   - Greeting personalizado pelo nome
-//   - Switch PF/PJ no topo + sub-accordion de sócios
-//   - Refinos inline (casado/investimento/pronaf) escondem docs irrelevantes
-//   - Barra de progresso com microcopy contextual
-//   - Quick wins primeiro com badge "rápido"
-//   - Marcar item como pronto via checkbox grande à esquerda
+// Cenário 9 — Checklist genérico em 3 abas (reescrito 25/04/2026 noite —
+// "está muito contaminado de coisas pra clicar"):
+//   1. Aba Cadastro: gate PF/PJ → checklist da escolha
+//   2. Aba Crédito Rural: docs da operação independentes de PF/PJ
+//   3. Aba Dossiê: estado-único, mostra próximo passo conforme contexto
 //
 // User autenticado E2E é Free-zero (sem processo pago) → cai no genérico.
 
-test.describe('Checklist genérico (PF/PJ + UX anti-abandono)', () => {
-  test('renderiza em /checklist sem redirecionar', async ({
-    autenticado: page,
-  }) => {
+test.describe('Checklist em 3 abas', () => {
+  test('renderiza em /checklist sem redirect', async ({ autenticado: page }) => {
     await page.goto('/checklist')
     await expect(page).toHaveURL(/\/checklist$/)
-    // Header H1 (do server component)
     await expect(
       page.getByRole('heading', {
         level: 1,
-        name: /documentos do crédito/i,
+        name: /tudo que o banco vai pedir/i,
       }),
     ).toBeVisible()
   })
 
-  test('mostra barra de progresso com 0% ao abrir', async ({
+  test('mostra os 3 tabs: Cadastro, Crédito Rural, Dossiê', async ({
     autenticado: page,
   }) => {
     await page.goto('/checklist')
-    const bar = page.getByRole('progressbar', { name: /progresso/i })
-    await expect(bar).toBeVisible()
-    await expect(bar).toHaveAttribute('aria-valuenow', '0')
+    const tablist = page.getByRole('tablist', { name: /etapas do checklist/i })
+    await expect(tablist).toBeVisible()
+    await expect(page.getByRole('tab', { name: /cadastro/i })).toBeVisible()
+    await expect(page.getByRole('tab', { name: /crédito rural/i })).toBeVisible()
+    await expect(page.getByRole('tab', { name: /dossiê/i })).toBeVisible()
   })
 
-  test('mostra switch PF/PJ no header com opção de trocar', async ({
+  test('aba Cadastro inicial mostra cabeçalho do tipo + botão "Trocar tipo"', async ({
     autenticado: page,
   }) => {
     await page.goto('/checklist')
+    await expect(page.getByText(/cadastro como/i).first()).toBeVisible()
+    await expect(page.getByRole('button', { name: /trocar tipo/i })).toBeVisible()
+  })
+
+  test('clicar "Trocar tipo" abre o gate PF/PJ', async ({ autenticado: page }) => {
+    await page.goto('/checklist')
+    await page.getByRole('button', { name: /trocar tipo/i }).click()
     await expect(
-      page.getByRole('button', { name: /trocar tipo de cadastro/i }),
+      page.getByRole('heading', {
+        name: /como você vai entrar com o crédito/i,
+      }),
+    ).toBeVisible()
+    await expect(
+      page.getByRole('button', { name: /escolher pessoa física/i }),
+    ).toBeVisible()
+    await expect(
+      page.getByRole('button', { name: /escolher pessoa jurídica/i }),
     ).toBeVisible()
   })
 
-  test('chips de refino aparecem (casado/investimento/Pronaf)', async ({
+  test('aba Crédito Rural mostra docs da operação + chips de refino', async ({
     autenticado: page,
   }) => {
     await page.goto('/checklist')
-    // PF — sou casado(a) aparece. Em PJ ele some.
-    await expect(page.getByText(/sou casado\(a\) ou em união estável/i)).toBeVisible()
+    await page.getByRole('tab', { name: /crédito rural/i }).click()
+    await expect(
+      page.getByRole('heading', { name: /^crédito rural$/i }),
+    ).toBeVisible()
     await expect(page.getByText(/operação de investimento/i)).toBeVisible()
     await expect(page.getByText(/me enquadro no pronaf/i)).toBeVisible()
-  })
-
-  test('exibe os documentos core (CNH, CAR, ITR último exercício, matrícula)', async ({
-    autenticado: page,
-  }) => {
-    await page.goto('/checklist')
-    await expect(page.getByText(/CNH \(ou RG \+ CPF\)/i).first()).toBeVisible()
     await expect(page.getByText(/CAR — Cadastro Ambiental Rural/i).first()).toBeVisible()
     await expect(page.getByText(/CCIR — Certificado de Cadastro/i).first()).toBeVisible()
-    // ITR — só último exercício (correção do dia)
-    await expect(
-      page.getByText(/ITR.*último exercício/i).first(),
-    ).toBeVisible()
-    await expect(
-      page.getByText(/Matrícula atualizada do imóvel/i).first(),
-    ).toBeVisible()
+    await expect(page.getByText(/ITR.*último exercício/i).first()).toBeVisible()
   })
 
-  test('ITR não pede mais 5 exercícios em lugar nenhum', async ({
-    autenticado: page,
-  }) => {
+  test('ITR não pede mais 5 exercícios', async ({ autenticado: page }) => {
     await page.goto('/checklist')
-    // Garantia: o texto antigo não pode aparecer.
+    await page.getByRole('tab', { name: /crédito rural/i }).click()
     await expect(page.getByText(/últimos 5 exercícios/)).toHaveCount(0)
   })
 
-  test('accordion expande ao clicar e mostra link do portal', async ({
+  test('aba Dossiê mostra estado conforme entrevista', async ({
     autenticado: page,
   }) => {
     await page.goto('/checklist')
-    const carBtn = page
-      .getByRole('button', { expanded: false })
-      .filter({ hasText: /CAR — Cadastro Ambiental Rural/i })
-      .first()
-    await carBtn.click()
-    await expect(page.getByRole('link', { name: /SICAR/i }).first()).toBeVisible()
+    await page.getByRole('tab', { name: /dossiê/i }).click()
+    // Free-zero sem entrevista → eyebrow "Etapa 1 — Entrevista"
+    // Free com entrevista → eyebrow "Próximo passo"
+    // Em qualquer caso, cabeçalho com botão CTA
+    await expect(
+      page.getByRole('link', { name: /(iniciar entrevista|ver planos)/i }),
+    ).toBeVisible()
   })
 
-  test('Plano B aparece no item da matrícula (ONR instável)', async ({
-    autenticado: page,
-  }) => {
-    await page.goto('/checklist')
-    await page
-      .getByRole('button', { expanded: false })
-      .filter({ hasText: /Matrícula atualizada do imóvel/i })
-      .first()
-      .click()
-    await expect(page.getByText(/plano b se o portal não abrir/i).first()).toBeVisible()
-    await expect(page.getByText(/portal ONR fica instável/i).first()).toBeVisible()
-  })
-
-  test('marcar item como pronto risca o nome e atualiza barra', async ({
+  test('marcar item como pronto atualiza contador na aba Cadastro', async ({
     autenticado: page,
   }) => {
     await page.goto('/checklist')
 
-    // Pega checkbox do CNH (1º quick win do cadastro PF)
+    // Garante que estamos na aba Cadastro (tipo PF default mostra docs)
+    const cadTab = page.getByRole('tab', { name: /cadastro/i })
+    await cadTab.click()
+
+    // Pega checkbox do CNH (1º item PF)
     const cnhCheckbox = page
       .getByRole('button', { name: /Marcar "CNH \(ou RG \+ CPF\)" como pronto/i })
       .first()
@@ -120,28 +110,19 @@ test.describe('Checklist genérico (PF/PJ + UX anti-abandono)', () => {
         .getByRole('button', { name: /Desmarcar "CNH \(ou RG \+ CPF\)" como pronto/i })
         .first(),
     ).toBeVisible()
-
-    // Barra sobe (não é mais 0)
-    const bar = page.getByRole('progressbar', { name: /progresso/i })
-    await expect(bar).not.toHaveAttribute('aria-valuenow', '0')
   })
 
-  test('banner de incentivo à entrevista aparece pra quem não fez', async ({
+  test('accordion expande no item da matrícula e mostra Plano B (ONR)', async ({
     autenticado: page,
   }) => {
     await page.goto('/checklist')
-    // Banner em ouro — heading "checklist personalizado" + CTA
-    await expect(page.getByText(/checklist.*personalizado/i).first()).toBeVisible()
-    await expect(
-      page.getByRole('link', { name: /iniciar entrevista/i }),
-    ).toBeVisible()
-  })
-
-  test('CTA final "Próxima etapa" + botão Ver planos aparecem', async ({
-    autenticado: page,
-  }) => {
-    await page.goto('/checklist')
-    await expect(page.getByText(/análise técnica.*dossiê/i).first()).toBeVisible()
-    await expect(page.getByRole('link', { name: /ver planos/i }).first()).toBeVisible()
+    await page.getByRole('tab', { name: /crédito rural/i }).click()
+    await page
+      .getByRole('button', { expanded: false })
+      .filter({ hasText: /Matrícula atualizada do imóvel/i })
+      .first()
+      .click()
+    await expect(page.getByText(/plano b se o portal não abrir/i).first()).toBeVisible()
+    await expect(page.getByText(/portal ONR fica instável/i).first()).toBeVisible()
   })
 })

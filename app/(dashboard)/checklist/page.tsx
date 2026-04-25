@@ -3,10 +3,7 @@ import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getPlanoAtual } from "@/lib/plano"
 import { Eyebrow } from "@/components/landing/primitives"
-import { ChecklistGenerico } from "@/components/checklist/ChecklistGenerico"
-import { CadastroBancarioBlock } from "@/components/checklist/CadastroBancarioBlock"
-import { EtapasFluxoCredito } from "@/components/checklist/EtapasFluxoCredito"
-import { CarrosselEducativo } from "@/components/checklist/CarrosselEducativo"
+import { ChecklistTabs } from "@/components/checklist/ChecklistTabs"
 import type { LeadType, SocioPJ } from "@/types/perfil-lead"
 
 export const dynamic = "force-dynamic"
@@ -19,12 +16,15 @@ export const metadata = {
  * /checklist (sem id) — comportamento:
  *  1. Se user tem processo com pagamento confirmado: redireciona pro
  *     checklist personalizado em /checklist/[id]
- *  2. Senão (sem processo ou só free): mostra o checklist GENÉRICO
- *     com docs core do crédito rural + banner pra entrevista
+ *  2. Senão (sem processo ou só free): mostra a versão genérica em 3
+ *     abas (Cadastro / Crédito Rural / Dossiê). Cada aba é uma view
+ *     focada — anti-overwhelm pra lead com TDAH no celular no trator.
  *
- * Carrega contexto do lead (nome, lead_type, sócios, finalidade) pra
- * personalizar greeting e filtrar docs não aplicáveis. UX é o ponto
- * de maior abandono — quanto menos ruído, melhor.
+ * Carrega contexto (nome, lead_type, finalidade, sócios) pra:
+ *   - Personalizar greeting e gate PF/PJ
+ *   - Pré-marcar refinos de investimento/Pronaf da finalidade
+ *   - Pré-marcar refino "casado" da memoria_ia
+ *   - Listar sócios já cadastrados (PJ)
  */
 export default async function ChecklistIndexPage() {
   const supabase = await createClient()
@@ -34,7 +34,7 @@ export default async function ChecklistIndexPage() {
   if (!user) redirect("/login?next=/checklist")
 
   const admin = createAdminClient()
-  const { data } = await admin
+  const { data: processoPago } = await admin
     .from("processos")
     .select("id")
     .eq("user_id", user.id)
@@ -44,8 +44,8 @@ export default async function ChecklistIndexPage() {
     .limit(1)
     .maybeSingle()
 
-  if (data?.id) {
-    redirect(`/checklist/${data.id}`)
+  if (processoPago?.id) {
+    redirect(`/checklist/${processoPago.id}`)
   }
 
   // Sem processo pago — render genérico (acessível a TODOS, inclusive Free)
@@ -62,7 +62,7 @@ export default async function ChecklistIndexPage() {
   const nome = (perfil?.nome ?? null) as string | null
   const leadType: LeadType = (perfil?.lead_type as LeadType | undefined) ?? "pf"
 
-  // Heurística simples pra inferir investimento/Pronaf a partir da finalidade
+  // Heurística pra inferir investimento/Pronaf da finalidade
   const finalidade = String(perfil?.finalidade_credito ?? "").toLowerCase()
   const investimento =
     finalidade.includes("investimento") ||
@@ -74,7 +74,7 @@ export default async function ChecklistIndexPage() {
     finalidade.includes("abc")
   const pronaf = finalidade.includes("pronaf")
 
-  // Estado civil pode estar em memoria_ia (entrevista grava lá) — heurística defensiva
+  // Estado civil pode estar em memoria_ia (entrevista grava lá)
   const memoriaCasado = (() => {
     const m = perfil?.memoria_ia as Record<string, unknown> | null
     if (!m) return false
@@ -94,7 +94,7 @@ export default async function ChecklistIndexPage() {
     socios = (sociosData ?? []) as SocioPJ[]
   }
 
-  // Detecta se já fez ao menos 1 mensagem na entrevista (heurística simples)
+  // Heurística simples: já fez ao menos 3 mensagens de user na entrevista
   const { count } = await admin
     .from("mensagens")
     .select("user_id", { count: "exact", head: true })
@@ -103,19 +103,10 @@ export default async function ChecklistIndexPage() {
 
   const fezEntrevista = (count ?? 0) >= 3
 
-  // Etapa ativa: 2 (cadastro) se já fez entrevista, senão 1
-  const etapaAtiva = fezEntrevista ? 2 : 1
-  const tierLabel = (() => {
-    if (plano.plano === "Bronze") return "Bronze" as const
-    if (plano.plano === "Prata") return "Prata" as const
-    if (plano.plano === "Ouro") return "Ouro" as const
-    return "free" as const
-  })()
-
   return (
     <div>
-      <header style={{ marginBottom: 24 }}>
-        <Eyebrow>Documentos necessários para o crédito rural</Eyebrow>
+      <header style={{ marginBottom: 22 }}>
+        <Eyebrow>Documentos para o crédito rural</Eyebrow>
         <h1
           style={{
             margin: "12px 0 8px",
@@ -126,33 +117,23 @@ export default async function ChecklistIndexPage() {
             color: "#fff",
           }}
         >
-          Documentos do crédito — passo a passo.
+          Tudo que o banco vai pedir, em 3 passos.
         </h1>
         <p
           style={{
             margin: 0,
-            fontSize: 15.5,
+            fontSize: 15,
             color: "var(--ink-2)",
             lineHeight: 1.55,
             maxWidth: 720,
           }}
         >
-          Antes de juntar papel, seu cadastro no banco precisa estar
-          atualizado — esse é o maior motivo de reprovação hoje. Comece
-          pela etapa abaixo, depois siga pra documentação.
+          Cada aba é um foco — termina uma, segue pra próxima. No fim, a IA
+          monta seu dossiê de defesa pronto pro comitê do banco.
         </p>
       </header>
 
-      <EtapasFluxoCredito etapaAtiva={etapaAtiva} entrevistaConcluida={fezEntrevista} />
-
-      {/* Carrossel educativo — 6 slides com mensagens diretas sobre
-          cadastro bancário, valor de mercado, fluxo AgroBridge.
-          Posicionado ANTES do bloco detalhado pra prender atenção. */}
-      <CarrosselEducativo tier={tierLabel} />
-
-      <CadastroBancarioBlock tier={tierLabel} />
-
-      <ChecklistGenerico
+      <ChecklistTabs
         nome={nome}
         leadType={leadType}
         socios={socios}
@@ -161,6 +142,8 @@ export default async function ChecklistIndexPage() {
         pronaf={pronaf}
         fezEntrevista={fezEntrevista}
         isFree={isFree}
+        temProcessoPago={false /* já redirecionou se fosse true */}
+        processoId={null}
       />
     </div>
   )
