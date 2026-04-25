@@ -135,6 +135,20 @@ export const GLOSSARIO: TermoGlossario[] = [
     definicao:
       'Define janelas de plantio por cultura, município e tipo de solo. Plantar fora do ZARC = sem Proagro/PSR e, em geral, sem crédito.',
   },
+  {
+    sigla: 'SIGEF',
+    categoria: 'ambiental',
+    nome: 'Sistema de Gestão Fundiária',
+    definicao:
+      'Plataforma do INCRA para certificação e cadastro de imóveis rurais georreferenciados, conforme Lei 10.267/01. Imóveis acima do limite legal só são certificados via SIGEF — exigência cada vez mais comum em operações de crédito de maior porte.',
+  },
+  {
+    sigla: 'GEORREFERENCIAMENTO',
+    categoria: 'ambiental',
+    nome: 'Levantamento topográfico do imóvel rural',
+    definicao:
+      'Levantamento técnico da poligonal do imóvel feito por profissional habilitado no CREA, conforme Lei 10.267/01 e norma técnica do INCRA. Obrigatório para certificação no SIGEF e exigido em diversas linhas de crédito.',
+  },
 
   // === CRÉDITO & FINANCIAMENTO ===
   {
