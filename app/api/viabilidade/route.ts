@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { gerarParecerViabilidade } from '@/lib/anthropic/viabilidade'
 import { montarViabilidadePDF } from '@/lib/dossie/pdf-viabilidade'
+import { montarDossiePDFv12 } from '@/lib/dossie/pdf-v12'
 import {
   marcarEntregaEnfileirada,
   marcarEntregaGerando,
@@ -144,17 +145,34 @@ export async function POST(request: NextRequest) {
   }
 
   let pdfBuffer: Buffer
+  const usarV12 = process.env.PDF_ENGINE === 'v12'
   try {
-    pdfBuffer = await montarViabilidadePDF({
-      produtor: {
-        nome: perfil.perfil?.nome || user.email?.split('@')[0] || 'Produtor',
-        cpf: perfil.perfil?.cpf || '',
-        email: user.email,
-      },
-      processoId,
-      perfil,
-      parecerMd,
-    })
+    if (usarV12) {
+      pdfBuffer = await montarDossiePDFv12({
+        produtor: {
+          nome: perfil.perfil?.nome || user.email?.split('@')[0] || 'Produtor',
+          cpf: perfil.perfil?.cpf || '',
+          email: user.email,
+        },
+        processoId,
+        banco: null,
+        valor: perfil.necessidade_credito?.valor ?? null,
+        perfil,
+        laudoMd: parecerMd,
+        tier: 'diagnostico',
+      })
+    } else {
+      pdfBuffer = await montarViabilidadePDF({
+        produtor: {
+          nome: perfil.perfil?.nome || user.email?.split('@')[0] || 'Produtor',
+          cpf: perfil.perfil?.cpf || '',
+          email: user.email,
+        },
+        processoId,
+        perfil,
+        parecerMd,
+      })
+    }
   } catch (err) {
     capturarErroProducao(err, {
       modulo: 'viabilidade',

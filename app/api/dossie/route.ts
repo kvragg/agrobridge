@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { gerarLaudo } from '@/lib/anthropic/defesa'
 import { montarDossiePDF } from '@/lib/dossie/pdf'
 import { montarMentoriaPDF } from '@/lib/dossie/pdf-mentoria'
+import { montarDossiePDFv12 } from '@/lib/dossie/pdf-v12'
 import { calcularCompletude } from '@/lib/dossie/status'
 import {
   marcarEntregaEnfileirada,
@@ -223,11 +224,25 @@ export async function POST(request: NextRequest) {
       laudoMd,
     }
     let pdfBuffer: Buffer
+    // Feature flag: PDF_ENGINE=v12 ativa o template HTML→PDF novo
+    // (Memorando de Análise de Crédito Rural — Oxford Blue + Burgundy
+    // + Gold). Default volta pro pipeline pdfkit (pdf.ts/pdf-mentoria.ts)
+    // pra zero risco prod até validação visual em preview.
+    const usarV12 = process.env.PDF_ENGINE === 'v12'
     try {
-      pdfBuffer =
-        tier === 'mentoria'
-          ? await montarMentoriaPDF(pdfInput)
-          : await montarDossiePDF(pdfInput)
+      if (usarV12) {
+        // tier já validado por temAcesso(...,'dossie') acima — só
+        // 'dossie' ou 'mentoria' chegam aqui (nunca 'diagnostico'/null).
+        pdfBuffer = await montarDossiePDFv12({
+          ...pdfInput,
+          tier: tier === 'mentoria' ? 'mentoria' : 'dossie',
+        })
+      } else {
+        pdfBuffer =
+          tier === 'mentoria'
+            ? await montarMentoriaPDF(pdfInput)
+            : await montarDossiePDF(pdfInput)
+      }
     } catch (err) {
       capturarErroProducao(err, {
         modulo: 'dossie',

@@ -118,32 +118,72 @@ O v12-base é único — diferenciação por tier vem de:
 Implementar via classes CSS condicionais (`.tier-bronze .ouro-only { display: none }`)
 ou via remoção de seções pelo template engine antes do `setContent`.
 
-## Plano de migração
+## Plano de migração — STATUS
 
-### Fase 1 (concluída — 2026-04-26)
+### Fase 1 — Foundation (✅ 2026-04-26)
 - [x] Copiar v12-base.html pro repo
 - [x] Documentar integração
 
-### Fase 2 (próxima sessão)
-- [ ] Adicionar puppeteer-core + @sparticuz/chromium-min
-- [ ] Self-host fontes Google em `/public/fonts/`
-- [ ] Criar `lib/dossie/pdf-v12.ts` com template engine
-- [ ] Implementar diferenciação por tier (CSS class no `<body>`)
-- [ ] Adicionar watermark personalizada (CPF mascarado + processo)
-- [ ] Atualizar `tests/integration/pdfs-snapshot.test.ts` pra v12
+### Fase 2 — Implementação (✅ 2026-04-26)
+- [x] Adicionar puppeteer-core + @sparticuz/chromium-min
+- [x] Criar `lib/dossie/pdf-v12.ts` com template engine TypeScript
+  (não usa o HTML cru — emite HTML programaticamente lendo perfil
+  + laudo, com CSS extraído do v12-base)
+- [x] Diferenciação por tier (Bronze 2-3 pgs, Prata 4-5 pgs, Ouro 5-6 pgs)
+- [x] Watermark personalizada (nome + CPF mascarado + processo + data)
+- [x] Detecção automática de ambiente (chromium-min em Vercel,
+  system Chrome em dev local Windows/Mac)
+- [x] Script local `scripts/gerar-pdf-v12-exemplo.ts` validado
 
-### Fase 3 (validação)
-- [ ] Gerar 3 PDFs exemplo via `scripts/gerar-pdf-exemplo.ts` adaptado
-- [ ] Visual review (comparar com v06 atual e v11)
-- [ ] Deploy em preview (Vercel branch deploy)
-- [ ] Smoke test em prod com perfil real (anonimizado)
+### Fase 3 — Cutover gradual (próxima validação)
 
-### Fase 4 (cutover)
-- [ ] Rota `/api/dossie` chama `gerarPdfV12` em vez de `gerarPdf` (Prata)
-  ou `gerarPdfMentoria` (Ouro)
-- [ ] Rota `/api/viabilidade` idem (Bronze)
-- [ ] Manter `pdf.ts` / `pdf-mentoria.ts` / `pdf-viabilidade.ts` como
-  fallback por 1 release antes de deletar
+**Feature flag em produção:** `PDF_ENGINE=v12` ativa o novo render.
+Default é `undefined` → continua usando pdfkit antigo (zero risco).
+
+Cutover pode ser gradual:
+
+1. **Validação local** (✅ feito)
+   ```bash
+   npx tsx scripts/gerar-pdf-v12-exemplo.ts
+   # 3 PDFs gerados em docs/examples/v12/
+   ```
+2. **Validação em preview Vercel:**
+   - Push pra branch
+   - Vercel cria preview deployment
+   - Setar `PDF_ENGINE=v12` em "Preview Environment Variables"
+   - Smoke test gerando dossiê com lead real
+
+3. **Cutover prod:**
+   - Setar `PDF_ENGINE=v12` em "Production Environment Variables"
+   - Trigger redeploy (sem mudança de código)
+   - Monitorar logs por 24h
+
+4. **Rollback rápido:**
+   - Remover `PDF_ENGINE` env var → next request volta pra pdfkit
+
+5. **Cleanup (após 1 semana estável):**
+   - Deletar `pdf.ts`, `pdf-mentoria.ts`, `pdf-viabilidade.ts`, `pdf-v06.ts`
+   - Remover feature flag das rotas
+   - Tornar `pdf-v12.ts` o único pipeline
+
+### Considerações Vercel pré-cutover
+
+- **Função size:** chromium-min é ~30MB (não-comprimido); cabe em Hobby
+  (50MB) e Pro (250MB). Tarball baixado on-demand via URL pinada
+  (v131.0.1) cached em /tmp.
+- **Cold start:** ~3-5s adicionais na primeira chamada (download +
+  extração). Subsequentes ~0.5-1s adicionais (chromium ready).
+- **maxDuration:** rotas /api/dossie já têm 90s, /api/viabilidade
+  precisa subir pra 30-60s antes do cutover.
+- **Fontes Google:** atualmente carregadas via CDN com `networkidle0`.
+  Em prod, considerar self-host em `/public/fonts/` pra independência
+  de rede (latência consistente + privacidade).
+
+### Snapshot tests
+
+`tests/integration/pdfs-snapshot.test.ts` testa pdfs antigos. Quando
+v12 virar default, atualizar esse teste (chumbar v12 + manter um teste
+de retrocompat dos antigos enquanto coexistirem).
 
 ## Histórico de iterações visuais
 
