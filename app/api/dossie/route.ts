@@ -3,6 +3,12 @@ import { gerarLaudo } from '@/lib/anthropic/defesa'
 import { montarDossiePDF } from '@/lib/dossie/pdf'
 import { montarMentoriaPDF } from '@/lib/dossie/pdf-mentoria'
 import { calcularCompletude } from '@/lib/dossie/status'
+import {
+  marcarEntregaEnfileirada,
+  marcarEntregaGerando,
+  marcarEntregaPronta,
+  marcarEntregaErro,
+} from '@/lib/dossie/entrega-tracker'
 import { enviarDossiePronto } from '@/lib/email/resend'
 import { getEnderecosUsuario } from '@/lib/email/enderecos'
 import { logAuditEvent } from '@/lib/audit'
@@ -158,6 +164,12 @@ export async function POST(request: NextRequest) {
 
   // A partir daqui somos o ÚNICO generator. Qualquer saída precisa
   // liberar o lock (RPC abortar_geracao_dossie) para não travar retries.
+
+  // Tracker de entrega (best-effort — alimenta a IA do chat com status real).
+  // tier aqui é 'dossie' ou 'mentoria' (gate acima já garante).
+  await marcarEntregaEnfileirada(supabase, processoId, tier as 'dossie' | 'mentoria', 'dossie')
+  await marcarEntregaGerando(supabase, processoId, 'dossie')
+
   try {
     // 2. Laudo Sonnet (usa cache se presente e não for forcar)
     let laudoMd =
@@ -190,6 +202,7 @@ export async function POST(request: NextRequest) {
         else if (status === 529 || status === 503)
           curta = 'IA sobrecarregada. Tente em alguns segundos.'
         await supabase.rpc('abortar_geracao_dossie', { p_processo_id: processoId })
+        await marcarEntregaErro(supabase, processoId, 'Falha ao gerar laudo (IA)', 'dossie')
         return Response.json({ erro: curta }, { status: 502 })
       }
     }
@@ -222,6 +235,7 @@ export async function POST(request: NextRequest) {
         extra: { etapa: 'montar_pdf', processoId },
       })
       await supabase.rpc('abortar_geracao_dossie', { p_processo_id: processoId })
+      await marcarEntregaErro(supabase, processoId, 'Falha ao montar PDF', 'dossie')
       return Response.json({ erro: 'Erro ao montar PDF do dossiê' }, { status: 500 })
     }
 
@@ -240,6 +254,7 @@ export async function POST(request: NextRequest) {
         extra: { etapa: 'upload_storage', processoId },
       })
       await supabase.rpc('abortar_geracao_dossie', { p_processo_id: processoId })
+      await marcarEntregaErro(supabase, processoId, 'Falha ao salvar arquivo', 'dossie')
       return Response.json({ erro: 'Falha ao salvar dossiê' }, { status: 500 })
     }
 
@@ -255,6 +270,7 @@ export async function POST(request: NextRequest) {
         extra: { rpc: 'finalizar_geracao_dossie', processoId },
       })
       await supabase.rpc('abortar_geracao_dossie', { p_processo_id: processoId })
+      await marcarEntregaErro(supabase, processoId, 'Falha ao finalizar', 'dossie')
       return Response.json({ erro: 'Falha ao finalizar dossiê' }, { status: 500 })
     }
     const finRow = (Array.isArray(finData) ? finData[0] : finData) as
@@ -292,9 +308,14 @@ export async function POST(request: NextRequest) {
       })
     }
 
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString()
     const { data: signed } = await supabase.storage
       .from('documentos')
       .createSignedUrl(pdfPath, 60 * 60)
+
+    if (signed?.signedUrl) {
+      await marcarEntregaPronta(supabase, processoId, signed.signedUrl, expiresAt, 'dossie')
+    }
 
     return Response.json({
       url: signed?.signedUrl ?? null,
@@ -308,6 +329,7 @@ export async function POST(request: NextRequest) {
       extra: { etapa: 'erro_inesperado', processoId },
     })
     await supabase.rpc('abortar_geracao_dossie', { p_processo_id: processoId })
+    await marcarEntregaErro(supabase, processoId, 'Erro inesperado', 'dossie')
     return Response.json({ erro: 'Erro inesperado ao gerar dossiê' }, { status: 500 })
   }
 }

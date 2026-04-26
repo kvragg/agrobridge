@@ -1,6 +1,12 @@
 import { createClient } from '@/lib/supabase/server'
 import { gerarParecerViabilidade } from '@/lib/anthropic/viabilidade'
 import { montarViabilidadePDF } from '@/lib/dossie/pdf-viabilidade'
+import {
+  marcarEntregaEnfileirada,
+  marcarEntregaGerando,
+  marcarEntregaPronta,
+  marcarEntregaErro,
+} from '@/lib/dossie/entrega-tracker'
 import { rateLimitRemoto } from '@/lib/rate-limit-upstash'
 import { lerTier, temAcesso, TIER_NOME } from '@/lib/tier'
 import { logAuditEvent } from '@/lib/audit'
@@ -90,6 +96,12 @@ export async function POST(request: NextRequest) {
 
   const perfil = perfilJson as unknown as PerfilEntrevista
 
+  // Tracker de entrega (best-effort — alimenta a IA do chat com status real).
+  // Tier de viabilidade é sempre 'diagnostico' (Bronze) — qualquer tier pago
+  // pode gerar viabilidade, mas o snapshot é o tier mínimo desse entregável.
+  await marcarEntregaEnfileirada(supabase, processoId, 'diagnostico', 'viabilidade')
+  await marcarEntregaGerando(supabase, processoId, 'viabilidade')
+
   // Cache: parecer já gerado e não estamos forçando regeração
   let parecerMd =
     typeof perfilJson._parecer_md === 'string' ? perfilJson._parecer_md : ''
@@ -118,6 +130,7 @@ export async function POST(request: NextRequest) {
       else if (status === 429) curta = 'Limite de requisições atingido. Aguarde.'
       else if (status === 529 || status === 503)
         curta = 'IA sobrecarregada. Tente em alguns segundos.'
+      await marcarEntregaErro(supabase, processoId, 'Falha ao gerar parecer (IA)', 'viabilidade')
       return Response.json({ erro: curta }, { status: 502 })
     }
 
@@ -148,6 +161,7 @@ export async function POST(request: NextRequest) {
       userId: user.id,
       extra: { etapa: 'montar_pdf', processoId },
     })
+    await marcarEntregaErro(supabase, processoId, 'Falha ao montar PDF', 'viabilidade')
     return Response.json({ erro: 'Erro ao montar PDF' }, { status: 500 })
   }
 
@@ -164,12 +178,18 @@ export async function POST(request: NextRequest) {
       userId: user.id,
       extra: { etapa: 'upload_storage', processoId },
     })
+    await marcarEntregaErro(supabase, processoId, 'Falha ao salvar arquivo', 'viabilidade')
     return Response.json({ erro: 'Falha ao salvar parecer' }, { status: 500 })
   }
 
+  const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString()
   const { data: signed } = await supabase.storage
     .from('documentos')
     .createSignedUrl(pdfPath, 60 * 60)
+
+  if (signed?.signedUrl) {
+    await marcarEntregaPronta(supabase, processoId, signed.signedUrl, expiresAt, 'viabilidade')
+  }
 
   void logAuditEvent({
     userId: user.id,
