@@ -21,9 +21,7 @@ import { logAuditEvent } from '@/lib/audit'
 import { capturarErroProducao } from '@/lib/logger'
 import { getPlanoAtual } from '@/lib/plano'
 import type { PerfilLead } from '@/types/perfil-lead'
-import type { EntregaSnapshot } from '@/lib/ai/system-prompt'
-import { snapshotChecklistParaChat } from '@/lib/ai/checklist-snapshot'
-import { snapshotComprasParaChat } from '@/lib/ai/compras-snapshot'
+import { carregarSnapshotsParaChat } from '@/lib/ai/snapshots-loader'
 import { NextRequest } from 'next/server'
 
 export const runtime = 'nodejs'
@@ -49,16 +47,13 @@ export async function POST(request: NextRequest) {
 
   const admin = createAdminClient()
 
-  // Carrega perfil + historico + entregas + checklist + compras em
-  // paralelo. As 3 fontes oficiais (Pilares #1/#2/#3) dão lastro
-  // factual ao IA no system prompt — sem isso ela inventava prazo de
-  // PDF, lista de docs pendentes e janela CDC de reembolso.
+  // Carrega perfil + histórico + os 3 snapshots oficiais (Pilares
+  // #1/#2/#3) em paralelo. `carregarSnapshotsParaChat` faz try/catch
+  // unificado por snapshot — falha de um não bloqueia o chat.
   const [
     { data: perfilRaw },
     { data: historicoRaw },
-    { data: entregasRaw },
-    checklistSnapshot,
-    comprasSnapshot,
+    snapshots,
     plano,
   ] = await Promise.all([
     admin.from('perfis_lead').select('*').eq('user_id', user.id).maybeSingle(),
@@ -69,31 +64,7 @@ export async function POST(request: NextRequest) {
       .is('deleted_at', null)
       .order('created_at', { ascending: false })
       .limit(HISTORICO_MAX),
-    admin
-      .from('dossie_entregas')
-      .select(
-        'status, tier_snapshot, enqueued_at, generating_at, ready_at, errored_at, attempt_count, error_message'
-      )
-      .eq('user_id', user.id)
-      .is('deleted_at', null)
-      .order('updated_at', { ascending: false })
-      .limit(5),
-    snapshotChecklistParaChat(admin, user.id).catch((err) => {
-      capturarErroProducao(err, {
-        modulo: 'chat',
-        userId: user.id,
-        extra: { etapa: 'checklist_snapshot' },
-      })
-      return null
-    }),
-    snapshotComprasParaChat(admin, user.id).catch((err) => {
-      capturarErroProducao(err, {
-        modulo: 'chat',
-        userId: user.id,
-        extra: { etapa: 'compras_snapshot' },
-      })
-      return []
-    }),
+    carregarSnapshotsParaChat(admin, user.id),
     getPlanoAtual(),
   ])
 
@@ -115,7 +86,6 @@ export async function POST(request: NextRequest) {
   }
 
   const perfil = (perfilRaw ?? null) as PerfilLead | null
-  const entregas = (entregasRaw ?? []) as EntregaSnapshot[]
   // Sanitiza pro shape exato da Anthropic API. messages.create() rejeita
   // qualquer campo extra (created_at, id, user_id) com 400 invalid_request_error
   // — defense-in-depth contra futuros selects vazarem colunas.
@@ -153,9 +123,9 @@ export async function POST(request: NextRequest) {
         const iaStream = criarStreamChat({
           perfil,
           historico: historicoCompleto,
-          entregas,
-          checklist: checklistSnapshot,
-          compras: comprasSnapshot,
+          entregas: snapshots.entregas,
+          checklist: snapshots.checklist,
+          compras: snapshots.compras,
         })
         for await (const chunk of iaStream) {
           if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
