@@ -60,7 +60,7 @@ describe('Score sempre clampeado [0..100]', () => {
         car: 'regular_averbado',
         tem_seguro_agricola: true,
         reciprocidade_bancaria: 'forte',
-        garantias: ['hipoteca_1grau', 'cpr_financeira', 'alienacao_fiduciaria_guarda_chuva'],
+        garantias: ['hipoteca_1grau', 'cpr_f_registrada', 'alienacao_fiduciaria_guarda_chuva'],
         relacao_terra: 'proprio',
       }),
       CONJUNTURA_ATUAL,
@@ -101,7 +101,7 @@ describe('Teto por cadastro', () => {
       inputBase({
         cadastro_nivel: 'desatualizado',
         // Tudo positivo pra empurrar score pro alto — teto deve segurar
-        garantias: ['hipoteca_1grau', 'cpr_financeira'],
+        garantias: ['hipoteca_1grau', 'cpr_f_registrada'],
         historico_scr: 'limpo',
         reciprocidade_bancaria: 'forte',
         endividamento_pct: 10,
@@ -210,7 +210,7 @@ describe('Faixas qualitativas', () => {
         historico_scr: 'limpo',
         reciprocidade_bancaria: 'forte',
         endividamento_pct: 10,
-        garantias: ['hipoteca_1grau', 'cpr_financeira'],
+        garantias: ['hipoteca_1grau', 'cpr_f_registrada'],
       }),
       CONJUNTURA_ATUAL,
     )
@@ -244,7 +244,7 @@ describe('Plano de subida', () => {
         historico_scr: 'limpo',
         reciprocidade_bancaria: 'forte',
         endividamento_pct: 5,
-        garantias: ['hipoteca_1grau', 'cpr_financeira', 'alienacao_fiduciaria_guarda_chuva'],
+        garantias: ['hipoteca_1grau', 'cpr_f_registrada', 'alienacao_fiduciaria_guarda_chuva'],
       }),
       CONJUNTURA_ATUAL,
     )
