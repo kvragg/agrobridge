@@ -32,6 +32,8 @@
 // quebra `tsx scripts/gerar-pdf-v12-exemplo.ts`. Como pdf-v12 só é
 // importado por rotas em `app/api/*` (que são server-only por
 // convenção do App Router), o risco de exposição ao cliente é nulo.
+import fs from 'fs'
+import path from 'path'
 import puppeteer, { type Browser } from 'puppeteer-core'
 import chromium from '@sparticuz/chromium-min'
 import { brl, dataHojeExtenso } from './_theme'
@@ -169,16 +171,81 @@ function montarHtml(input: DossieInputV12): string {
 <head>
 <meta charset="UTF-8">
 <title>AgroBridge · ${TIER_LABEL[tier]} · ${processoLabel}</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,500;0,600;1,400;1,600&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<style>${CSS}</style>
+<style>${getFontsCss()}${CSS}</style>
 </head>
 <body>
 ${SVG_LOGO_DEFS}
 ${paginas.join('\n')}
 </body>
 </html>`
+}
+
+// ============================================================
+// Self-hosted fonts — embed woff2 base64 inline.
+// ============================================================
+// Em vez de carregar Google Fonts via <link>, lê os woff2 dos pacotes
+// @fontsource/* uma vez no boot e injeta como @font-face data: URIs.
+// Vantagens: independência de rede em headless Chrome, latência
+// previsível em cold start serverless, privacidade (sem IP do servidor
+// ir pro Google).
+//
+// Fontes carregadas (latin-only, sem cyrillic/vietnamese/etc pra
+// minimizar payload — produtor brasileiro):
+//   Source Serif 4: 400/500/600 + italics  (display)
+//   Inter:          300/400/500/600 normal (sans body)
+//   JetBrains Mono: 400/500 normal         (mono labels/eyebrows)
+
+let _fontsCssCache: string | null = null
+
+function getFontsCss(): string {
+  if (_fontsCssCache !== null) return _fontsCssCache
+  _fontsCssCache = montarFontFaces()
+  return _fontsCssCache
+}
+
+interface FontFile {
+  family: string
+  weight: number
+  style: 'normal' | 'italic'
+  arquivo: string
+}
+
+const FONT_FILES: FontFile[] = [
+  // Source Serif 4 — display
+  { family: 'Source Serif 4', weight: 400, style: 'normal', arquivo: 'source-serif-4-latin-400-normal.woff2' },
+  { family: 'Source Serif 4', weight: 400, style: 'italic', arquivo: 'source-serif-4-latin-400-italic.woff2' },
+  { family: 'Source Serif 4', weight: 500, style: 'normal', arquivo: 'source-serif-4-latin-500-normal.woff2' },
+  { family: 'Source Serif 4', weight: 500, style: 'italic', arquivo: 'source-serif-4-latin-500-italic.woff2' },
+  { family: 'Source Serif 4', weight: 600, style: 'normal', arquivo: 'source-serif-4-latin-600-normal.woff2' },
+  { family: 'Source Serif 4', weight: 600, style: 'italic', arquivo: 'source-serif-4-latin-600-italic.woff2' },
+  // Inter — sans body
+  { family: 'Inter', weight: 300, style: 'normal', arquivo: 'inter-latin-300-normal.woff2' },
+  { family: 'Inter', weight: 400, style: 'normal', arquivo: 'inter-latin-400-normal.woff2' },
+  { family: 'Inter', weight: 500, style: 'normal', arquivo: 'inter-latin-500-normal.woff2' },
+  { family: 'Inter', weight: 600, style: 'normal', arquivo: 'inter-latin-600-normal.woff2' },
+  // JetBrains Mono — mono
+  { family: 'JetBrains Mono', weight: 400, style: 'normal', arquivo: 'jetbrains-mono-latin-400-normal.woff2' },
+  { family: 'JetBrains Mono', weight: 500, style: 'normal', arquivo: 'jetbrains-mono-latin-500-normal.woff2' },
+]
+
+// Lê os 12 woff2 self-hosted em `public/fonts/` (incluídos automaticamente
+// no bundle Vercel). Cacheado no boot — é executado uma única vez e
+// reutilizado em todas as renderizações.
+function montarFontFaces(): string {
+  const baseDir = path.join(process.cwd(), 'public', 'fonts')
+  const partes: string[] = []
+  for (const f of FONT_FILES) {
+    try {
+      const buf = fs.readFileSync(path.join(baseDir, f.arquivo))
+      const base64 = buf.toString('base64')
+      partes.push(
+        `@font-face{font-family:'${f.family}';font-style:${f.style};font-weight:${f.weight};font-display:block;src:url(data:font/woff2;base64,${base64}) format('woff2');}`,
+      )
+    } catch {
+      // Falha em uma fonte não bloqueia — Chrome usa fallback do system.
+    }
+  }
+  return partes.join('')
 }
 
 interface RenderContext {

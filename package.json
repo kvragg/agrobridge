@@ -19,6 +19,9 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.89.0",
     "@base-ui/react": "^1.4.0",
+    "@fontsource/inter": "^5.2.8",
+    "@fontsource/jetbrains-mono": "^5.2.8",
+    "@fontsource/source-serif-4": "^5.2.9",
     "@sentry/nextjs": "^10.50.0",
     "@sparticuz/chromium-min": "^131.0.1",
     "@supabase/ssr": "^0.10.2",

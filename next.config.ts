@@ -40,6 +40,11 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     'app/api/entrevista/route': ['./prompts/**/*'],
     'app/api/checklist/route': ['./prompts/**/*'],
+    // PDF v12 lê fontes self-hosted em ./public/fonts/ via fs.readFileSync.
+    // O Next.js inclui /public no bundle Vercel automaticamente, então
+    // não precisa entry adicional aqui — só mencionado pra contexto.
+    'app/api/dossie/route': ['./prompts/**/*'],
+    'app/api/viabilidade/route': ['./prompts/**/*'],
   },
   headers: async () => [
     { source: '/(.*)', headers: securityHeaders },
