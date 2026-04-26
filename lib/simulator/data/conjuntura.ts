@@ -16,18 +16,22 @@ export const CONJUNTURA_ATUAL: ConjunturaEconomica = {
   vigencia: '2026-Q2',
   descricao_curta: 'Selic alta, margem apertada, onda de RJs',
   descricao_longa:
-    'Cenário de Selic em patamar elevado, margem de aprovação apertada nos comitês e aumento de pedidos de recuperação judicial. Garantias tradicionais (penhor simples, aval puro) estão com aprovação significativamente mais difícil.',
+    'Cenário de Selic em patamar elevado, margem de aprovação apertada nos comitês e aumento expressivo de pedidos de recuperação judicial nas instituições. Comitês hoje preferem três tipos de garantia: alienação fiduciária guarda-chuva, alienação fiduciária simples (1 imóvel) e investimento dado em garantia (CDB/LCA/poupança vinculada). Garantias tradicionais como hipoteca, CPR-F e fiança ainda passam mas com defesa técnica mais robusta. Penhor simples e aval puro têm taxa de aprovação significativamente menor.',
   modificadores: {
-    penhor_safra_sem_seguro: -3, // piora ainda mais
+    // Premia as 3 preferidas
+    alienacao_fiduciaria_guarda_chuva: 2,
+    alienacao_fiduciaria_rural: 2,
+    investimento_garantia: 3,
+    cessao_creditorios_aaa: 2,
+    // Penaliza fracas
+    penhor_safra_sem_seguro: -3,
     penhor_safra_com_seguro: -2,
     aval_puro_sem_respaldo: -3,
     aval_terceiro_fraco: -2,
-    hipoteca_1grau: -2, // até hipoteca tá mais chata
-    alienacao_fiduciaria_guarda_chuva: 2, // premia garantia forte
-    cessao_creditorios_aaa: 2,
+    hipoteca_1grau: -2,
   },
   avisos: [
-    'Cenário atual: Selic elevada e margem apertada. Comitês priorizam garantias com liquidez e guarda-chuva patrimonial.',
-    'Penhor simples e aval puro têm taxa de aprovação significativamente menor que em 2022-2023.',
+    'Cenário 2026: comitês priorizam 3 tipos de garantia — alienação fiduciária (guarda-chuva ou simples) e investimento dado em garantia (CDB/LCA). O resto passa mas com defesa técnica forte.',
+    'Onda de recuperações judiciais deixou comitês mais conservadores com leverage patrimonial — produtor com mais de 70% do patrimônio comprometido em crédito entra em alerta.',
   ],
 }

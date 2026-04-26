@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head>
+<meta charset="UTF-8">
+<title>AgroBridge · Memorando de Análise de Crédito Rural · MAC 2026/001</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,500;0,600;1,400;1,600&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --ink: #0A1628;
+  --ink-2: #1F2D44;
+  --paper: #FAFAF7;
+  --paper-2: #F2EDE0;
+  --accent: #B08A3E;
+  --accent-2: #1A4D3A;
+  --muted: #6B7A8F;
+  --line: #D9D2C2;
+  --line-soft: #ECE6D6;
+
+  --serif: 'Source Serif 4', Georgia, serif;
+  --sans: 'Inter', -apple-system, sans-serif;
+  --mono: 'JetBrains Mono', monospace;
+}
+
+html, body { background: #1a1a16; min-height: 100vh; color: #1f1f1f; }
+.shell { max-width: 232mm; margin: 0 auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.shell-head { background: #232320; color: #ddd; padding: 14px 18px; border-radius: 4px; font-family: 'Inter', sans-serif; }
+.shell-head .t { font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: #888; font-family: 'JetBrains Mono', monospace; }
+.shell-head .h { font-size: 22px; margin-top: 6px; font-family: 'Source Serif 4', serif; font-weight: 500; }
+.shell-head .s { font-size: 12px; color: #999; margin-top: 4px; }
+.actions { display: flex; gap: 8px; padding: 0 4px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; }
+.actions a, .actions button { all: unset; cursor: pointer; padding: 8px 14px; border: 0.5px solid rgba(255,255,255,0.18); color: #ccc; background: rgba(255,255,255,0.02); border-radius: 2px; }
+.actions a:hover, .actions button:hover { background: rgba(255,255,255,0.06); }
+
+.page {
+  width: 210mm;
+  height: 297mm;
+  position: relative;
+  overflow: hidden;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+  margin: 0 auto;
+  box-shadow: 0 4px 32px rgba(0,0,0,0.6);
+  display: flex;
+  flex-direction: column;
+  page-break-after: always;
+}
+.page:last-child { break-after: auto; }
+.page--cream { background: var(--paper-2); }
+
+.watermark {
+  position: absolute; inset: 0; pointer-events: none; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  z-index: 0;
+}
+.watermark span {
+  font-family: var(--serif); font-style: italic; font-weight: 600;
+  font-size: 130pt; letter-spacing: 0.06em; color: var(--ink);
+  opacity: 0.035; transform: rotate(-32deg); white-space: nowrap;
+}
+
+.p-pad { padding: 18mm 22mm 14mm; flex: 1; display: flex; flex-direction: column; position: relative; z-index: 1; }
+
+.h1 { font-family: var(--serif); font-weight: 500; font-size: 50pt; line-height: 1.0; letter-spacing: -0.018em; color: var(--ink); }
+.h1 em { font-style: italic; color: var(--accent); }
+.h2 { font-family: var(--serif); font-weight: 500; font-size: 24pt; line-height: 1.05; letter-spacing: -0.005em; color: var(--ink); }
+.h2 em { font-style: italic; color: var(--accent); }
+.h3 { font-family: var(--sans); font-weight: 600; font-size: 9pt; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink); }
+.eyebrow { font-family: var(--mono); font-size: 7.5pt; letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent); font-weight: 500; }
+.lbl { font-family: var(--mono); font-size: 7pt; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); font-weight: 500; }
+.body { font-family: var(--sans); font-weight: 300; font-size: 10pt; line-height: 1.65; color: var(--ink-2); }
+.body b { font-weight: 500; color: var(--ink); }
+.body--j { text-align: justify; text-wrap: pretty; hyphens: auto; }
+.mono { font-family: var(--mono); font-size: 9pt; font-variant-numeric: tabular-nums; }
+.placeholder { color: var(--accent); font-style: italic; font-weight: 400; }
+
+.header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding-bottom: 7pt; border-bottom: 0.5pt solid var(--line);
+  font-family: var(--mono); font-size: 7pt; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted);
+}
+.header .brand-mark { display: flex; align-items: center; gap: 6pt; color: var(--ink); }
+.header .brand-mark .logo-mark { display: flex; align-items: center; }
+.header .brand-mark b { font-family: var(--serif); font-style: italic; font-weight: 600; font-size: 11pt; letter-spacing: 0; text-transform: none; color: var(--ink); }
+.footer {
+  margin-top: auto; padding-top: 7pt; border-top: 0.5pt solid var(--line);
+  display: flex; justify-content: space-between; align-items: baseline;
+  font-family: var(--mono); font-size: 6.5pt; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted);
+}
+.footer .pag { color: var(--accent); }
+.footer .hash { font-size: 6pt; letter-spacing: 0.08em; text-transform: none; }
+
+.cover { padding: 24mm 22mm 18mm; flex: 1; display: flex; flex-direction: column; position: relative; z-index: 1; }
+.cover-top { display: flex; justify-content: space-between; align-items: center; padding-bottom: 14pt; border-bottom: 0.5pt solid var(--line); }
+.brand-lock { display: flex; align-items: center; gap: 10pt; }
+.brand-lock .name { font-family: var(--serif); font-style: italic; font-weight: 600; font-size: 28pt; letter-spacing: -0.005em; color: var(--ink); line-height: 1; }
+.brand-lock .sub { font-family: var(--mono); font-size: 7.5pt; letter-spacing: 0.22em; text-transform: uppercase; color: var(--muted); display: block; margin-top: 4pt; }
+
+.cover-id { text-align: right; font-family: var(--mono); font-size: 7.5pt; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); line-height: 1.7; }
+.cover-id b { color: var(--ink); font-weight: 500; }
+
+.cover-hero { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 28pt 0; max-width: 510pt; }
+.cover-hero .kicker { font-family: var(--mono); font-size: 8.5pt; letter-spacing: 0.32em; text-transform: uppercase; color: var(--accent); margin-bottom: 16pt; }
+.cover-hero h1 { font-family: var(--serif); font-weight: 500; font-size: 56pt; line-height: 0.96; letter-spacing: -0.022em; color: var(--ink); }
+.cover-hero h1 em { font-style: italic; color: var(--accent); }
+.cover-hero .lede { font-family: var(--sans); font-weight: 300; font-size: 10.5pt; color: var(--ink-2); margin-top: 18pt; max-width: 380pt; line-height: 1.6; }
+
+.cover-stats { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 0.5pt solid var(--line); border-bottom: 0.5pt solid var(--line); }
+.cover-stats > div { padding: 10pt 14pt; border-right: 0.3pt solid var(--line); }
+.cover-stats > div:last-child { border-right: 0; }
+.cover-stats .lbl { font-family: var(--mono); font-size: 6.5pt; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
+.cover-stats .val { font-family: var(--serif); font-weight: 500; font-size: 16pt; color: var(--ink); margin-top: 4pt; line-height: 1.05; letter-spacing: -0.005em; }
+.cover-stats .val em { font-style: italic; color: var(--accent); font-size: 10pt; margin-left: 2pt; }
+
+.cover-foot { margin-top: 16pt; display: flex; justify-content: space-between; align-items: flex-end; gap: 18pt; }
+.cover-foot .meta { font-family: var(--mono); font-size: 7pt; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); line-height: 1.7; }
+.cover-foot .meta b { color: var(--ink); font-weight: 500; }
+.cover-foot .qr { width: 64pt; text-align: right; }
+.cover-foot .qr svg.qrcode { width: 50pt; height: 50pt; display: block; margin-left: auto; }
+.cover-foot .qr .cap { font-family: var(--mono); font-size: 6pt; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-top: 4pt; }
+
+.cover-status {
+  margin-top: 10pt; padding-top: 8pt; border-top: 0.3pt solid var(--line-soft);
+  font-family: var(--mono); font-size: 6.5pt; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted);
+}
+
+.kv { display: grid; grid-template-columns: 38% 62%; row-gap: 4pt; column-gap: 10pt; }
+.kv dt { font-family: var(--mono); font-size: 7pt; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); padding-top: 2pt; }
+.kv dd { font-family: var(--sans); font-size: 9.5pt; color: var(--ink); font-weight: 400; }
+
+.tbl { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.tbl th { text-align: left; font-family: var(--mono); font-size: 6.5pt; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); font-weight: 600; padding: 5pt 6pt 6pt 0; border-bottom: 0.7pt solid var(--accent); }
+.tbl td { padding: 5pt 6pt 5pt 0; border-bottom: 0.3pt solid var(--line-soft); font-size: 9pt; color: var(--ink-2); vertical-align: top; line-height: 1.4; }
+.tbl td.num { font-family: var(--mono); }
+.tbl td b { font-weight: 500; color: var(--ink); }
+.tbl tr.total td { font-weight: 600; color: var(--accent); border-top: 0.7pt solid var(--accent); border-bottom: 0; padding-top: 7pt; }
+
+.status-ok { color: var(--accent-2); font-weight: 500; }
+.status-warn { color: var(--accent); font-weight: 500; }
+
+.kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); border: 0.5pt solid var(--line); }
+.kpi { padding: 11pt 13pt; border-right: 0.3pt solid var(--line); }
+.kpi:last-child { border-right: 0; }
+.kpi .lbl { font-family: var(--mono); font-size: 6.5pt; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+.kpi .v { font-family: var(--serif); font-weight: 500; font-size: 22pt; color: var(--ink); line-height: 1; margin-top: 7pt; letter-spacing: -0.018em; }
+.kpi .v em { font-style: italic; color: var(--accent); font-size: 10pt; margin-left: 2pt; }
+.kpi .s { font-size: 8pt; color: var(--muted); margin-top: 5pt; font-weight: 300; }
+
+.bar-row { display: grid; grid-template-columns: 1fr auto; gap: 10pt; padding: 4pt 0; align-items: baseline; }
+.bar-row .l { font-size: 9pt; color: var(--ink); }
+.bar-row .v { font-family: var(--mono); font-size: 8.5pt; color: var(--accent); font-variant-numeric: tabular-nums; }
+.bar-row .bar { grid-column: 1/-1; height: 2pt; background: var(--line-soft); margin-top: 3pt; }
+.bar-row .bar i { display: block; height: 100%; background: var(--accent); }
+
+.pull { padding: 12pt 16pt 12pt 18pt; border-left: 2pt solid var(--accent); background: rgba(176,138,62,0.04); margin: 12pt 0; }
+.pull .q { font-family: var(--serif); font-style: italic; font-size: 13pt; line-height: 1.4; color: var(--ink); font-weight: 400; }
+.pull .q em { color: var(--accent); }
+.pull .cap { font-family: var(--mono); font-size: 6.5pt; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin-top: 8pt; }
+
+.callout { border: 0.5pt solid var(--accent-2); padding: 12pt 14pt; background: rgba(26,77,58,0.03); }
+.callout .h { font-family: var(--mono); font-size: 7pt; letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent-2); font-weight: 600; }
+.callout .b { font-family: var(--sans); font-weight: 300; font-size: 9pt; line-height: 1.55; color: var(--ink-2); margin-top: 6pt; }
+.callout .b b { font-weight: 500; color: var(--ink); }
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 22pt; }
+.three-col { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18pt; }
+
+.verdict-grid { display: grid; grid-template-columns: repeat(3, 1fr); border: 0.5pt solid var(--accent); }
+.verdict-grid > div { padding: 16pt 14pt; border-right: 0.3pt solid var(--accent); text-align: center; }
+.verdict-grid > div:last-child { border-right: 0; }
+.verdict-grid .v { font-family: var(--serif); font-weight: 600; font-style: italic; font-size: 26pt; color: var(--accent); line-height: 1; }
+.verdict-grid .lbl { font-family: var(--mono); font-size: 6.5pt; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin-top: 6pt; }
+
+.sig { display: grid; grid-template-columns: 1fr 1fr; gap: 26pt; margin-top: 22pt; }
+.sig .line { border-bottom: 0.6pt solid var(--accent); height: 38pt; }
+.sig .cap { font-family: var(--mono); font-size: 6.5pt; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-top: 4pt; line-height: 1.6; }
+.sig .cap b { color: var(--ink); font-weight: 500; }
+
+.glossary { font-family: var(--mono); font-size: 6.5pt; letter-spacing: 0.06em; line-height: 1.7; color: var(--muted); padding: 10pt 0; border-top: 0.3pt solid var(--line-soft); }
+.glossary b { color: var(--ink); font-weight: 500; }
+
+/* === Primitivos novos v12 === */
+.narrative {
+  font-family: var(--serif); font-style: italic; font-weight: 400;
+  font-size: 13pt; line-height: 1.5; color: var(--ink-2);
+  border-left: 2pt solid var(--accent-2);
+  padding: 10pt 16pt; max-width: 470pt;
+  background: rgba(26, 77, 58, 0.025); margin: 14pt 0;
+}
+.narrative .placeholder { font-style: italic; }
+
+.steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18pt; margin-top: 18pt; }
+.steps .step { padding: 14pt 0; border-top: 0.5pt solid var(--line); }
+.steps .step .n { font-family: var(--mono); font-size: 7pt; letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent); font-weight: 500; }
+.steps .step .t { font-family: var(--serif); font-style: italic; font-weight: 600; font-size: 13pt; color: var(--ink); margin-top: 6pt; line-height: 1.15; }
+.steps .step .d { font-family: var(--sans); font-weight: 300; font-size: 8.5pt; color: var(--ink-2); line-height: 1.55; margin-top: 5pt; }
+
+.creds { display: flex; flex-wrap: wrap; gap: 8pt; margin-top: 14pt; justify-content: center; }
+.creds .chip { font-family: var(--mono); font-size: 7.5pt; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-2); font-weight: 500; padding: 5pt 10pt; border: 0.5pt solid var(--line); background: rgba(176, 138, 62, 0.04); }
+.creds .chip b { color: var(--accent); font-weight: 500; }
+
+.signoff { margin-top: 8pt; padding: 8pt 12pt; border-top: 0.7pt solid var(--accent); background: rgba(176, 138, 62, 0.03); }
+.signoff .body-l { font-family: var(--sans); font-weight: 300; font-size: 9.5pt; line-height: 1.6; color: var(--ink-2); text-align: justify; text-wrap: pretty; hyphens: auto; max-width: 440pt; }
+.signoff .body-l b { font-weight: 500; color: var(--ink); }
+.signoff .sig-l { margin-top: 10pt; font-family: var(--sans); font-size: 9pt; color: var(--ink); }
+.signoff .sig-l .name { font-family: var(--serif); font-style: italic; font-weight: 600; font-size: 13pt; color: var(--ink); }
+.signoff .sig-l .role { font-family: var(--mono); font-size: 7pt; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); margin-top: 2pt; display: block; }
+
+.attach-list { margin-top: 22pt; max-width: 480pt; margin-left: auto; margin-right: auto; }
+.attach-list .row { display: grid; grid-template-columns: 22pt 1fr 130pt 60pt; gap: 12pt; align-items: baseline; padding: 12pt 0; border-bottom: 0.4pt solid var(--line-soft); }
+.attach-list .row:last-child { border-bottom: 0; }
+.attach-list .ico { padding-top: 2pt; }
+.attach-list .name { font-family: var(--serif); font-weight: 500; font-size: 11pt; color: var(--ink); letter-spacing: -0.005em; }
+.attach-list .desc { font-family: var(--sans); font-weight: 300; font-size: 8.5pt; color: var(--muted); line-height: 1.5; }
+.attach-list .pgs { font-family: var(--mono); font-size: 8pt; color: var(--accent); text-align: right; font-variant-numeric: tabular-nums; }
+
+.intro-block { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 18pt 0; }
+.intro-block .logo-xl { margin-bottom: 18pt; }
+.intro-block h1 { font-family: var(--serif); font-weight: 500; font-style: italic; font-size: 56pt; color: var(--ink); line-height: 1; letter-spacing: -0.018em; }
+.intro-block .sub { font-family: var(--mono); font-size: 9pt; letter-spacing: 0.22em; text-transform: uppercase; color: var(--muted); margin-top: 10pt; }
+.intro-block .institutional { font-family: var(--sans); font-weight: 300; font-size: 10.5pt; line-height: 1.65; color: var(--ink-2); max-width: 540pt; margin: 24pt auto 0; text-align: center; text-wrap: pretty; }
+.intro-block .institutional b { font-weight: 500; color: var(--ink); }
+.intro-disclaimer { font-family: var(--sans); font-style: italic; font-size: 8pt; color: var(--muted); text-align: center; margin-top: 22pt; max-width: 460pt; margin-left: auto; margin-right: auto; line-height: 1.55; }
+
+.attachments-hero { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 22pt 0 0; }
+.attachments-hero .eyebrow-c { text-align: center; }
+.attachments-hero h1 { font-family: var(--serif); font-weight: 500; font-size: 50pt; color: var(--ink); line-height: 1; letter-spacing: -0.018em; text-align: center; margin-top: 12pt; }
+.attachments-hero h1 em { font-style: italic; color: var(--accent); }
+.attachments-hero .lede { font-family: var(--sans); font-weight: 300; font-size: 10.5pt; line-height: 1.6; color: var(--ink-2); max-width: 440pt; text-align: center; margin: 18pt auto 0; }
+.attachments-hero .lgpd { font-family: var(--mono); font-size: 7pt; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); text-align: center; margin-top: 24pt; }
+
+@media print {
+  html, body { background: #fff; }
+  .shell { padding: 0; gap: 0; max-width: none; display: block; }
+  .actions, .shell-head { display: none !important; }
+  .page { box-shadow: none; margin: 0; width: 210mm; height: 297mm; }
+  @page { size: A4; margin: 0; }
+}
+</style>
+</head>
+<body>
+
+<!-- ============ SVG SYMBOLS ============ -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="ag-logo" viewBox="0 0 28 28">
+      <path d="M4 23 Q14 23 14 6" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" fill="none"/>
+      <path d="M24 23 Q14 23 14 6" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" fill="none"/>
+      <path d="M8.5 17 L19.5 17" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
+      <path d="M8.5 17 L14 9 M19.5 17 L14 9" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" opacity="0.55"/>
+      <ellipse cx="14" cy="5.2" rx="1.6" ry="2.6" fill="var(--logo-keystone, #B08A3E)"/>
+      <path d="M14 3 L14 7.4" stroke="currentColor" stroke-width="0.9" stroke-linecap="round" opacity="0.6"/>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="shell">
+  <div class="shell-head">
+    <div class="t">AGROBRIDGE · ANÁLISE TÉCNICA DE CRÉDITO RURAL · v12 PRODUÇÃO</div>
+    <div class="h">Memorando de Análise de Crédito Rural</div>
+    <div class="s">A4 · 8 páginas · Source Serif + Inter + JetBrains Mono · base Oxford Blue</div>
+  </div>
+  <div class="actions">
+    <a href="index.html">← Índice</a>
+    <a href="v11-producao.html">v11</a>
+    <button onclick="window.print()">Imprimir / Salvar PDF</button>
+  </div>
+
+<!-- ===================== P1 · CAPA ===================== -->
+<section class="page">
+  <div class="watermark"><span>AGROBRIDGE</span></div>
+  <div class="cover">
+    <div class="cover-top">
+      <div class="brand-lock">
+        <svg width="56" height="56" viewBox="0 0 28 28" style="color:#1A4D3A; --logo-keystone:#B08A3E;" aria-label="AgroBridge"><use href="#ag-logo"/></svg>
+        <div>
+          <div class="name">AgroBridge</div>
+          <span class="sub">Consultoria em Crédito Rural</span>
+        </div>
+      </div>
+      <div class="cover-id">
+        Memorando &nbsp; <b>MAC 2026 / 001</b><br>
+        Processo &nbsp;&nbsp;&nbsp; <b>MAC-2026-001-CALADO</b><br>
+        Emissão &nbsp;&nbsp;&nbsp;&nbsp; <b>23.04.2026</b><br>
+        Validade &nbsp;&nbsp;&nbsp; <b>120 dias corridos</b>
+      </div>
+    </div>
+
+    <div class="cover-hero">
+      <div class="kicker">Análise técnica de operação · Crédito rural</div>
+      <h1>Análise técnica<br>de operação<br>de crédito <em>rural.</em></h1>
+      <p class="lede">Análise técnica e econômico-financeira da operação pleiteada por <span class="placeholder">[Nome do produtor]</span>, referente ao imóvel <b>Fazenda Calado</b> em Cocalzinho/GO, com verificação integral de aderência ao Manual de Crédito Rural publicado pelo Banco Central do Brasil.</p>
+    </div>
+
+    <div class="cover-stats">
+      <div><div class="lbl">Produtor</div><div class="val placeholder">[Nome]</div></div>
+      <div><div class="lbl">Imóvel</div><div class="val">Fazenda <em>Calado</em></div></div>
+      <div><div class="lbl">Área</div><div class="val">534 <em>ha</em></div></div>
+      <div><div class="lbl">Pleito</div><div class="val placeholder">[R$ valor]</div></div>
+    </div>
+
+    <div class="cover-foot">
+      <div class="meta">
+        Analista responsável &nbsp; <b><span class="placeholder">[Paulo Sobrenome]</span></b><br>
+        Gerente de Agronegócios &nbsp; <b>ANBIMA C-PRO R · Febraban FBB 420</b><br>
+        AgroBridge &middot; Consultoria em Crédito Rural &middot; <b>14 anos</b> de mercado
+      </div>
+      <div class="qr">
+        <svg class="qrcode" viewBox="0 0 21 21" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">
+          <rect width="21" height="21" fill="#FAFAF7"/>
+          <g fill="#0A1628">
+            <rect x="0" y="0" width="7" height="1"/><rect x="0" y="6" width="7" height="1"/>
+            <rect x="0" y="0" width="1" height="7"/><rect x="6" y="0" width="1" height="7"/>
+            <rect x="2" y="2" width="3" height="3"/>
+            <rect x="14" y="0" width="7" height="1"/><rect x="14" y="6" width="7" height="1"/>
+            <rect x="14" y="0" width="1" height="7"/><rect x="20" y="0" width="1" height="7"/>
+            <rect x="16" y="2" width="3" height="3"/>
+            <rect x="0" y="14" width="7" height="1"/><rect x="0" y="20" width="7" height="1"/>
+            <rect x="0" y="14" width="1" height="7"/><rect x="6" y="14" width="1" height="7"/>
+            <rect x="2" y="16" width="3" height="3"/>
+            <rect x="8" y="2" width="1" height="1"/><rect x="10" y="3" width="1" height="1"/><rect x="12" y="2" width="1" height="1"/>
+            <rect x="9" y="5" width="1" height="1"/><rect x="11" y="6" width="1" height="1"/>
+            <rect x="2" y="8" width="1" height="1"/><rect x="4" y="9" width="1" height="1"/><rect x="6" y="10" width="1" height="1"/>
+            <rect x="8" y="8" width="1" height="1"/><rect x="10" y="9" width="1" height="1"/><rect x="12" y="8" width="1" height="1"/><rect x="14" y="9" width="1" height="1"/><rect x="16" y="8" width="1" height="1"/><rect x="18" y="10" width="1" height="1"/>
+            <rect x="9" y="11" width="1" height="1"/><rect x="11" y="12" width="1" height="1"/><rect x="13" y="11" width="1" height="1"/><rect x="15" y="12" width="1" height="1"/><rect x="17" y="13" width="1" height="1"/>
+            <rect x="8" y="14" width="1" height="1"/><rect x="10" y="15" width="1" height="1"/><rect x="12" y="16" width="1" height="1"/><rect x="14" y="15" width="1" height="1"/><rect x="16" y="14" width="1" height="1"/><rect x="18" y="16" width="1" height="1"/>
+            <rect x="9" y="18" width="1" height="1"/><rect x="11" y="17" width="1" height="1"/><rect x="13" y="18" width="1" height="1"/><rect x="15" y="19" width="1" height="1"/><rect x="17" y="18" width="1" height="1"/><rect x="19" y="19" width="1" height="1"/>
+          </g>
+        </svg>
+        <div class="cap">Verificar online</div>
+      </div>
+    </div>
+
+    <div class="cover-status">
+      Documento técnico emitido pela AgroBridge &middot; Dados verificados contra fontes documentais anexas &middot; Assinatura digital ICP-Brasil
+    </div>
+  </div>
+</section>
+
+<!-- ===================== P2 · SUMÁRIO EXECUTIVO ===================== -->
+<section class="page">
+  <div class="watermark"><span>AGROBRIDGE</span></div>
+  <div class="p-pad">
+    <div class="header">
+      <div class="brand-mark">
+        <span class="logo-mark"><svg width="14" height="14" viewBox="0 0 28 28" style="color:#1A4D3A; --logo-keystone:#B08A3E;"><use href="#ag-logo"/></svg></span>
+        <b>AgroBridge</b> &middot; MAC 2026/001
+      </div>
+      <div>Fazenda Calado &middot; Cocalzinho / GO</div>
+    </div>
+
+    <div style="margin-top: 18pt;">
+      <div class="eyebrow">01 &middot; Síntese da operação</div>
+      <div class="h2" style="margin-top: 4pt;">Operação <em>apta</em>, lastro confortável.</div>
+    </div>
+
+    <p class="body body--j" style="margin-top: 12pt; max-width: 480pt;">
+      Síntese técnica do pleito apresentado para análise. Os indicadores abaixo consolidam capacidade de pagamento, lastro patrimonial e regularidade documental verificada nos dez pontos críticos do Manual de Crédito Rural. Itens em curso são sinalizados explicitamente para tratativa prévia à formalização da operação junto à instituição financeira destinatária.
+    </p>
+
+    <div class="kpi-row" style="margin-top: 16pt;">
+      <div class="kpi"><div class="lbl">Pleito</div><div class="v" style="font-size:18pt;"><span class="placeholder">[R$ valor]</span></div><div class="s">finalidade a confirmar</div></div>
+      <div class="kpi"><div class="lbl">TIR</div><div class="v"><span class="placeholder">[a calcular]</span></div><div class="s">a.a. · premissas a confirmar</div></div>
+      <div class="kpi"><div class="lbl">VPL (10%)</div><div class="v" style="font-size:18pt;"><span class="placeholder">[a calcular]</span></div><div class="s">horizonte 10 anos</div></div>
+      <div class="kpi"><div class="lbl">Lastro G/O</div><div class="v"><span class="placeholder">[× a confirmar]</span></div><div class="s">consolidado</div></div>
+    </div>
+
+    <div class="two-col" style="margin-top: 16pt;">
+      <div>
+        <div class="h3" style="color:var(--accent);">Pontos fortes</div>
+        <div style="height:0.5pt; background:var(--line); margin: 4pt 0 6pt;"></div>
+        <ul style="list-style: none; padding: 0; font-size: 9pt; line-height: 1.7; color: var(--ink-2); font-weight: 300;">
+          <li>— Domínio pleno comprovado &middot; <b>3 matrículas</b> consolidadas</li>
+          <li>— Conformidade ambiental &middot; CAR ativo, reserva legal averbada</li>
+          <li>— Regularidade fiscal &middot; ITR exercício corrente quitado</li>
+          <li>— Histórico bancário sem restrições no SCR</li>
+          <li>— <span class="placeholder">[anos]</span> de atividade contínua na região</li>
+        </ul>
+      </div>
+      <div>
+        <div class="h3" style="color:var(--accent);">Pontos a tratar</div>
+        <div style="height:0.5pt; background:var(--line); margin: 4pt 0 6pt;"></div>
+        <ul style="list-style: none; padding: 0; font-size: 9pt; line-height: 1.7; color: var(--ink-2); font-weight: 300;">
+          <li>— Unificação do memorial das três matrículas</li>
+          <li>— Certidão negativa municipal &middot; em regularização (30 d)</li>
+          <li>— Licenciamento ambiental &middot; processo em curso</li>
+          <li>— Premissas econômicas a confirmar na data da apresentação</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="pull">
+      <p class="q">"Operação <em>tecnicamente viável</em>, com lastro confortável e retorno projetado consistente com os parâmetros usuais de aceitação."</p>
+      <div class="cap">AgroBridge &middot; Análise técnica do pleito</div>
+    </div>
+
+    <div class="footer">
+      <div>01 &middot; Síntese &middot; MAC 2026/001</div>
+      <div class="hash">SHA-256 <span class="placeholder">[a1b2c3d4]…[e5f6g7h8]</span></div>
+      <div class="pag">2 / 8</div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== P3 · APRESENTAÇÃO AGROBRIDGE ===================== -->
+<section class="page">
+  <div class="watermark"><span>AGROBRIDGE</span></div>
+  <div class="p-pad">
+    <div class="header">
+      <div class="brand-mark">
+        <span class="logo-mark"><svg width="14" height="14" viewBox="0 0 28 28" style="color:#1A4D3A; --logo-keystone:#B08A3E;"><use href="#ag-logo"/></svg></span>
+        <b>AgroBridge</b> &middot; MAC 2026/001
+      </div>
+      <div>Fazenda Calado &middot; Cocalzinho / GO</div>
+    </div>
+
+    <div style="margin-top: 16pt;">
+      <div class="eyebrow" style="text-align:center;">02 &middot; Quem apresenta este memorando</div>
+    </div>
+
+    <div class="intro-block">
+      <div class="logo-xl">
+        <svg width="96" height="96" viewBox="0 0 28 28" style="color:#1A4D3A; --logo-keystone:#B08A3E;" aria-label="AgroBridge"><use href="#ag-logo"/></svg>
+      </div>
+      <h1>AgroBridge.</h1>
+      <div class="sub">Consultoria em Crédito Rural</div>
+
+      <p class="institutional">
+        A AgroBridge é uma <b>consultoria técnica especializada em crédito rural</b>. Conduzimos entrevista estruturada com o produtor, validamos a documentação contra os requisitos do Manual de Crédito Rural, identificamos pontos sensíveis antes da apresentação ao comitê e organizamos o memorando técnico que consolida fundiária, ambiental, econômico-financeira e estrutura de garantias. O presente documento é o produto dessa estruturação.
+      </p>
+
+      <div class="creds">
+        <div class="chip"><b>ANBIMA</b> &middot; C-PRO R</div>
+        <div class="chip"><b>Febraban</b> &middot; FBB 420</div>
+        <div class="chip"><b>14 anos</b> &middot; Crédito rural</div>
+      </div>
+
+      <div class="steps" style="width: 100%;">
+        <div class="step">
+          <div class="n">01</div>
+          <div class="t">Entrevista</div>
+          <div class="d">Conversa estruturada com o produtor para mapear operação, garantias, histórico e necessidade.</div>
+        </div>
+        <div class="step">
+          <div class="n">02</div>
+          <div class="t">Validação</div>
+          <div class="d">Conferência da documentação contra os requisitos do MCR e contra fontes oficiais (BACEN, INCRA, CAR).</div>
+        </div>
+        <div class="step">
+          <div class="n">03</div>
+          <div class="t">Estruturação</div>
+          <div class="d">Consolidação do memorando técnico com fundamentação fundiária, econômica e de garantias.</div>
+        </div>
+        <div class="step">
+          <div class="n">04</div>
+          <div class="t">Apresentação</div>
+          <div class="d">Entrega do memorando ao produtor, pronto para apresentação ao comitê de crédito da instituição.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="intro-disclaimer">
+      A AgroBridge presta análise técnica e estruturação documental. A decisão de concessão é prerrogativa exclusiva da instituição financeira avaliadora.
+    </div>
+
+    <div class="footer">
+      <div>02 &middot; Apresentação &middot; MAC 2026/001</div>
+      <div class="hash">SHA-256 <span class="placeholder">[a1b2c3d4]…[e5f6g7h8]</span></div>
+      <div class="pag">3 / 8</div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== P4 · PRODUTOR E PROPRIEDADE ===================== -->
+<section class="page page--cream">
+  <div class="watermark"><span>AGROBRIDGE</span></div>
+  <div class="p-pad">
+    <div class="header">
+      <div class="brand-mark">
+        <span class="logo-mark"><svg width="14" height="14" viewBox="0 0 28 28" style="color:#1A4D3A; --logo-keystone:#B08A3E;"><use href="#ag-logo"/></svg></span>
+        <b>AgroBridge</b> &middot; MAC 2026/001
+      </div>
+      <div>Fazenda Calado &middot; Cocalzinho / GO</div>
+    </div>
+
+    <div style="margin-top: 16pt;">
+      <div class="eyebrow">03 &middot; Produtor e propriedade</div>
+      <div class="h2" style="margin-top: 4pt;">Trajetória, vínculo e <em>operação</em>.</div>
+    </div>
+
+    <div class="narrative">
+      <span class="placeholder">[Nome do produtor]</span> atua na pecuária de cria e recria há <span class="placeholder">[anos]</span> anos em Cocalzinho de Goiás. Operação consolidada com plantel próprio, foco em descarte de matrizes Nelore e venda de bezerros desmamados, com pastagem manejada em três matrículas contíguas sob domínio pleno. Histórico bancário sem registros no SCR. O presente pleito busca aquisição de matrizes Nelore PO e reforma de pastagem para ampliar a capacidade produtiva do imóvel.
+    </div>
+
+    <div class="two-col" style="margin-top: 10pt;">
+      <dl class="kv">
+        <dt>Proprietário</dt><dd class="placeholder">[Nome do produtor]</dd>
+        <dt>CPF</dt><dd class="placeholder">[CPF a confirmar]</dd>
+        <dt>Estado civil</dt><dd class="placeholder">[a confirmar]</dd>
+        <dt>Cônjuge</dt><dd class="placeholder">[se aplicável]</dd>
+        <dt>Atividade</dt><dd>Pecuária de cria e recria</dd>
+        <dt>Tempo de atividade</dt><dd class="placeholder">[anos]</dd>
+      </dl>
+      <dl class="kv">
+        <dt>Imóvel</dt><dd>Fazenda Calado</dd>
+        <dt>Município / UF</dt><dd>Cocalzinho de Goiás / GO</dd>
+        <dt>CAR</dt><dd class="mono">GO-5205513-65509CF3</dd>
+        <dt>CCIR</dt><dd class="mono">931.152.001.554-8</dd>
+        <dt>Coordenadas</dt><dd class="mono">15°48'S 48°45'W</dd>
+        <dt>Bioma</dt><dd>Cerrado</dd>
+      </dl>
+    </div>
+
+    <div style="margin-top: 14pt;">
+      <div class="h3" style="color:var(--accent);">Inventário fundiário</div>
+      <div style="height:0.5pt; background:var(--line); margin: 4pt 0 6pt;"></div>
+      <table class="tbl">
+        <thead><tr><th style="width:10%">Matr.</th><th>Denominação</th><th style="width:14%">Área (ha)</th><th style="width:14%">Aquisição</th><th style="width:22%">Cartório</th></tr></thead>
+        <tbody>
+          <tr><td class="num">6.777</td><td><b>Fazenda Calado</b> &middot; gleba principal</td><td class="num">440,0142</td><td class="num">17.10.2025</td><td>1º Of. Cocalzinho</td></tr>
+          <tr><td class="num">9.478</td><td><b>Fazenda Calado</b> &middot; anexo norte</td><td class="num">34,4632</td><td class="num">17.10.2025</td><td>1º Of. Cocalzinho</td></tr>
+          <tr><td class="num">9.479</td><td><b>Burity dos Creoulos</b> &middot; anexo sul</td><td class="num">59,6330</td><td class="num">17.10.2025</td><td>1º Of. Cocalzinho</td></tr>
+          <tr class="total"><td colspan="2">Consolidado &middot; domínio pleno</td><td class="num">534,1104</td><td colspan="2">3 matrículas &middot; sem ônus reais</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div style="margin-top: 14pt;">
+      <div class="h3" style="color:var(--accent);">Balanço ambiental e uso do solo</div>
+      <div style="height:0.5pt; background:var(--line); margin: 4pt 0 8pt;"></div>
+      <div class="bar-row"><div class="l">Pastagem manejada &middot; Piatã + mombaça</div><div class="v">462,0 ha &middot; 86,5%</div><div class="bar"><i style="width:86.5%"></i></div></div>
+      <div class="bar-row"><div class="l">Reserva legal averbada</div><div class="v">107,0 ha &middot; 20,1%</div><div class="bar"><i style="width:20.1%"></i></div></div>
+      <div class="bar-row"><div class="l">APP &middot; mata ciliar</div><div class="v">22,4 ha &middot; 4,2%</div><div class="bar"><i style="width:4.2%"></i></div></div>
+      <div class="bar-row"><div class="l">Sede e benfeitorias</div><div class="v">9,5 ha &middot; 1,8%</div><div class="bar"><i style="width:1.8%"></i></div></div>
+    </div>
+
+    <div class="footer">
+      <div>03 &middot; Produtor e propriedade &middot; MAC 2026/001</div>
+      <div class="hash">SHA-256 <span class="placeholder">[a1b2c3d4]…[e5f6g7h8]</span></div>
+      <div class="pag">4 / 8</div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== P5 · FUNDAMENTAÇÃO TÉCNICA ===================== -->
+<section class="page">
+  <div class="watermark"><span>AGROBRIDGE</span></div>
+  <div class="p-pad">
+    <div class="header">
+      <div class="brand-mark">
+        <span class="logo-mark"><svg width="14" height="14" viewBox="0 0 28 28" style="color:#1A4D3A; --logo-keystone:#B08A3E;"><use href="#ag-logo"/></svg></span>
+        <b>AgroBridge</b> &middot; MAC 2026/001
+      </div>
+      <div>Fazenda Calado &middot; Cocalzinho / GO</div>
+    </div>
+
+    <div style="margin-top: 14pt;">
+      <div class="eyebrow">04 &middot; Fundamentação técnica do pleito</div>
+      <div class="h2" style="margin-top: 4pt;">Três pilares <em>técnicos</em> da operação.</div>
+    </div>
+
+    <p class="body body--j" style="margin-top: 6pt; max-width: 480pt;">
+      A operação encontra respaldo em três pilares técnicos — capacidade de pagamento sustentada por fluxo recorrente, lastro patrimonial superior aos múltiplos usualmente exigidos e indicadores de viabilidade econômica consistentes com a finalidade pretendida. A análise abaixo consolida a fundamentação que subsidia a apresentação ao comitê.
+    </p>
+
+    <!-- Pilar 1 -->
+    <div style="margin-top: 6pt;">
+      <div class="h3" style="color:var(--accent);">Pilar 01 &middot; Capacidade de pagamento</div>
+      <div style="height:0.5pt; background:var(--line); margin: 4pt 0 6pt;"></div>
+      <table class="tbl">
+        <thead><tr><th>Categoria de receita</th><th style="width:30%">R$ / ano</th></tr></thead>
+        <tbody>
+          <tr><td><b>Bezerros desmamados</b></td><td class="num placeholder">[a confirmar]</td></tr>
+          <tr><td><b>Garrotes recriados</b></td><td class="num placeholder">[a confirmar]</td></tr>
+          <tr><td><b>Novilhas excedentes</b></td><td class="num placeholder">[a confirmar]</td></tr>
+          <tr><td><b>Descarte de matrizes</b></td><td class="num placeholder">[a confirmar]</td></tr>
+          <tr class="total"><td>Receita anual consolidada</td><td class="num placeholder">[R$ a confirmar]</td></tr>
+        </tbody>
+      </table>
+      <p style="font-family: var(--serif); font-style: italic; font-size: 9.5pt; color: var(--ink-2); margin-top: 5pt; line-height: 1.45;">
+        Receita anual projetada de <span class="placeholder">R$ [receita]</span> cobre <span class="placeholder">[cobertura]×</span> a parcela do pleito, considerando ciclo de <span class="placeholder">[ciclo]</span>.
+      </p>
+    </div>
+
+    <!-- Pilar 2 -->
+    <div style="margin-top: 8pt;">
+      <div class="h3" style="color:var(--accent);">Pilar 02 &middot; Estrutura de garantias</div>
+      <div style="height:0.5pt; background:var(--line); margin: 4pt 0 6pt;"></div>
+      <table class="tbl">
+        <thead><tr><th style="width:8%">Cód.</th><th>Instrumento</th><th>Objeto</th><th style="width:18%">Avaliação</th><th style="width:8%">G/O</th></tr></thead>
+        <tbody>
+          <tr><td class="num">G.01</td><td><b>Hipoteca de 1º grau</b></td><td>Fazenda Calado &middot; 3 matrículas</td><td class="num placeholder">[R$ aval.]</td><td class="num placeholder">[× ]</td></tr>
+          <tr><td class="num">G.02</td><td><b>Penhor cedular</b></td><td>Rebanho e maquinário</td><td class="num placeholder">[R$ aval.]</td><td class="num placeholder">[× ]</td></tr>
+          <tr><td class="num">G.03</td><td><b>Aval solidário</b></td><td>Cônjuge <span class="placeholder">[Nome]</span></td><td class="num">meação</td><td class="num">—</td></tr>
+          <tr><td class="num">G.04</td><td><b>Seguro pecuário</b></td><td>Beneficiário = credor</td><td class="num placeholder">[R$ apólice]</td><td class="num">—</td></tr>
+          <tr class="total"><td colspan="3">Lastro consolidado</td><td class="num placeholder">[R$ total]</td><td class="num placeholder">[× ]</td></tr>
+        </tbody>
+      </table>
+      <p style="font-family: var(--serif); font-style: italic; font-size: 9.5pt; color: var(--ink-2); margin-top: 5pt; line-height: 1.45;">
+        Lastro consolidado acima dos múltiplos usualmente exigidos por instituições financeiras para esta natureza de operação.
+      </p>
+    </div>
+
+    <!-- Pilar 3 -->
+    <div style="margin-top: 8pt;">
+      <div class="h3" style="color:var(--accent);">Pilar 03 &middot; Indicadores de viabilidade</div>
+      <div style="height:0.5pt; background:var(--line); margin: 4pt 0 8pt;"></div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; border: 0.4pt solid var(--line);">
+        <div style="padding: 8pt 10pt; border-right: 0.3pt solid var(--line);"><div class="lbl">VPL (10%)</div><div style="font-family: var(--serif); font-weight: 500; font-size: 16pt; color: var(--accent); font-style: italic; margin-top: 4pt;" class="placeholder">[a calcular]</div></div>
+        <div style="padding: 8pt 10pt; border-right: 0.3pt solid var(--line);"><div class="lbl">TIR</div><div style="font-family: var(--serif); font-weight: 500; font-size: 16pt; color: var(--accent); font-style: italic; margin-top: 4pt;" class="placeholder">[a calcular]</div></div>
+        <div style="padding: 8pt 10pt; border-right: 0.3pt solid var(--line);"><div class="lbl">Payback descontado</div><div style="font-family: var(--serif); font-weight: 500; font-size: 16pt; color: var(--accent); font-style: italic; margin-top: 4pt;" class="placeholder">[a calcular]</div></div>
+        <div style="padding: 8pt 10pt;"><div class="lbl">Margem operacional</div><div style="font-family: var(--serif); font-weight: 500; font-size: 16pt; color: var(--accent); font-style: italic; margin-top: 4pt;" class="placeholder">[a calcular]</div></div>
+      </div>
+      <p class="mono" style="font-size: 8pt; margin-top: 6pt; color: var(--muted); letter-spacing: 0.04em;">Premissas econômicas dependem da finalização da composição do pleito e dos preços de mercado vigentes na data da apresentação.</p>
+    </div>
+
+    <!-- Signoff -->
+    <div class="signoff">
+      <p class="body-l">
+        Apresentamos esta operação tecnicamente fundamentada e em conformidade com os requisitos do Manual de Crédito Rural. Permanecemos à disposição do comitê para esclarecimentos adicionais sobre qualquer dos pilares analisados.
+      </p>
+      <div class="sig-l" style="text-align: right;">
+        <span class="name">[Paulo Sobrenome]</span>
+        <span class="role">Gerente de Agronegócios &middot; AgroBridge &middot; Consultoria em Crédito Rural</span>
+      </div>
+    </div>
+
+    <div class="footer">
+      <div>04 &middot; Fundamentação técnica &middot; MAC 2026/001</div>
+      <div class="hash">SHA-256 <span class="placeholder">[a1b2c3d4]…[e5f6g7h8]</span></div>
+      <div class="pag">5 / 8</div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== P6 · ADERÊNCIA AO MCR ===================== -->
+<section class="page page--cream">
+  <div class="watermark"><span>AGROBRIDGE</span></div>
+  <div class="p-pad">
+    <div class="header">
+      <div class="brand-mark">
+        <span class="logo-mark"><svg width="14" height="14" viewBox="0 0 28 28" style="color:#1A4D3A; --logo-keystone:#B08A3E;"><use href="#ag-logo"/></svg></span>
+        <b>AgroBridge</b> &middot; MAC 2026/001
+      </div>
+      <div>Fazenda Calado &middot; Cocalzinho / GO</div>
+    </div>
+
+    <div style="margin-top: 16pt;">
+      <div class="eyebrow">05 &middot; Aderência documental ao MCR/BACEN</div>
+      <div class="h2" style="margin-top: 4pt;">Aderência integral ao <em>Manual de Crédito Rural</em>.</div>
+    </div>
+
+    <p class="body body--j" style="margin-top: 10pt; max-width: 480pt;">
+      Cada item da operação foi verificado contra a seção correspondente do <b>Manual de Crédito Rural</b> publicado pelo Banco Central do Brasil. A AgroBridge audita os dez pontos de checagem documental antes da apresentação ao comitê — itens em curso ou regularização são sinalizados explicitamente para tratativa prévia à formalização.
+    </p>
+
+    <table class="tbl" style="margin-top: 14pt;">
+      <thead><tr><th style="width:6%">Item</th><th>Documento / requisito</th><th style="width:24%">Referência MCR</th><th style="width:22%">Status</th></tr></thead>
+      <tbody>
+        <tr><td class="num">01</td><td><b>Cadastro do produtor</b> &middot; PF/CPF</td><td class="num">MCR 2-1-1</td><td><span class="status-ok">✓ Conforme</span></td></tr>
+        <tr><td class="num">02</td><td><b>Comprovação de domínio</b> &middot; matrículas atualizadas</td><td class="num">MCR 3-2-1</td><td><span class="status-ok">✓ Conforme</span></td></tr>
+        <tr><td class="num">03</td><td><b>CCIR vigente</b></td><td class="num">MCR 2-1-3 alínea b</td><td><span class="status-ok">✓ Conforme</span></td></tr>
+        <tr><td class="num">04</td><td><b>CAR ativo</b></td><td class="num">MCR 2-2-3</td><td><span class="status-ok">✓ Conforme</span></td></tr>
+        <tr><td class="num">05</td><td><b>ITR quitado</b> &middot; último exercício</td><td class="num">MCR 2-1-3 alínea c</td><td><span class="status-ok">✓ Conforme</span></td></tr>
+        <tr><td class="num">06</td><td><b>Outorga de uso de água</b></td><td class="num">MCR 2-2-5</td><td><span class="status-ok">✓ Conforme</span></td></tr>
+        <tr><td class="num">07</td><td><b>Licenciamento ambiental</b> ou dispensa</td><td class="num">MCR 2-2-4</td><td><span class="status-warn">⚠ Em curso</span></td></tr>
+        <tr><td class="num">08</td><td><b>Certidão negativa municipal</b></td><td class="num">—</td><td><span class="status-warn">⚠ Em regularização (30 d)</span></td></tr>
+        <tr><td class="num">09</td><td><b>SCR limpo</b> &middot; Sistema de Informações de Crédito BCB</td><td class="num">Res. CMN 4.571/17</td><td><span class="status-ok">✓ Conforme</span></td></tr>
+        <tr><td class="num">10</td><td><b>Aderência da finalidade</b> à linha pretendida</td><td class="num">MCR 6 (linhas)</td><td><span class="status-ok">✓ Conforme</span></td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout" style="margin-top: 14pt;">
+      <div class="h">Por que esta verificação importa</div>
+      <div class="b">
+        A não conformidade documental é a primeira causa de devolução de pleitos pelos comitês de crédito. Auditamos os <b>dez pontos críticos do MCR</b> antes do caso chegar ao analista, organizando explicitamente itens em curso e em regularização para tratativa prévia. Isso reduz fricção, retrabalho e o risco de a operação ser arquivada por questões formais.
+      </div>
+    </div>
+
+    <div class="footer">
+      <div>05 &middot; Aderência MCR &middot; MAC 2026/001</div>
+      <div class="hash">SHA-256 <span class="placeholder">[a1b2c3d4]…[e5f6g7h8]</span></div>
+      <div class="pag">6 / 8</div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== P7 · PARECER E RESPONSABILIDADE ===================== -->
+<section class="page">
+  <div class="watermark"><span>AGROBRIDGE</span></div>
+  <div class="p-pad">
+    <div class="header">
+      <div class="brand-mark">
+        <span class="logo-mark"><svg width="14" height="14" viewBox="0 0 28 28" style="color:#1A4D3A; --logo-keystone:#B08A3E;"><use href="#ag-logo"/></svg></span>
+        <b>AgroBridge</b> &middot; MAC 2026/001
+      </div>
+      <div>Fazenda Calado &middot; Cocalzinho / GO</div>
+    </div>
+
+    <div style="margin-top: 16pt;">
+      <div class="eyebrow">06 &middot; Parecer técnico e responsabilidade</div>
+      <div class="h2" style="margin-top: 4pt;">Parecer técnico <em>favorável</em> à apresentação ao comitê.</div>
+    </div>
+
+    <p class="body body--j" style="margin-top: 12pt; max-width: 490pt;">
+      Considerando a regularidade documental e fundiária verificada, a aderência integral ao Manual de Crédito Rural nos dez pontos auditados, a viabilidade técnica e econômica da operação, o lastro consolidado de garantias e o histórico bancário do proponente sem restrições no SCR, a AgroBridge emite parecer técnico <b style="color: var(--accent);">FAVORÁVEL</b> à apresentação desta operação ao comitê de crédito da instituição financeira destinatária, condicionado à formalização das garantias descritas, à regularização dos itens em curso e ao cumprimento do cronograma vinculado à evolução da operação. <b>A decisão de concessão é prerrogativa exclusiva da instituição.</b>
+    </p>
+
+    <div class="verdict-grid" style="margin-top: 16pt;">
+      <div><div class="v">íntegra</div><div class="lbl">Conformidade documental</div></div>
+      <div><div class="v">apta</div><div class="lbl">Viabilidade econômica</div></div>
+      <div><div class="v"><span class="placeholder">[a confirmar]</span></div><div class="lbl">Lastro consolidado</div></div>
+    </div>
+
+    <div class="two-col" style="margin-top: 18pt;">
+      <div>
+        <div class="h3" style="color:var(--accent);">Responsabilidade pela análise</div>
+        <div style="height:0.5pt; background:var(--line); margin: 4pt 0 8pt;"></div>
+        <div style="font-family: var(--serif); font-weight: 500; font-size: 18pt; color: var(--ink); line-height: 1.1;" class="placeholder">[Paulo Sobrenome]</div>
+        <div class="mono" style="color: var(--muted); margin-top: 5pt; font-size: 8pt;">Gerente de Agronegócios</div>
+        <div style="font-family: var(--mono); font-size: 7.5pt; color: var(--ink-2); margin-top: 6pt; line-height: 1.7;">
+          ANBIMA C-PRO R &middot; Febraban FBB 420<br>
+          14 anos &middot; Crédito rural<br>
+          AgroBridge &middot; Consultoria em Crédito Rural
+        </div>
+      </div>
+      <div>
+        <div class="h3" style="color:var(--accent);">Identificação documental</div>
+        <div style="height:0.5pt; background:var(--line); margin: 4pt 0 8pt;"></div>
+        <div class="mono" style="font-size: 8pt; line-height: 1.85; color: var(--ink-2);">
+          MEMORANDO &nbsp; <b style="color: var(--ink);">MAC 2026 / 001</b><br>
+          PROCESSO &nbsp;&nbsp; <b style="color: var(--ink);">MAC-2026-001-CALADO</b><br>
+          EMISSÃO &nbsp;&nbsp;&nbsp; <b style="color: var(--ink);">23.04.2026</b><br>
+          VALIDADE &nbsp;&nbsp; <b style="color: var(--ink);">120 dias corridos</b><br>
+          ASSINATURA &nbsp;<b style="color: var(--ink);">DIGITAL ICP-BRASIL</b>
+        </div>
+      </div>
+    </div>
+
+    <div class="sig">
+      <div><div class="line"></div><div class="cap"><b>Gerente de Agronegócios</b> &middot; ANBIMA C-PRO R &middot; Febraban FBB 420</div></div>
+      <div><div class="line"></div><div class="cap"><b>Produtor</b> &middot; ciente e de acordo</div></div>
+    </div>
+
+    <div class="glossary" style="margin-top: 14pt;">
+      <b>Glossário ·</b> MCR · BACEN · CMN · CAR · CCIR · ITR · SCR · Resolução CMN 4.571/17 · CDA · WA · ICP-Brasil · LCA · CPR · CPR-F
+    </div>
+
+    <div class="footer">
+      <div>06 &middot; Parecer e responsabilidade &middot; MAC 2026/001</div>
+      <div class="hash">SHA-256 <span class="placeholder">[a1b2c3d4]…[e5f6g7h8]</span></div>
+      <div class="pag">7 / 8</div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== P8 · CAPA DOS ANEXOS ===================== -->
+<section class="page page--cream">
+  <div class="watermark"><span>AGROBRIDGE</span></div>
+  <div class="p-pad">
+    <div class="header">
+      <div class="brand-mark">
+        <span class="logo-mark"><svg width="14" height="14" viewBox="0 0 28 28" style="color:#1A4D3A; --logo-keystone:#B08A3E;"><use href="#ag-logo"/></svg></span>
+        <b>AgroBridge</b> &middot; MAC 2026/001
+      </div>
+      <div>Fazenda Calado &middot; Cocalzinho / GO</div>
+    </div>
+
+    <div class="attachments-hero">
+      <div class="eyebrow eyebrow-c">07 &middot; Dossiê de respaldo documental</div>
+      <h1>Anexos <em>originais</em><br>do produtor.</h1>
+      <p class="lede">
+        Os documentos originais entregues pelo produtor à AgroBridge seguem em sequência neste memorando, organizados por categoria e na ordem em que foram verificados.
+      </p>
+
+      <div class="attach-list">
+        <div class="row">
+          <div class="ico"><svg width="18" height="18" viewBox="0 0 28 28" style="color:#6B7A8F; --logo-keystone:#B08A3E;"><use href="#ag-logo"/></svg></div>
+          <div>
+            <div class="name">Comprovação fundiária</div>
+            <div class="desc">Matrículas atualizadas, CCIR vigente</div>
+          </div>
+          <div></div>
+          <div class="pgs"><span class="placeholder">[n] págs</span></div>
+        </div>
+        <div class="row">
+          <div class="ico"><svg width="18" height="18" viewBox="0 0 28 28" style="color:#6B7A8F; --logo-keystone:#B08A3E;"><use href="#ag-logo"/></svg></div>
+          <div>
+            <div class="name">Conformidade ambiental</div>
+            <div class="desc">CAR, licenças, outorga de uso de água</div>
+          </div>
+          <div></div>
+          <div class="pgs"><span class="placeholder">[n] págs</span></div>
+        </div>
+        <div class="row">
+          <div class="ico"><svg width="18" height="18" viewBox="0 0 28 28" style="color:#6B7A8F; --logo-keystone:#B08A3E;"><use href="#ag-logo"/></svg></div>
+          <div>
+            <div class="name">Regularidade fiscal</div>
+            <div class="desc">ITR, CNDs federal e estadual</div>
+          </div>
+          <div></div>
+          <div class="pgs"><span class="placeholder">[n] págs</span></div>
+        </div>
+        <div class="row">
+          <div class="ico"><svg width="18" height="18" viewBox="0 0 28 28" style="color:#6B7A8F; --logo-keystone:#B08A3E;"><use href="#ag-logo"/></svg></div>
+          <div>
+            <div class="name">Identificação</div>
+            <div class="desc">CPF, comprovante de residência</div>
+          </div>
+          <div></div>
+          <div class="pgs"><span class="placeholder">[n] págs</span></div>
+        </div>
+        <div class="row">
+          <div class="ico"><svg width="18" height="18" viewBox="0 0 28 28" style="color:#6B7A8F; --logo-keystone:#B08A3E;"><use href="#ag-logo"/></svg></div>
+          <div>
+            <div class="name">Capacidade financeira</div>
+            <div class="desc">Registrato BACEN, faturamento documentado</div>
+          </div>
+          <div></div>
+          <div class="pgs"><span class="placeholder">[n] págs</span></div>
+        </div>
+      </div>
+
+      <div class="lgpd">
+        Documentos protegidos por LGPD &middot; Uso restrito ao comitê de crédito da instituição financeira destinatária
+      </div>
+    </div>
+
+    <div class="footer">
+      <div>07 &middot; Anexos &middot; MAC 2026/001</div>
+      <div class="hash">SHA-256 <span class="placeholder">[a1b2c3d4]…[e5f6g7h8]</span></div>
+      <div class="pag">8 / 8</div>
+    </div>
+  </div>
+</section>
+
+</div>
+</body>
+</html>

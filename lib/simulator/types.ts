@@ -37,6 +37,24 @@ export type CarStatus =
 
 export type ReciprocidadeBancaria = 'forte' | 'media' | 'nenhuma'
 
+/**
+ * Alavancagem patrimonial — percentual do patrimônio real do produtor
+ * já comprometido em crédito no mercado. Cenário 2026 (RJs em alta):
+ * comitês olham com lupa quem passa de 70%.
+ *
+ *   ate_50      — comitê vê com bons olhos (folga patrimonial)
+ *   de_51_a_70  — atende com ressalvas (defesa do fluxo de caixa)
+ *   de_71_a_85  — zona de alerta (cenário econômico + RJs)
+ *   acima_85    — alavancagem crítica (improvável sem reestruturação)
+ *   nao_sei     — produtor não soube responder; IA aprofunda no chat
+ */
+export type DividaPatrimonioFaixa =
+  | 'ate_50'
+  | 'de_51_a_70'
+  | 'de_71_a_85'
+  | 'acima_85'
+  | 'nao_sei'
+
 export interface SimulatorInput {
   valor_pretendido: number
   cultura: CulturaId
@@ -48,7 +66,13 @@ export interface SimulatorInput {
   aval_tipo?: AvalTipo
   cadastro_nivel: CadastroNivelId
   historico_scr: HistoricoScr
-  endividamento_pct: number // 0–200
+  endividamento_pct: number // 0–200, dívida total / receita anual
+  /**
+   * Dívida total / patrimônio real (alavancagem). Opcional: simulações
+   * antigas não têm. Quando ausente ou 'nao_sei' o engine não aplica
+   * delta nem entra no eixo Capacidade.
+   */
+  divida_patrimonio_faixa?: DividaPatrimonioFaixa
   car: CarStatus
   tem_seguro_agricola: boolean
   reciprocidade_bancaria: ReciprocidadeBancaria

@@ -11,6 +11,7 @@ import {
 } from "@/components/landing/primitives"
 import { Alert } from "@/components/shell/Alert"
 import { BotaoConcluirEntrevista } from "@/components/entrevista/BotaoConcluirEntrevista"
+import { CarrosselMercado } from "@/components/entrevista/CarrosselMercado"
 import { useRouter } from "next/navigation"
 import { deveAutoConcluir } from "@/lib/entrevista/detectar-fim"
 
@@ -234,6 +235,12 @@ export function ChatClient(props: Props) {
         limite={props.limite}
         mostraContador={mostraContador}
       />
+
+      {/* Briefing do mercado 2026 — primeira coisa que o lead vê. Educa
+          sobre garantias preferidas + alavancagem patrimonial ANTES de
+          a IA pedir dados. Lead chega informado, dá resposta melhor.
+          Auto-dismiss persistido em localStorage. */}
+      <CarrosselMercado />
 
       {/* Overlay visível quando auto-conclusão dispara — bloqueia
           interação enquanto monta processo + redireciona pro checklist. */}
