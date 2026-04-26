@@ -277,7 +277,7 @@ function paginaSumario(ctx: RenderContext): string {
 
     <div class="kpi-row" style="margin-top: 16pt;">
       <div class="kpi"><div class="lbl">Pleito</div><div class="v" style="font-size:18pt;">${valor ? brl(valor) : '—'}</div><div class="s">${esc(tipoOperacao || 'finalidade a confirmar')}</div></div>
-      <div class="kpi"><div class="lbl">Finalidade</div><div class="v" style="font-size:14pt;">${esc(truncate(finalidade || '—', 22))}</div><div class="s">conforme entrevista</div></div>
+      <div class="kpi"><div class="lbl">Finalidade</div><div class="v" style="font-size:11pt; line-height:1.2;">${esc(truncate(finalidade || '—', 60))}</div><div class="s">conforme entrevista</div></div>
       <div class="kpi"><div class="lbl">Regime fundiário</div><div class="v" style="font-size:14pt;">${regimeLabel(perfil.propriedade.regime)}</div><div class="s">${perfil.propriedade.area_hectares ? `${perfil.propriedade.area_hectares} ha` : 'área a confirmar'}</div></div>
       <div class="kpi"><div class="lbl">CAR</div><div class="v" style="font-size:14pt;">${carLabel(perfil.propriedade.car_situacao)}</div><div class="s">aderência ambiental</div></div>
     </div>
@@ -526,13 +526,16 @@ type MdBlock =
   | { tipo: 'h2'; texto: string }
   | { tipo: 'h3'; texto: string }
   | { tipo: 'p'; texto: string }
-  | { tipo: 'lista'; itens: string[] }
+  | { tipo: 'lista'; itens: string[]; numerada?: boolean }
+
+const LISTA_NUMERADA_RE = /^(\d+)\.\s+(.+)$/
 
 function parseMarkdownBlocks(md: string): MdBlock[] {
   const linhas = (md ?? '').split(/\r?\n/)
   const blocks: MdBlock[] = []
   let buffer: string[] = []
   let listBuffer: string[] = []
+  let listNumerada: boolean | null = null
 
   function flushParagrafo() {
     if (buffer.length) {
@@ -542,13 +545,19 @@ function parseMarkdownBlocks(md: string): MdBlock[] {
   }
   function flushLista() {
     if (listBuffer.length) {
-      blocks.push({ tipo: 'lista', itens: [...listBuffer] })
+      blocks.push({
+        tipo: 'lista',
+        itens: [...listBuffer],
+        numerada: listNumerada === true,
+      })
       listBuffer = []
+      listNumerada = null
     }
   }
 
   for (const linha of linhas) {
     const t = linha.trim()
+    const numerada = LISTA_NUMERADA_RE.exec(t)
     if (t.startsWith('## ')) {
       flushParagrafo()
       flushLista()
@@ -559,7 +568,14 @@ function parseMarkdownBlocks(md: string): MdBlock[] {
       blocks.push({ tipo: 'h3', texto: t.slice(4) })
     } else if (t.startsWith('- ') || t.startsWith('* ')) {
       flushParagrafo()
+      if (listNumerada === true) flushLista()
+      listNumerada = false
       listBuffer.push(t.slice(2))
+    } else if (numerada) {
+      flushParagrafo()
+      if (listNumerada === false) flushLista()
+      listNumerada = true
+      listBuffer.push(`${numerada[1]}. ${numerada[2]}`)
     } else if (t === '') {
       flushParagrafo()
       flushLista()
@@ -587,7 +603,17 @@ function blocosToHtml(blocks: MdBlock[]): string {
         case 'p':
           return `<p class="body body--j" style="margin-top: 6pt;">${renderInline(b.texto)}</p>`
         case 'lista':
-          return `<ul style="list-style: none; padding: 0; margin-top: 6pt; font-size: 9pt; line-height: 1.7; color: var(--ink-2); font-weight: 300;">${b.itens.map((i) => `<li>— ${renderInline(i)}</li>`).join('')}</ul>`
+          return `<ul style="list-style: none; padding: 0; margin-top: 6pt; font-size: 9pt; line-height: 1.7; color: var(--ink-2); font-weight: 300;">${b.itens
+            .map((i) => {
+              if (b.numerada) {
+                const m = LISTA_NUMERADA_RE.exec(i)
+                if (m) {
+                  return `<li style="display: grid; grid-template-columns: 18pt 1fr; gap: 6pt; margin-bottom: 4pt;"><span class="mono" style="color: var(--accent); font-size: 8pt;">${m[1]}.</span><span>${renderInline(m[2])}</span></li>`
+                }
+              }
+              return `<li>— ${renderInline(i)}</li>`
+            })
+            .join('')}</ul>`
       }
     })
     .join('\n')
@@ -776,7 +802,7 @@ html, body { background: #fff; color: #1f1f1f; }
 }
 .watermark span {
   font-family: var(--serif); font-style: italic; font-weight: 600;
-  font-size: 130pt; letter-spacing: 0.06em; color: var(--ink);
+  font-size: 100pt; letter-spacing: 0.06em; color: var(--ink);
   opacity: 0.035; transform: rotate(-32deg); white-space: nowrap;
 }
 .p-pad { padding: 18mm 22mm 14mm; flex: 1; display: flex; flex-direction: column; position: relative; z-index: 1; }
