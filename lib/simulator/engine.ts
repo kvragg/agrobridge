@@ -139,7 +139,9 @@ export function simular(
       break
   }
 
-  // ── 6) Endividamento ──────────────────────────────────────────
+  // ── 6) Endividamento (% da receita anual) ─────────────────────
+  // Capacidade de pagamento — quanto da receita já vai pra serviço de
+  // dívida. Eixo "consigo pagar?".
   if (input.endividamento_pct >= 100) {
     deltas.push({
       fator: 'endividamento_alto',
@@ -158,6 +160,49 @@ export function simular(
       delta: 5,
       motivo: `Endividamento baixo (${input.endividamento_pct}%) — capacidade de pagamento boa.`,
     })
+  }
+
+  // ── 6.5) Alavancagem patrimonial (% do patrimônio comprometido) ─
+  // Cenário 2026: comitês olham com lupa quem passa de 70% por causa
+  // da onda de RJs no agro. Eixo "se a operação azedar, sobra colateral?".
+  // Complementar ao endividamento por receita — os dois coexistem.
+  switch (input.divida_patrimonio_faixa) {
+    case 'ate_50':
+      deltas.push({
+        fator: 'alavancagem_patrimonial_baixa',
+        delta: 5,
+        motivo:
+          'Até 50% do patrimônio comprometido — comitê vê com bons olhos, folga patrimonial confortável.',
+      })
+      break
+    case 'de_51_a_70':
+      deltas.push({
+        fator: 'alavancagem_patrimonial_moderada',
+        delta: -6,
+        motivo:
+          '51-70% do patrimônio comprometido — atende com ressalvas, comitê pede defesa do fluxo.',
+      })
+      break
+    case 'de_71_a_85':
+      deltas.push({
+        fator: 'alavancagem_patrimonial_alerta',
+        delta: -14,
+        motivo:
+          '71-85% do patrimônio comprometido — zona de alerta no cenário 2026 (RJs em alta).',
+      })
+      break
+    case 'acima_85':
+      deltas.push({
+        fator: 'alavancagem_patrimonial_critica',
+        delta: -22,
+        motivo:
+          'Acima de 85% do patrimônio comprometido — alavancagem crítica, operação improvável sem reestruturação.',
+      })
+      break
+    case 'nao_sei':
+    case undefined:
+      // Não aplica delta — IA do chat aprofunda no Turno 3.
+      break
   }
 
   // ── 7) CAR ────────────────────────────────────────────────────
@@ -383,6 +428,19 @@ export function simular(
       texto: 'Endividamento acima de 100% — refinanciamento ou redução de pleito é quase obrigatório.',
     })
   }
+  if (input.divida_patrimonio_faixa === 'acima_85') {
+    avisos.push({
+      tipo: 'critico',
+      texto:
+        'Alavancagem patrimonial acima de 85% — operação improvável sem reestruturação. Cenário 2026 com onda de RJs no agro deixou comitês muito conservadores nessa zona.',
+    })
+  } else if (input.divida_patrimonio_faixa === 'de_71_a_85') {
+    avisos.push({
+      tipo: 'alerta',
+      texto:
+        'Alavancagem patrimonial em 71-85% — zona de alerta. Comitê vai pedir defesa robusta. Considere garantia premium (alienação fiduciária ou investimento dado em garantia).',
+    })
+  }
   if (input.historico_scr === 'com_restricao_ativa') {
     avisos.push({
       tipo: 'critico',
@@ -466,7 +524,31 @@ function montarRadar(
     }
   })()
 
-  const eixoCapacidade = clamp01(100 - input.endividamento_pct * 0.7)
+  // Eixo "Capacidade" combina dois ângulos quando ambos disponíveis:
+  //   (a) endividamento sobre receita → "consegue pagar?"
+  //   (b) alavancagem patrimonial → "sobra colateral se azedar?"
+  // Média ponderada 60/40 quando alavancagem informada; só (a) quando
+  // não-informada ou 'nao_sei'.
+  const eixoCaixa = 100 - input.endividamento_pct * 0.7
+  const eixoPatrimonio = (() => {
+    switch (input.divida_patrimonio_faixa) {
+      case 'ate_50':
+        return 90
+      case 'de_51_a_70':
+        return 60
+      case 'de_71_a_85':
+        return 30
+      case 'acima_85':
+        return 10
+      case 'nao_sei':
+      case undefined:
+        return null
+    }
+  })()
+  const eixoCapacidade =
+    eixoPatrimonio === null
+      ? clamp01(eixoCaixa)
+      : clamp01(eixoCaixa * 0.6 + eixoPatrimonio * 0.4)
 
   const docsOk = [
     input.car === 'regular_averbado',
@@ -564,12 +646,25 @@ function montarPlanoSubida(
     })
   }
 
-  // Endividamento alto
+  // Endividamento alto (sobre receita)
   if (input.endividamento_pct >= 100) {
     acoes.push({
       acao: 'Reduzir/refinanciar dívida atual antes de pleitear novo crédito',
       ganho_estimado: 18,
       prazo_dias: 60,
+    })
+  }
+
+  // Alavancagem patrimonial alta (sobre patrimônio real)
+  if (
+    input.divida_patrimonio_faixa === 'de_71_a_85' ||
+    input.divida_patrimonio_faixa === 'acima_85'
+  ) {
+    acoes.push({
+      acao:
+        'Reduzir alavancagem patrimonial — quitar/refinanciar parte da dívida ou complementar com investimento dado em garantia (CDB/LCA)',
+      ganho_estimado: input.divida_patrimonio_faixa === 'acima_85' ? 22 : 14,
+      prazo_dias: 90,
     })
   }
 

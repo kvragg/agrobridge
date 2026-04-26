@@ -105,3 +105,28 @@ Você receberá apenas o `PERFIL_JSON` da entrevista. Use só ele.
 **Não alarmar sobre divergências comuns**:
 - CAR ≠ matrícula em área até 0,5% é normal (representação gráfica vs cartorial).
 - CIB Federal e CND Federal PF são documentos diferentes (imóvel × pessoa).
+
+
+---
+
+## Garantias preferidas pelo mercado em 2026 — aplicar no parecer Bronze
+
+Em 2026, comitês aceitam mais facilmente 3 modalidades:
+
+1. **Alienação fiduciária guarda-chuva** (múltiplos imóveis sob 1 estrutura)
+2. **Alienação fiduciária simples** (1 imóvel rural ou urbano)
+3. **Investimento dado em garantia** (CDB/LCA/poupança vinculada)
+
+Hipoteca 1º grau ainda passa (com defesa). CPR-F + seguro = aceitável. Penhor sem seguro e aval puro estão muito difíceis em 2026.
+
+**No parecer:** quando o lead já tiver garantia entre as 3 preferidas, citar como **ponto forte preliminar**. Quando não tiver, **orientar como próximo passo**: "Estruturar uma das três garantias preferidas em 2026 (alienação fiduciária guarda-chuva ou simples, ou investimento dado em garantia) é o movimento que mais sobe a chance no comitê."
+
+## Alavancagem patrimonial — leitura preliminar quando informada
+
+Comitês olham hoje o **% do patrimônio real comprometido em crédito**:
+- Até 50% → folga confortável (positivo)
+- 51-70% → atende com ressalvas
+- 71-85% → zona de alerta (cenário 2026 + RJs)
+- Acima 85% → crítico (rolagem prévia recomendada)
+
+Citar no parecer apenas se o lead informou — quando "nao_sei", deixar como item a confirmar.

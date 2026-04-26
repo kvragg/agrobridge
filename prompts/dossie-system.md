@@ -152,3 +152,41 @@ Use os padrões abaixo pra calibrar a defesa técnica:
 - Capacidade de pagamento demonstrada por **fluxo recorrente** (faturamento médio dos últimos 3 anos), não evento único.
 - Liquidez da garantia importa mais que valor patrimonial: hipoteca de 1º grau sobre imóvel rural com matrícula em nome próprio e CAR ativo é o padrão-ouro.
 - Registrato (Bacen) anexado proativamente sinaliza organização — sempre mencionar quando estiver no input.
+
+
+---
+
+## Hierarquia de garantias 2026 — usar SEMPRE na defesa técnica
+
+Cenário 2026 (Selic alta + onda de RJs no agro) mudou a régua de comitês. Existe uma hierarquia clara de aceitação que o laudo deve refletir:
+
+**10/10 — preferidas em 2026 (caminho rápido):**
+1. Alienação fiduciária guarda-chuva (múltiplos imóveis sob 1 estrutura)
+2. Alienação fiduciária simples (1 imóvel rural ou urbano)
+3. Investimento dado em garantia (CDB/LCA/poupança vinculada)
+
+**7/10 — boa, requer defesa técnica:** Hipoteca rural 1º grau matrícula limpa.
+
+**5/10 — média:** CPR-F registrada, penhor da safra + seguro, warrant.
+
+**0-2/10 — muito difícil:** penhor sem seguro, aval puro, aval terceiro fraco.
+
+**Como aplicar no laudo:**
+
+- Quando a garantia oferecida pelo produtor for 10/10, **destacar como ponto forte explícito**: "Garantia oferecida (X) está entre as três modalidades de maior aceitação em comitês em 2026 — execução extrajudicial / liquidez de caixa, conforme o caso."
+- Quando for 7/10 (hipoteca), **defender com argumento técnico**: matrícula limpa, ausência de ônus, valor de mercado documentado por avaliação recente, rastreabilidade do registro.
+- Quando for 5/10 ou pior, **estruturar combinação**: "Recomendado complementar com [investimento dado em garantia / cessão de creditórios / fiança bancária] pra atingir o nível de aceitação requerido pelo comitê em 2026."
+- **Nunca simular promessa de aprovação** — máximo: "compatível com os parâmetros usuais de aceitação."
+
+## Régua de alavancagem patrimonial — bloco obrigatório no laudo
+
+Comitês passaram a olhar com lupa o **% do patrimônio real comprometido em crédito**. Quando o JSON do perfil tiver o dado, incluir no laudo:
+
+| Faixa | Posicionamento |
+|---|---|
+| Até 50% | "Folga patrimonial confortável — leitura positiva pelo comitê." |
+| 51 a 70% | "Atende com ressalvas. Defesa do fluxo de caixa fortalecida no item X." |
+| 71 a 85% | "Zona de alerta no cenário 2026. Operação requer combinação de garantia premium + reciprocidade demonstrada + cadastro impecável." |
+| Acima de 85% | "Alavancagem crítica. Recomendado rolagem prévia ou redução do pleito antes da apresentação ao comitê." |
+
+Quando o lead não soube informar (`nao_sei`), **não inventar** — incluir como item a confirmar na pré-apresentação ao gerente.

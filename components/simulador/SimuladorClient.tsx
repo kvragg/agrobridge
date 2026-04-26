@@ -17,6 +17,7 @@ import type {
   SimulatorInput,
   SimulatorResult,
   Faixa,
+  DividaPatrimonioFaixa,
 } from "@/lib/simulator/types"
 import { SimuladorRadar } from "./SimuladorRadar"
 import { useWidgetIA } from "@/components/widget-ia/WidgetIAProvider"
@@ -56,6 +57,7 @@ function inputInicial(): SimulatorInput {
     cadastro_nivel: "atualizado_incompleto",
     historico_scr: "limpo",
     endividamento_pct: 35,
+    divida_patrimonio_faixa: "nao_sei",
     car: "regular_averbado",
     tem_seguro_agricola: true,
     reciprocidade_bancaria: "media",
@@ -236,7 +238,35 @@ export function SimuladorClient({
           />
         </Field>
 
-        <Field label={`Garantias (${input.garantias.length} selecionadas)`}>
+        <Field
+          label={`Garantias (${input.garantias.length} selecionadas)`}
+          extra={
+            <span
+              className="mono"
+              style={{
+                fontSize: 10,
+                color: "var(--gold)",
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+              }}
+            >
+              <span
+                aria-hidden
+                style={{
+                  width: 6,
+                  height: 6,
+                  borderRadius: "50%",
+                  background: "var(--gold)",
+                  boxShadow: "0 0 6px var(--gold)",
+                }}
+              />
+              Preferidas mercado 2026
+            </span>
+          }
+        >
           <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
             {GARANTIAS.map((g) => {
               const active = input.garantias.includes(g.id)
@@ -253,7 +283,9 @@ export function SimuladorClient({
                   key={g.id}
                   type="button"
                   onClick={() => toggleGarantia(g.id)}
-                  title={g.nome}
+                  title={g.preferida_mercado_2026
+                    ? `${g.nome} — preferida do mercado em 2026 (10/10)`
+                    : g.nome}
                   style={{
                     padding: "6px 11px",
                     borderRadius: 999,
@@ -267,8 +299,24 @@ export function SimuladorClient({
                     fontFamily: "inherit",
                     transition: "all .15s",
                     whiteSpace: "nowrap",
+                    position: "relative",
                   }}
                 >
+                  {g.preferida_mercado_2026 && (
+                    <span
+                      aria-hidden
+                      style={{
+                        display: "inline-block",
+                        width: 6,
+                        height: 6,
+                        borderRadius: "50%",
+                        background: "var(--gold)",
+                        boxShadow: "0 0 6px var(--gold)",
+                        marginRight: 6,
+                        verticalAlign: "middle",
+                      }}
+                    />
+                  )}
                   {abreviar(g.nome)}{" "}
                   <span
                     className="mono"
@@ -394,6 +442,28 @@ export function SimuladorClient({
             value={input.endividamento_pct}
             onChange={(e) => patch({ endividamento_pct: +e.target.value })}
             style={{ width: "100%", accentColor: "var(--green)" }}
+          />
+        </Field>
+
+        <Field
+          label="Alavancagem patrimonial · % do patrimônio comprometido em crédito"
+          extra={
+            <span
+              className="mono"
+              style={{
+                fontSize: 10,
+                color: "var(--gold)",
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+              }}
+            >
+              Crítico em 2026
+            </span>
+          }
+        >
+          <FaixaPatrimonioPicker
+            value={input.divida_patrimonio_faixa ?? "nao_sei"}
+            onChange={(v) => patch({ divida_patrimonio_faixa: v })}
           />
         </Field>
 
@@ -1049,4 +1119,110 @@ function CadastroModal({ onClose }: { onClose: () => void }) {
 function abreviar(s: string): string {
   if (s.length <= 36) return s
   return s.slice(0, 33) + "…"
+}
+
+// Picker de faixa de alavancagem patrimonial. Radio em cores graduais
+// (verde → âmbar → vermelho) pra deixar o impacto visual claro. Se
+// "Não sei" o engine não aplica delta — IA do chat aprofunda no Turno 3.
+function FaixaPatrimonioPicker({
+  value,
+  onChange,
+}: {
+  value: DividaPatrimonioFaixa
+  onChange: (v: DividaPatrimonioFaixa) => void
+}) {
+  const opcoes: {
+    id: DividaPatrimonioFaixa
+    rotulo: string
+    descr: string
+    cor: string
+  }[] = [
+    {
+      id: "ate_50",
+      rotulo: "Até 50%",
+      descr: "Folga confortável",
+      cor: "var(--green)",
+    },
+    {
+      id: "de_51_a_70",
+      rotulo: "51 a 70%",
+      descr: "Atende com ressalvas",
+      cor: "var(--gold)",
+    },
+    {
+      id: "de_71_a_85",
+      rotulo: "71 a 85%",
+      descr: "Zona de alerta",
+      cor: "#d97a4f",
+    },
+    {
+      id: "acima_85",
+      rotulo: "Acima de 85%",
+      descr: "Crítico",
+      cor: "var(--danger)",
+    },
+    {
+      id: "nao_sei",
+      rotulo: "Não sei",
+      descr: "IA aprofunda no chat",
+      cor: "var(--muted)",
+    },
+  ]
+  return (
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))",
+        gap: 6,
+      }}
+    >
+      {opcoes.map((o) => {
+        const active = value === o.id
+        return (
+          <button
+            key={o.id}
+            type="button"
+            onClick={() => onChange(o.id)}
+            style={{
+              padding: "9px 10px",
+              borderRadius: 10,
+              background: active
+                ? `color-mix(in srgb, ${o.cor} 18%, transparent)`
+                : "rgba(255,255,255,0.03)",
+              border: `1px solid ${active ? o.cor : "var(--line-2)"}`,
+              color: active ? o.cor : "var(--ink-2)",
+              cursor: "pointer",
+              fontFamily: "inherit",
+              textAlign: "left",
+              transition: "all .15s",
+              display: "flex",
+              flexDirection: "column",
+              gap: 2,
+            }}
+          >
+            <span
+              className="mono"
+              style={{
+                fontSize: 11,
+                letterSpacing: "0.08em",
+                fontWeight: 500,
+              }}
+            >
+              {o.rotulo}
+            </span>
+            <span
+              style={{
+                fontSize: 10.5,
+                color: active ? o.cor : "var(--muted)",
+                opacity: active ? 0.85 : 1,
+                lineHeight: 1.3,
+              }}
+            >
+              {o.descr}
+            </span>
+          </button>
+        )
+      })}
+    </div>
+  )
 }

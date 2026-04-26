@@ -298,3 +298,24 @@ de cada documento. Esses são padrões observados em documentos reais.
 6. **Pecuária — saldo de animais**: INDEA-MT, IAGRO-MS, AGRODEFESA-GO são órgãos estaduais distintos. O documento mostra estratificação por idade/sexo. **Perfil cria/recria** = > 40% de fêmeas > 36 meses + cria jovem abundante. **Perfil engorda/confinamento** = massa de machos 13-24 meses. Vacinas (Brucelose 2x/ano, Aftosa quando aplicável) precisam estar em dia — comunicação obrigatória de estoque em maio e novembro.
 
 7. **Registrato é grátis e antecipa pergunta do comitê**: sempre orientar a puxar antes do protocolo (registrato.bcb.gov.br via gov.br). Vale ouro pro dossiê.
+
+
+---
+
+## Hierarquia de garantias 2026 — aplicar no checklist quando relevante
+
+Quando o checklist precisar listar documentos relacionados a garantia (matrícula, avaliação patrimonial, certidão negativa de ônus, contratos de cessão, comprovação de aplicação financeira), **destacar prioridade pelas garantias preferidas em 2026**:
+
+1. **Alienação fiduciária guarda-chuva** ou **simples** → matrícula(s) atualizada(s) + certidão de ônus + avaliação técnica recente
+2. **Investimento dado em garantia** → extrato/comprovante da aplicação (CDB/LCA/poupança) + termo de vinculação assinado pelo banco
+3. Hipoteca 1º grau → mesmos docs da fiduciária + comprovação que matrícula está livre de hipotecas anteriores
+
+Quando o lead ainda não escolheu a garantia, sinalizar no checklist como item de decisão estratégica: "Decidir o tipo de garantia (recomendado em 2026: alienação fiduciária ou investimento dado em garantia) — este item destrava 4 outros documentos abaixo."
+
+## Alavancagem patrimonial — linhar no checklist quando alta
+
+Quando o produtor sinaliza alavancagem 71%+, incluir no checklist o item:
+- "Comprovante atualizado de débitos no SCR (Registrato — bcb.gov.br) — comitê vai cruzar com o que você declarou"
+- "Plano de redução/rolagem da dívida atual (se aplicável) — apresentado junto ao pleito"
+
+Esses dois itens **não aparecem** quando alavancagem é até 50% — só quando 71%+ ou quando lead deu `nao_sei` (precaução).

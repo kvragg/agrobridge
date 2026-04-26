@@ -323,6 +323,88 @@ describe('Cultura inválida não quebra (defensivo)', () => {
   })
 })
 
+describe('Alavancagem patrimonial (cenário 2026 — RJs em alta)', () => {
+  it('até 50% bonifica score (folga patrimonial)', () => {
+    const baixa = simular(
+      inputBase({ divida_patrimonio_faixa: 'ate_50' }),
+      CONJUNTURA_ATUAL,
+    )
+    const semInfo = simular(inputBase(), CONJUNTURA_ATUAL)
+    expect(baixa.score).toBeGreaterThanOrEqual(semInfo.score)
+  })
+
+  it('51-70% penaliza moderadamente (sob teto cadastro)', () => {
+    // Cenário com espaço sob o teto (sem garantia premium + endividamento
+    // baixo) pra ver o efeito real do delta sem o teto mascarar.
+    const cenarioCabe: Partial<SimulatorInput> = {
+      garantias: [],
+      endividamento_pct: 50,
+      tem_seguro_agricola: false,
+      reciprocidade_bancaria: 'nenhuma',
+    }
+    const moderada = simular(
+      inputBase({ ...cenarioCabe, divida_patrimonio_faixa: 'de_51_a_70' }),
+      CONJUNTURA_ATUAL,
+    )
+    const baixa = simular(
+      inputBase({ ...cenarioCabe, divida_patrimonio_faixa: 'ate_50' }),
+      CONJUNTURA_ATUAL,
+    )
+    expect(moderada.score).toBeLessThan(baixa.score)
+  })
+
+  it('71-85% gera aviso de alerta', () => {
+    const r = simular(
+      inputBase({ divida_patrimonio_faixa: 'de_71_a_85' }),
+      CONJUNTURA_ATUAL,
+    )
+    const tiposAviso = r.avisos.map((a) => a.tipo)
+    expect(tiposAviso).toContain('alerta')
+    expect(r.avisos.some((a) => /alavancagem/i.test(a.texto))).toBe(true)
+  })
+
+  it('acima de 85% gera aviso crítico + ação no plano de subida', () => {
+    const r = simular(
+      inputBase({ divida_patrimonio_faixa: 'acima_85' }),
+      CONJUNTURA_ATUAL,
+    )
+    const tiposAviso = r.avisos.map((a) => a.tipo)
+    expect(tiposAviso).toContain('critico')
+    const acoes = r.plano_de_subida.map((a) => a.acao).join(' ')
+    expect(acoes).toMatch(/alavancagem|reduzir.*dívida/i)
+  })
+
+  it("'nao_sei' não aplica delta nem aviso (neutro)", () => {
+    const semInfo = simular(inputBase(), CONJUNTURA_ATUAL)
+    const naoSei = simular(
+      inputBase({ divida_patrimonio_faixa: 'nao_sei' }),
+      CONJUNTURA_ATUAL,
+    )
+    expect(naoSei.score).toBe(semInfo.score)
+    expect(
+      naoSei.avisos.filter((a) => /alavancagem/i.test(a.texto)).length,
+    ).toBe(0)
+  })
+
+  it('eixo Capacidade do radar combina os dois endividamentos quando informados', () => {
+    // Cenário: endividamento receita baixo (deveria dar capacidade alta)
+    // mas alavancagem patrimonial crítica (deveria puxar pra baixo)
+    const so_caixa = simular(
+      inputBase({ endividamento_pct: 10 }),
+      CONJUNTURA_ATUAL,
+    )
+    const com_alavancagem_critica = simular(
+      inputBase({ endividamento_pct: 10, divida_patrimonio_faixa: 'acima_85' }),
+      CONJUNTURA_ATUAL,
+    )
+    const eixoSoCaixa = so_caixa.radar.find((e) => e.eixo === 'Capacidade')!
+    const eixoCombinado = com_alavancagem_critica.radar.find(
+      (e) => e.eixo === 'Capacidade',
+    )!
+    expect(eixoCombinado.valor).toBeLessThan(eixoSoCaixa.valor)
+  })
+})
+
 describe('teto_valor_estimado', () => {
   it('é null pra culturas com teto_custeio_por_ha.max=0 (pecuária etc)', () => {
     // Buscar uma cultura com max=0
