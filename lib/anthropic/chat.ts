@@ -9,7 +9,7 @@ import 'server-only'
 import 'server-only'
 import Anthropic from '@anthropic-ai/sdk'
 import type { PerfilLead } from '@/types/perfil-lead'
-import { buildSystemBlocks } from '@/lib/ai/system-prompt'
+import { buildSystemBlocks, type EntregaSnapshot } from '@/lib/ai/system-prompt'
 import { MODEL } from './model'
 
 // Alias retrocompatível — todo código que importa HAIKU_MODEL recebe
@@ -41,11 +41,12 @@ export { montarContextoLead } from '@/lib/ai/system-prompt'
 export function criarStreamChat(params: {
   perfil: PerfilLead | null
   historico: MensagemChat[]
+  entregas?: EntregaSnapshot[]
 }) {
   return getClient().messages.stream({
     model: MODEL,
     max_tokens: 1024,
-    system: buildSystemBlocks(params.perfil),
+    system: buildSystemBlocks(params.perfil, params.entregas ?? []),
     messages: params.historico,
   })
 }

@@ -21,6 +21,7 @@ import { logAuditEvent } from '@/lib/audit'
 import { capturarErroProducao } from '@/lib/logger'
 import { getPlanoAtual } from '@/lib/plano'
 import type { PerfilLead } from '@/types/perfil-lead'
+import type { EntregaSnapshot } from '@/lib/ai/system-prompt'
 import { NextRequest } from 'next/server'
 
 export const runtime = 'nodejs'
@@ -46,8 +47,15 @@ export async function POST(request: NextRequest) {
 
   const admin = createAdminClient()
 
-  // Carrega perfil + historico em paralelo
-  const [{ data: perfilRaw }, { data: historicoRaw }, plano] = await Promise.all([
+  // Carrega perfil + historico + entregas em paralelo. `entregas` é o
+  // estado oficial dos PDFs (Bronze/Prata/Ouro) consumido pelo system
+  // prompt — sem isso a IA inventava prazo.
+  const [
+    { data: perfilRaw },
+    { data: historicoRaw },
+    { data: entregasRaw },
+    plano,
+  ] = await Promise.all([
     admin.from('perfis_lead').select('*').eq('user_id', user.id).maybeSingle(),
     admin
       .from('mensagens')
@@ -56,6 +64,15 @@ export async function POST(request: NextRequest) {
       .is('deleted_at', null)
       .order('created_at', { ascending: false })
       .limit(HISTORICO_MAX),
+    admin
+      .from('dossie_entregas')
+      .select(
+        'status, tier_snapshot, enqueued_at, generating_at, ready_at, errored_at, attempt_count, error_message'
+      )
+      .eq('user_id', user.id)
+      .is('deleted_at', null)
+      .order('updated_at', { ascending: false })
+      .limit(5),
     getPlanoAtual(),
   ])
 
@@ -77,6 +94,7 @@ export async function POST(request: NextRequest) {
   }
 
   const perfil = (perfilRaw ?? null) as PerfilLead | null
+  const entregas = (entregasRaw ?? []) as EntregaSnapshot[]
   // Sanitiza pro shape exato da Anthropic API. messages.create() rejeita
   // qualquer campo extra (created_at, id, user_id) com 400 invalid_request_error
   // — defense-in-depth contra futuros selects vazarem colunas.
@@ -111,7 +129,7 @@ export async function POST(request: NextRequest) {
   const stream = new ReadableStream({
     async start(controller) {
       try {
-        const iaStream = criarStreamChat({ perfil, historico: historicoCompleto })
+        const iaStream = criarStreamChat({ perfil, historico: historicoCompleto, entregas })
         for await (const chunk of iaStream) {
           if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
             respostaCompleta += chunk.delta.text

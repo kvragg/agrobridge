@@ -34,6 +34,21 @@ export interface SystemBlock {
   cache_control?: { type: 'ephemeral' }
 }
 
+// Snapshot do registro `dossie_entregas` para a IA do chat consultar
+// antes de responder sobre status do PDF. Lastro factual — sem isso
+// a IA inventa prazo. Carregado no /api/chat e injetado no segundo
+// bloco (não cacheado) do system prompt.
+export interface EntregaSnapshot {
+  status: 'nao_iniciado' | 'em_fila' | 'gerando' | 'pronto' | 'erro'
+  tier_snapshot: 'diagnostico' | 'dossie' | 'mentoria' | null
+  enqueued_at: string | null
+  generating_at: string | null
+  ready_at: string | null
+  errored_at: string | null
+  attempt_count: number
+  error_message: string | null
+}
+
 let _systemBaseCache: string | null = null
 
 function carregarSystemBase(): string {
@@ -49,6 +64,73 @@ function carregarSystemBase(): string {
 // Mantido aqui — e não em chat.ts — pra deixar claro que ESSE pedaço
 // NÃO deve ir para o cache.
 const FREEMIUM_LIMITE = 5
+
+// Texto humano curto descrevendo o estado das entregas (PDFs do
+// Bronze/Prata/Ouro). Sempre PT-BR, sem PII, sem URLs (URLs expiram
+// em 1h e a IA não deve repassar). A IA usa este bloco como fonte
+// única de verdade ao responder "cadê meu PDF".
+export function montarContextoEntregas(entregas: EntregaSnapshot[]): string {
+  if (entregas.length === 0) {
+    return [
+      '',
+      '## Estado das entregas (fonte oficial — não invente)',
+      '- Nenhuma entrega de PDF iniciada ainda.',
+      '- Se o lead perguntar status, responda exatamente isso e ofereça o próximo passo (concluir entrevista / completar checklist / pagar plano).',
+    ].join('\n')
+  }
+
+  const linhas: string[] = ['', '## Estado das entregas (fonte oficial — não invente)']
+
+  const labelTier: Record<NonNullable<EntregaSnapshot['tier_snapshot']>, string> = {
+    diagnostico: 'Bronze (parecer de viabilidade)',
+    dossie: 'Prata (dossiê bancário)',
+    mentoria: 'Ouro (assessoria premium)',
+  }
+
+  const labelStatus: Record<EntregaSnapshot['status'], string> = {
+    nao_iniciado: 'ainda não iniciada',
+    em_fila: 'enfileirada (aguardando processamento)',
+    gerando: 'em geração agora',
+    pronto: 'pronta',
+    erro: 'falhou',
+  }
+
+  for (const e of entregas) {
+    const tier = e.tier_snapshot ? labelTier[e.tier_snapshot] : 'tipo não definido'
+    const tsRef =
+      e.ready_at ?? e.errored_at ?? e.generating_at ?? e.enqueued_at ?? null
+    const ts = tsRef ? ` em ${tsRef}` : ''
+    linhas.push(`- ${tier}: ${labelStatus[e.status]}${ts}.`)
+    if (e.status === 'erro' && e.error_message) {
+      linhas.push(`  Motivo: ${e.error_message}.`)
+      linhas.push(
+        `  Posicione assim: "Tive um problema técnico aqui — você pode tentar gerar de novo. Se persistir, abre um chamado em suporte@agrobridge.space."`
+      )
+    }
+    if (e.status === 'gerando') {
+      linhas.push(
+        '  Posicione assim: "Está sendo gerada agora — costuma sair em 30-90 segundos. Atualize a página em alguns instantes."'
+      )
+    }
+    if (e.status === 'em_fila') {
+      linhas.push(
+        '  Posicione assim: "Está na fila — vai começar a gerar nos próximos segundos."'
+      )
+    }
+    if (e.status === 'pronto') {
+      linhas.push(
+        '  Posicione assim: "Já está pronta — aparece no dashboard em /dashboard ou /processos. O link expira em 1h, se não pegou hoje basta entrar lá agora."'
+      )
+    }
+  }
+
+  linhas.push('')
+  linhas.push(
+    'REGRA CRÍTICA: nunca prometa prazo diferente do que está acima. Se o lead insiste, repita o estado oficial.'
+  )
+
+  return linhas.join('\n')
+}
 
 export function montarContextoLead(perfil: PerfilLead | null): string {
   if (!perfil) {
@@ -122,7 +204,13 @@ export function montarContextoLead(perfil: PerfilLead | null): string {
 
 // Retorna os blocos de system prontos pro SDK. O bloco [0] é grande e
 // estável (alvo do cache); o bloco [1] é curto e varia por lead.
-export function buildSystemBlocks(perfil: PerfilLead | null): SystemBlock[] {
+//
+// `entregas` é opcional pra retrocompatibilidade. Quando presente, o
+// estado dos PDFs do lead é injetado no segundo bloco (não cacheado).
+export function buildSystemBlocks(
+  perfil: PerfilLead | null,
+  entregas: EntregaSnapshot[] = []
+): SystemBlock[] {
   return [
     {
       type: 'text',
@@ -131,7 +219,7 @@ export function buildSystemBlocks(perfil: PerfilLead | null): SystemBlock[] {
     },
     {
       type: 'text',
-      text: montarContextoLead(perfil),
+      text: montarContextoLead(perfil) + montarContextoEntregas(entregas),
     },
   ]
 }
