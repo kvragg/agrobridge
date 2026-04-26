@@ -65,6 +65,21 @@ export interface ChecklistSnapshotPrompt {
   }[]
 }
 
+// Snapshot das compras do user pra IA do chat consultar antes de
+// responder "comprei e agora?" / "quero reembolso" / "tenho Bronze ou
+// Prata?" / "ainda dá tempo cancelar?". Inclui janela CDC art. 49
+// (7 dias direito de arrependimento). Pilar #3.
+export interface CompraSnapshotPrompt {
+  id: string
+  tier: 'diagnostico' | 'dossie' | 'mentoria'
+  status: 'pending' | 'paid' | 'refunded' | 'chargeback' | 'failed'
+  amount_cents: number
+  paid_at: string | null
+  created_at: string
+  dias_restantes_cdc: number | null
+  dentro_janela_cdc: boolean
+}
+
 let _systemBaseCache: string | null = null
 
 function carregarSystemBase(): string {
@@ -264,15 +279,72 @@ export function montarContextoChecklist(
   return linhas.join('\n')
 }
 
+// Texto do bloco "Histórico de pagamento" — fonte oficial pra
+// responder sobre compras + janela CDC (7 dias de arrependimento).
+export function montarContextoCompras(compras: CompraSnapshotPrompt[]): string {
+  if (compras.length === 0) {
+    return [
+      '',
+      '## Histórico de pagamento (fonte oficial — não invente)',
+      '- Lead AINDA NÃO comprou nenhum plano. É Free.',
+      '- Se perguntar sobre cobrança/reembolso, oriente: "Você ainda não tem compra registrada — talvez esteja confundindo. Consigo te ajudar com algum plano?"',
+    ].join('\n')
+  }
+
+  const labelTier: Record<CompraSnapshotPrompt['tier'], string> = {
+    diagnostico: 'Bronze (parecer de viabilidade)',
+    dossie: 'Prata (dossiê bancário)',
+    mentoria: 'Ouro (assessoria premium)',
+  }
+  const labelStatus: Record<CompraSnapshotPrompt['status'], string> = {
+    pending: 'pendente (aguardando confirmação)',
+    paid: 'paga e confirmada',
+    refunded: 'reembolsada',
+    chargeback: 'estornada (chargeback)',
+    failed: 'falhou',
+  }
+
+  const linhas: string[] = ['', '## Histórico de pagamento (fonte oficial — não invente)']
+  for (const c of compras) {
+    const valor = (c.amount_cents / 100).toLocaleString('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+    })
+    const dataRef = c.paid_at ?? c.created_at
+    linhas.push(
+      `- ${labelTier[c.tier]} · ${valor} · ${labelStatus[c.status]} em ${dataRef}.`,
+    )
+    if (c.status === 'paid') {
+      if (c.dentro_janela_cdc && c.dias_restantes_cdc !== null) {
+        linhas.push(
+          `  ✓ Dentro da janela CDC (art. 49) — restam ${c.dias_restantes_cdc} dia(s) pra direito de arrependimento. Reembolso INTEGRAL é direito do consumidor sem precisar justificar.`,
+        )
+      } else if (c.paid_at) {
+        linhas.push(
+          `  ✗ FORA da janela CDC de 7 dias. Reembolso integral por arrependimento simples não se aplica mais — só com justificativa de descumprimento de contrato (caso a caso, time atende em suporte@agrobridge.space).`,
+        )
+      }
+    }
+  }
+
+  linhas.push('')
+  linhas.push(
+    'REGRAS: lead PEDE REEMBOLSO → consulte o status acima. Dentro do CDC = aprove e oriente abrir chamado em suporte@agrobridge.space pra processar (1-3 dias úteis). Fora do CDC = honre o direito do consumidor reclamar mas seja honesto que arrependimento simples só vale 7 dias. Lead pergunta TIER ATUAL → responda baseado na compra mais recente com status=paid.',
+  )
+
+  return linhas.join('\n')
+}
+
 // Retorna os blocos de system prontos pro SDK. O bloco [0] é grande e
 // estável (alvo do cache); o bloco [1] é curto e varia por lead.
 //
-// `entregas` e `checklist` são opcionais pra retrocompatibilidade.
+// `entregas`, `checklist`, `compras` são opcionais pra retrocompat.
 // Quando presentes, são injetados no segundo bloco (não cacheado).
 export function buildSystemBlocks(
   perfil: PerfilLead | null,
   entregas: EntregaSnapshot[] = [],
   checklist: ChecklistSnapshotPrompt | null = null,
+  compras: CompraSnapshotPrompt[] = [],
 ): SystemBlock[] {
   return [
     {
@@ -285,7 +357,8 @@ export function buildSystemBlocks(
       text:
         montarContextoLead(perfil) +
         montarContextoEntregas(entregas) +
-        montarContextoChecklist(checklist),
+        montarContextoChecklist(checklist) +
+        montarContextoCompras(compras),
     },
   ]
 }

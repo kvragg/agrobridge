@@ -13,6 +13,7 @@ import {
   buildSystemBlocks,
   type EntregaSnapshot,
   type ChecklistSnapshotPrompt,
+  type CompraSnapshotPrompt,
 } from '@/lib/ai/system-prompt'
 import { MODEL } from './model'
 
@@ -47,6 +48,7 @@ export function criarStreamChat(params: {
   historico: MensagemChat[]
   entregas?: EntregaSnapshot[]
   checklist?: ChecklistSnapshotPrompt | null
+  compras?: CompraSnapshotPrompt[]
 }) {
   return getClient().messages.stream({
     model: MODEL,
@@ -55,6 +57,7 @@ export function criarStreamChat(params: {
       params.perfil,
       params.entregas ?? [],
       params.checklist ?? null,
+      params.compras ?? [],
     ),
     messages: params.historico,
   })

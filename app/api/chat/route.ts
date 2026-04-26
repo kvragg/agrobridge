@@ -23,6 +23,7 @@ import { getPlanoAtual } from '@/lib/plano'
 import type { PerfilLead } from '@/types/perfil-lead'
 import type { EntregaSnapshot } from '@/lib/ai/system-prompt'
 import { snapshotChecklistParaChat } from '@/lib/ai/checklist-snapshot'
+import { snapshotComprasParaChat } from '@/lib/ai/compras-snapshot'
 import { NextRequest } from 'next/server'
 
 export const runtime = 'nodejs'
@@ -48,15 +49,16 @@ export async function POST(request: NextRequest) {
 
   const admin = createAdminClient()
 
-  // Carrega perfil + historico + entregas + checklist em paralelo.
-  // `entregas` (Pilar #1) e `checklist` (Pilar #2) são fontes oficiais
-  // pra IA do chat consumir como lastro factual no system prompt — sem
-  // isso a IA inventava prazo de PDF e lista de docs pendentes.
+  // Carrega perfil + historico + entregas + checklist + compras em
+  // paralelo. As 3 fontes oficiais (Pilares #1/#2/#3) dão lastro
+  // factual ao IA no system prompt — sem isso ela inventava prazo de
+  // PDF, lista de docs pendentes e janela CDC de reembolso.
   const [
     { data: perfilRaw },
     { data: historicoRaw },
     { data: entregasRaw },
     checklistSnapshot,
+    comprasSnapshot,
     plano,
   ] = await Promise.all([
     admin.from('perfis_lead').select('*').eq('user_id', user.id).maybeSingle(),
@@ -83,6 +85,14 @@ export async function POST(request: NextRequest) {
         extra: { etapa: 'checklist_snapshot' },
       })
       return null
+    }),
+    snapshotComprasParaChat(admin, user.id).catch((err) => {
+      capturarErroProducao(err, {
+        modulo: 'chat',
+        userId: user.id,
+        extra: { etapa: 'compras_snapshot' },
+      })
+      return []
     }),
     getPlanoAtual(),
   ])
@@ -145,6 +155,7 @@ export async function POST(request: NextRequest) {
           historico: historicoCompleto,
           entregas,
           checklist: checklistSnapshot,
+          compras: comprasSnapshot,
         })
         for await (const chunk of iaStream) {
           if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
