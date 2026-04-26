@@ -22,6 +22,7 @@ import { capturarErroProducao } from '@/lib/logger'
 import { getPlanoAtual } from '@/lib/plano'
 import type { PerfilLead } from '@/types/perfil-lead'
 import type { EntregaSnapshot } from '@/lib/ai/system-prompt'
+import { snapshotChecklistParaChat } from '@/lib/ai/checklist-snapshot'
 import { NextRequest } from 'next/server'
 
 export const runtime = 'nodejs'
@@ -47,13 +48,15 @@ export async function POST(request: NextRequest) {
 
   const admin = createAdminClient()
 
-  // Carrega perfil + historico + entregas em paralelo. `entregas` é o
-  // estado oficial dos PDFs (Bronze/Prata/Ouro) consumido pelo system
-  // prompt — sem isso a IA inventava prazo.
+  // Carrega perfil + historico + entregas + checklist em paralelo.
+  // `entregas` (Pilar #1) e `checklist` (Pilar #2) são fontes oficiais
+  // pra IA do chat consumir como lastro factual no system prompt — sem
+  // isso a IA inventava prazo de PDF e lista de docs pendentes.
   const [
     { data: perfilRaw },
     { data: historicoRaw },
     { data: entregasRaw },
+    checklistSnapshot,
     plano,
   ] = await Promise.all([
     admin.from('perfis_lead').select('*').eq('user_id', user.id).maybeSingle(),
@@ -73,6 +76,14 @@ export async function POST(request: NextRequest) {
       .is('deleted_at', null)
       .order('updated_at', { ascending: false })
       .limit(5),
+    snapshotChecklistParaChat(admin, user.id).catch((err) => {
+      capturarErroProducao(err, {
+        modulo: 'chat',
+        userId: user.id,
+        extra: { etapa: 'checklist_snapshot' },
+      })
+      return null
+    }),
     getPlanoAtual(),
   ])
 
@@ -129,7 +140,12 @@ export async function POST(request: NextRequest) {
   const stream = new ReadableStream({
     async start(controller) {
       try {
-        const iaStream = criarStreamChat({ perfil, historico: historicoCompleto, entregas })
+        const iaStream = criarStreamChat({
+          perfil,
+          historico: historicoCompleto,
+          entregas,
+          checklist: checklistSnapshot,
+        })
         for await (const chunk of iaStream) {
           if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
             respostaCompleta += chunk.delta.text

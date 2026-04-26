@@ -49,6 +49,22 @@ export interface EntregaSnapshot {
   error_message: string | null
 }
 
+// Snapshot do estado do checklist pra IA do chat consultar antes de
+// responder "o que falta?" / "quais documentos já mandei?" / "por que
+// não consigo gerar o dossiê?". Sem isso IA inventa lista de documentos
+// pendentes. Carregado em paralelo no /api/chat (Pilar #2).
+export interface ChecklistSnapshotPrompt {
+  processoId: string
+  total: number
+  anexados: number
+  pendentes: string[]
+  validacoesProblematicas: {
+    nome: string
+    status: 'atencao' | 'invalido'
+    resumo: string
+  }[]
+}
+
 let _systemBaseCache: string | null = null
 
 function carregarSystemBase(): string {
@@ -202,14 +218,61 @@ export function montarContextoLead(perfil: PerfilLead | null): string {
   return linhas.join('\n')
 }
 
+// Texto humano curto descrevendo o estado do checklist do processo
+// ativo do lead. IA usa pra responder "o que falta?" sem inventar.
+export function montarContextoChecklist(
+  snapshot: ChecklistSnapshotPrompt | null,
+): string {
+  if (!snapshot) {
+    return [
+      '',
+      '## Estado do checklist (fonte oficial — não invente)',
+      '- Lead ainda NÃO tem checklist gerado (ou ainda está na entrevista).',
+      '- Se perguntar sobre documentos antes de concluir entrevista, oriente: "Quando você concluir a entrevista, gero seu checklist personalizado de documentos."',
+    ].join('\n')
+  }
+
+  const linhas: string[] = ['', '## Estado do checklist (fonte oficial — não invente)']
+  linhas.push(`- Total de documentos exigidos: ${snapshot.total}`)
+  linhas.push(`- Já anexados: ${snapshot.anexados}/${snapshot.total}`)
+  linhas.push(`- Pendentes: ${snapshot.pendentes.length}`)
+
+  if (snapshot.pendentes.length > 0) {
+    linhas.push('- Lista de pendentes (use estes nomes exatos quando citar):')
+    for (const nome of snapshot.pendentes) {
+      linhas.push(`  · ${nome}`)
+    }
+  }
+
+  if (snapshot.validacoesProblematicas.length > 0) {
+    linhas.push('- Documentos enviados COM PROBLEMA na validação (precisam reenvio):')
+    for (const v of snapshot.validacoesProblematicas) {
+      const sigla = v.status === 'invalido' ? 'INVÁLIDO' : 'ATENÇÃO'
+      linhas.push(`  · [${sigla}] ${v.nome} — ${v.resumo}`)
+    }
+  }
+
+  if (snapshot.total > 0 && snapshot.anexados === snapshot.total && snapshot.validacoesProblematicas.length === 0) {
+    linhas.push('- ✓ Checklist 100% completo. Lead já pode gerar dossiê (se pagou plano Prata+).')
+  }
+
+  linhas.push('')
+  linhas.push(
+    'REGRAS: nunca invente documento que não está acima. Se o lead pergunta "o que falta?", liste APENAS os pendentes desta seção. Se 100% completo, diga claramente.',
+  )
+
+  return linhas.join('\n')
+}
+
 // Retorna os blocos de system prontos pro SDK. O bloco [0] é grande e
 // estável (alvo do cache); o bloco [1] é curto e varia por lead.
 //
-// `entregas` é opcional pra retrocompatibilidade. Quando presente, o
-// estado dos PDFs do lead é injetado no segundo bloco (não cacheado).
+// `entregas` e `checklist` são opcionais pra retrocompatibilidade.
+// Quando presentes, são injetados no segundo bloco (não cacheado).
 export function buildSystemBlocks(
   perfil: PerfilLead | null,
-  entregas: EntregaSnapshot[] = []
+  entregas: EntregaSnapshot[] = [],
+  checklist: ChecklistSnapshotPrompt | null = null,
 ): SystemBlock[] {
   return [
     {
@@ -219,7 +282,10 @@ export function buildSystemBlocks(
     },
     {
       type: 'text',
-      text: montarContextoLead(perfil) + montarContextoEntregas(entregas),
+      text:
+        montarContextoLead(perfil) +
+        montarContextoEntregas(entregas) +
+        montarContextoChecklist(checklist),
     },
   ]
 }
