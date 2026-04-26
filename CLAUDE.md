@@ -78,15 +78,31 @@ módulo novo for adicionado ou arquitetura mudar de forma não-trivial.
   `deleted_at IS NULL` (soft delete). Uploads têm ownership
   transitiva via `processos.user_id`.
 
-## Limites absolutos (agente autônomo)
+## Postura de execução (atualizado 2026-04-26)
 
-- Nunca `git push` em `main`/`master` sem confirmação humana.
-- Nunca `vercel --prod` nem aplicar migration em prod (Paulo roda no
-  SQL Editor manualmente pela manhã).
-- Nunca commitar secret. Rodar `scripts/check-secrets.sh` antes.
-- Nunca tocar em `.env.local`, `.env.production`, Vercel env vars.
+Paulo é fundador solo TDAH e me trata como sócio, não funcionário.
+Tenho autonomia pra:
+- `git push` em main quando o trabalho estiver pronto e validado.
+- Aplicar migrations em prod via MCP Supabase (`apply_migration`).
+- Mexer em env vars Vercel via MCP (com a key/valor que ele passar).
+- Disparar deploys (`vercel --prod` ou push que aciona auto-deploy).
+
+Regra de comunicação: **anuncio antes, reporto depois** — não peço
+permissão pra cada passo, mas dou visibilidade ("vou aplicar migration
+X agora" → executo → "aplicada, RLS ativo").
+
+**Ainda confirmo antes** (mesmo com autonomia ampla):
+- Ações destrutivas irreversíveis: DROP table com dados, force-push,
+  deletar branch com trabalho não-mergeado, revogar acessos.
+- Ações com efeito em terceiros: emails/Slack pra cliente real,
+  posts em redes sociais, issues em repo de outro.
+
+**Invariantes que continuam valendo (segurança real, não burocracia):**
+- Nunca commitar secret. Rodar `scripts/check-secrets.sh` antes de push.
 - Migrations são aditivas (sem DROP destrutivo) — `CREATE OR REPLACE`,
   `ADD COLUMN IF NOT EXISTS`, `CREATE POLICY IF NOT EXISTS`.
+- Nunca expor `service_role` no client-side.
+- Nunca citar marca de banco/cooperativa em UI/copy/PDF/email.
 
 ## Comandos frequentes
 
