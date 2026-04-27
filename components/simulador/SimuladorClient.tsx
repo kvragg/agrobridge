@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useMemo, useState } from "react"
 import {
   Button,
   Eyebrow,
@@ -88,27 +88,19 @@ export function SimuladorClient({
   podeSalvar: boolean
 }) {
   const [input, setInput] = useState<SimulatorInput>(inputInicial)
-  const [debounced, setDebounced] = useState(input)
   const [showCadastroModal, setShowCadastroModal] = useState(false)
   const [salvando, setSalvando] = useState(false)
   const [salvoSucesso, setSalvoSucesso] = useState(false)
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const widget = useWidgetIA()
 
-  // Debounce dos inputs pra rodar simular() suavemente
-  useEffect(() => {
-    if (debounceRef.current) clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(() => {
-      setDebounced(input)
-    }, 150)
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current)
-    }
-  }, [input])
-
+  // simular() é função pura, determinística e roda em <1ms. Não precisa
+  // de debounce — recalcular a cada mudança do input é barato e elimina
+  // toda chance de stale state. (Pre-fix tinha debounce 150ms + state
+  // duplo `input/input`, mas dava bug visual de "número não muda"
+  // em alguns casos de re-render rápido.)
   const resultado: SimulatorResult = useMemo(
-    () => simular(debounced, CONJUNTURA_ATUAL),
-    [debounced],
+    () => simular(input, CONJUNTURA_ATUAL),
+    [input],
   )
 
   const cor = corDoScore(resultado.score)
@@ -143,14 +135,14 @@ export function SimuladorClient({
       const res = await fetch("/api/simulador/salvar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ input: debounced }),
+        body: JSON.stringify({ input: input }),
       })
       if (res.ok) {
         setSalvoSucesso(true)
         setTimeout(() => setSalvoSucesso(false), 4000)
         widget.notificarSimulacaoSalva({
           score: resultado.score,
-          cultura: getCultura(debounced.cultura)?.nome,
+          cultura: getCultura(input.cultura)?.nome,
         })
       }
     } finally {
