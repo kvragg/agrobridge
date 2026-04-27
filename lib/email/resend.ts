@@ -711,3 +711,127 @@ export async function enviarExportacaoPronta(input: {
     html: wrap(content, preheader),
   })
 }
+
+// ── v1.1 — Lembretes inteligentes (cron diário) ──────────────────
+// Template genérico parametrizado por tipo. Cron `/api/cron/lembretes`
+// roda 09h BRT, identifica candidatos por categoria e dispara.
+//
+// Tom: nunca culpado, sempre caminho de saída. Lead que parou no meio
+// do checklist sabe que parou; reforçar a culpa é fricção.
+
+export type TipoLembrete =
+  | 'processo_dormente'
+  | 'dossie_pronto_nao_baixado'
+
+interface LembreteProcessoDormente {
+  tipo: 'processo_dormente'
+  contexto: {
+    processoId: string
+    diasInativo: number
+    docsEnviados: number
+    docsTotal: number
+    docsFaltando: string[] // nomes dos docs (até 5)
+  }
+}
+
+interface LembreteDossieNaoBaixado {
+  tipo: 'dossie_pronto_nao_baixado'
+  contexto: {
+    processoId: string
+    horasDesdeProntol: number
+    tier: 'dossie' | 'mentoria'
+  }
+}
+
+type LembreteInput = LembreteProcessoDormente | LembreteDossieNaoBaixado
+
+export async function enviarLembreteRetencao(input: {
+  emailPrincipal: string
+  emailAlternativo?: string | null
+  nome: string
+  lembrete: LembreteInput
+}): Promise<EmailResult> {
+  const { nome, lembrete, emailPrincipal, emailAlternativo } = input
+  const primeiro = primeiroNome(nome)
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://agrobridge.space'
+
+  let subject: string
+  let preheader: string
+  let content: string
+
+  if (lembrete.tipo === 'processo_dormente') {
+    const ctx = lembrete.contexto
+    const pct = ctx.docsTotal > 0 ? Math.round((ctx.docsEnviados / ctx.docsTotal) * 100) : 0
+    const url = `${siteUrl}/checklist/${ctx.processoId}`
+    const lista = ctx.docsFaltando
+      .slice(0, 5)
+      .map(
+        (nm) =>
+          `<li style="margin:0 0 6px;font-family:${T.fontStack};font-size:13.5px;color:${T.ink2};line-height:1.55;">${escapeHtml(nm)}</li>`,
+      )
+      .join('')
+
+    subject = `${primeiro}, seu dossiê está em ${pct}% — falta pouco`
+    preheader = `Última atualização há ${ctx.diasInativo} dias. Faltam ${ctx.docsTotal - ctx.docsEnviados} documento${ctx.docsTotal - ctx.docsEnviados === 1 ? '' : 's'}.`
+
+    content = `
+      ${eyebrow('Continue de onde parou', T.green)}
+      ${h1(`${escapeHtml(primeiro)}, faltam só ${ctx.docsTotal - ctx.docsEnviados} documento${ctx.docsTotal - ctx.docsEnviados === 1 ? '' : 's'}.`)}
+      ${p(
+        `Você concluiu <strong style="color:${T.ink};">${pct}% do checklist</strong> e parou há ${ctx.diasInativo} dias. Sem julgamento — sei que tirar documento de cartório, e-CAC e órgão estadual no mesmo dia é trabalho. Mas a janela do banco para protocolo de safra <strong style="color:${T.ink};">não pausa com você</strong>.`,
+        true,
+      )}
+      ${button(url, 'Voltar pro checklist e finalizar')}
+
+      ${ctx.docsFaltando.length > 0 ? `
+      <p style="margin:24px 0 8px;font-family:${T.monoStack};font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:${T.muted};">Pendentes</p>
+      <ul style="margin:0 0 18px;padding-left:20px;">${lista}</ul>` : ''}
+
+      ${dicaValor(
+        'Travou em algum?',
+        `Cada item tem o passo-a-passo do portal oficial. Se mesmo assim travar, pergunta na IA do app — ela abre o link junto e te guia em tempo real.`,
+      )}
+
+      ${assinaturaEquipe()}
+    `
+  } else {
+    const ctx = lembrete.contexto
+    const url = `${siteUrl}/processos`
+    const tierTxt = ctx.tier === 'mentoria' ? 'dossiê com mentoria 1:1' : 'dossiê bancário'
+    const horasTxt = ctx.horasDesdeProntol < 48
+      ? `há ${Math.round(ctx.horasDesdeProntol)} horas`
+      : `há ${Math.round(ctx.horasDesdeProntol / 24)} dias`
+
+    subject = `${primeiro}, seu dossiê está pronto — esperando você`
+    preheader = `PDF gerado ${horasTxt}, ainda não foi baixado. Janela do banco corre.`
+
+    content = `
+      ${eyebrow('Dossiê pronto · aguardando download', T.green)}
+      ${h1(`${escapeHtml(primeiro)}, seu ${tierTxt} foi gerado ${horasTxt}.`)}
+      ${p(
+        `O PDF está disponível na plataforma — defesa técnica em linguagem de comitê + checklist personalizado + índice cruzado com cada documento anexado. Pronto pra protocolar.`,
+        true,
+      )}
+      ${button(url, 'Abrir e baixar o dossiê')}
+
+      ${dicaValor(
+        'Antes de entregar — leia a defesa primeiro',
+        `A seção <strong style="color:${T.ink};">"Defesa de Crédito"</strong> traduz seus dados em formato que o analista usa pra defender seu pedido internamente. Conferir antes de entregar evita pergunta no comitê.`,
+      )}
+
+      ${divider()}
+      <p style="margin:0;font-family:${T.fontStack};font-size:13px;line-height:1.6;color:${T.ink2};">
+        <strong style="color:${T.ink};">Três passos pra fechar bem:</strong> imprimir 2 vias · agendar 30-60min com o gerente · acompanhar em até 7 dias úteis.
+      </p>
+
+      ${assinaturaEquipe()}
+    `
+  }
+
+  return enviarComFallbackCorporativo({
+    emailPrincipal,
+    emailAlternativo,
+    subject,
+    html: wrap(content, preheader),
+  })
+}
