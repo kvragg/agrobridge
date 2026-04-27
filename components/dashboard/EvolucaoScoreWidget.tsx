@@ -25,10 +25,13 @@ interface SimulacaoPonto {
   created_at: string
 }
 
+// Hex puro — `var(--*)` em `linear-gradient` + `background-clip: text`
+// não renderiza confiável (texto fica invisível). Mesma régua do
+// simulador pra coerência cross-componente.
 function corDoScore(score: number): string {
-  if (score >= 80) return "var(--green)"
+  if (score >= 80) return "#4ea884"
   if (score >= 51) return "#facc15"
-  return "var(--danger)"
+  return "#d47158"
 }
 
 function diasAtras(iso: string): number {

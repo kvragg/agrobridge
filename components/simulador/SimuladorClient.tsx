@@ -31,12 +31,19 @@ const UF_LIST = [
 // Régua de cor pelo NÚMERO (não pela faixa qualitativa, que mantém
 // 5 categorias em outros lugares). Pedido do produto:
 //   ≥ 80 verde · 51-79 amarelo · ≤ 50 vermelho.
-// Amarelo literal #facc15 (não o `--gold` dourado da paleta) pra ficar
-// nítido como "atenção" sem se confundir com o dourado de luxo do site.
+//
+// IMPORTANTE: retorna HEX puro, nunca `var(--*)`. Razão: este valor é
+// usado dentro de `linear-gradient(...)` com `background-clip: text`
+// pra renderizar o número grande do score com efeito de gradient. CSS
+// variables NÃO interpolam confiavelmente em gradient + background-clip
+// (bug visual: número fica invisível). Hex direto resolve em definitivo.
+//
+// Hex pareados com os tokens do globals.css:
+//   --green: #4ea884 / --danger: #d47158 / amarelo standalone #facc15.
 function corDoScore(score: number): string {
-  if (score >= 80) return "var(--green)"
+  if (score >= 80) return "#4ea884"
   if (score >= 51) return "#facc15"
-  return "var(--danger)"
+  return "#d47158"
 }
 
 const FAIXA_LABEL: Record<Faixa, string> = {
@@ -672,7 +679,13 @@ export function SimuladorClient({
               style={{
                 width: `${resultado.score}%`,
                 height: "100%",
-                background: `linear-gradient(90deg, ${cor}, ${cor === "var(--green)" ? "var(--gold)" : cor})`,
+                // Verde recebe gradiente verde→dourado pra leitura
+                // premium; outras cores ficam monocromáticas (amarelo
+                // ou vermelho não pedem segunda cor).
+                background:
+                  cor === "#4ea884"
+                    ? `linear-gradient(90deg, ${cor}, #c9a86a)`
+                    : cor,
                 boxShadow: `0 0 14px ${cor}`,
                 transition: "all .35s",
               }}
