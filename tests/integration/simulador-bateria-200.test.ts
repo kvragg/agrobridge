@@ -40,6 +40,11 @@ import type { SimulatorInput, Faixa } from '@/lib/simulator/types'
 // Y) Coerência — testes cruzados de invariantes do produto
 // ============================================================
 
+/**
+ * Espelha exatamente `inputInicial()` do SimuladorClient.tsx — cenário
+ * conservador realista que NÃO satura o teto. Mudanças nesse cenário
+ * devem ser sincronizadas entre os 2 lugares.
+ */
 function inputBase(over: Partial<SimulatorInput> = {}): SimulatorInput {
   return {
     valor_pretendido: 850_000,
@@ -51,13 +56,13 @@ function inputBase(over: Partial<SimulatorInput> = {}): SimulatorInput {
     relacao_terra: 'proprio',
     aval_tipo: 'nenhum',
     cadastro_nivel: 'atualizado_incompleto',
-    historico_scr: 'limpo',
-    divida_outros_bancos: 'nenhuma',
+    historico_scr: 'primeira_operacao',
+    divida_outros_bancos: 'em_dia',
     renda_bruta_anual: 1_200_000,
-    endividamento_pct: 30,
+    endividamento_pct: 45,
     divida_patrimonio_faixa: 'nao_sei',
-    car: 'regular_averbado',
-    tem_seguro_agricola: true,
+    car: 'inscrito_pendente',
+    tem_seguro_agricola: false,
     reciprocidade_bancaria: 'media',
     cpf_cnpj_regular: true,
     imovel_em_inventario: false,
@@ -71,6 +76,59 @@ function inputBase(over: Partial<SimulatorInput> = {}): SimulatorInput {
 }
 
 const conj = CONJUNTURA_ATUAL
+
+// ── 0) Anti-regressão: bug "número não altera" reportado 27/04/2026 ─
+describe('[0] Anti-regressão — bug "número não altera ao mexer slider"', () => {
+  // O cenário inicial padrão NÃO pode saturar o teto (clamp esconderia
+  // qualquer movimento positivo do slider, parecendo bug pro user).
+  it('cenário base (defaults do form) NÃO satura o teto', () => {
+    const r = simular(inputBase(), conj)
+    // Score deve ter pelo menos 5 pontos de margem em ambos lados,
+    // garantindo que mover sliders altera visualmente.
+    expect(r.score).toBeLessThan(r.teto_por_cadastro)
+    expect(r.score).toBeGreaterThan(0)
+  })
+
+  it('mover endividamento de 30 pra 100 ALTERA o score (não satura)', () => {
+    const baixo = simular(inputBase({ endividamento_pct: 30 }), conj)
+    const alto = simular(inputBase({ endividamento_pct: 100 }), conj)
+    expect(alto.score).not.toBe(baixo.score)
+  })
+
+  it('mover cultura de soja pra alevinos ALTERA o score', () => {
+    const soja = simular(inputBase({ cultura: 'soja' }), conj)
+    const alev = simular(inputBase({ cultura: 'alevinos' }), conj)
+    expect(soja.score).not.toBe(alev.score)
+  })
+
+  it('quando score == teto_por_cadastro E teto < 100 → indicador visível', () => {
+    // Cenário forçando saturação em cadastro desatualizado (teto 60)
+    const r = simular(
+      inputBase({
+        cadastro_nivel: 'desatualizado',
+        garantias: [
+          'alienacao_fiduciaria_guarda_chuva',
+          'alienacao_fiduciaria_rural',
+          'investimento_garantia',
+        ],
+        historico_scr: 'limpo',
+        endividamento_pct: 5,
+        reciprocidade_bancaria: 'forte',
+        tem_seguro_agricola: true,
+      }),
+      conj,
+    )
+    // Score deve estar EXATAMENTE no teto (saturado).
+    expect(r.score).toBe(r.teto_por_cadastro)
+    expect(r.teto_por_cadastro).toBe(60)
+    // (UI então mostra badge "Score travado em 60 pelo cadastro".)
+  })
+
+  it('cadastro padrao_agrobridge libera teto 100 (sem saturação artificial)', () => {
+    const r = simular(inputBase({ cadastro_nivel: 'padrao_agrobridge' }), conj)
+    expect(r.teto_por_cadastro).toBe(100)
+  })
+})
 
 // ── A) Determinismo (5 testes) ─────────────────────────────────────
 describe('[A] Determinismo (mesmo input = mesmo output)', () => {
