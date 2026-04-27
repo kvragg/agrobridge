@@ -55,23 +55,27 @@ const FAIXA_LABEL: Record<Faixa, string> = {
 }
 
 function inputInicial(): SimulatorInput {
+  // Cenário inicial calibrado pra NÃO saturar teto. Score base alvo
+  // ~60-65, com espaço pros 2 lados quando o lead mexe sliders. Antes,
+  // defaults positivos demais (cultura+garantia+CAR+seguro+reciprocidade
+  // moderada) somavam 115 → clamp em 80 → "número não altera ao mexer".
   return {
     valor_pretendido: 850_000,
     cultura: "soja",
     finalidade: "custeio",
     porte: "medio",
     uf: "MT",
-    garantias: ["hipoteca_1grau"],
+    garantias: [], // sem garantia (lead escolhe)
     relacao_terra: "proprio",
     aval_tipo: "nenhum",
     cadastro_nivel: "atualizado_incompleto",
-    historico_scr: "limpo",
-    divida_outros_bancos: "nenhuma",
+    historico_scr: "primeira_operacao", // mais comum em lead novo
+    divida_outros_bancos: "em_dia", // realismo: maioria tem alguma
     renda_bruta_anual: 1_200_000,
-    endividamento_pct: 35,
+    endividamento_pct: 45,
     divida_patrimonio_faixa: "nao_sei",
-    car: "regular_averbado",
-    tem_seguro_agricola: true,
+    car: "inscrito_pendente", // realismo: muito produtor está aqui
+    tem_seguro_agricola: false,
     reciprocidade_bancaria: "media",
     cpf_cnpj_regular: true,
     imovel_em_inventario: false,
@@ -660,6 +664,38 @@ export function SimuladorClient({
           >
             {FAIXA_LABEL[resultado.faixa]}
           </div>
+
+          {/* Indicador de saturação — quando score == teto de cadastro
+              (e o teto é < 100), avisa o lead que mexer sliders pode
+              não alterar o número porque está LIMITADO pelo nível de
+              cadastro. Resolve o "número não altera" reportado. */}
+          {resultado.score === resultado.teto_por_cadastro &&
+            resultado.teto_por_cadastro < 100 && (
+              <button
+                type="button"
+                onClick={() => setShowCadastroModal(true)}
+                style={{
+                  marginTop: 12,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 8,
+                  padding: "7px 12px",
+                  fontSize: 11.5,
+                  letterSpacing: "0.08em",
+                  textTransform: "uppercase",
+                  background: "rgba(176,138,62,0.12)",
+                  border: "1px solid rgba(176,138,62,0.35)",
+                  borderRadius: 999,
+                  color: "var(--gold)",
+                  cursor: "pointer",
+                  fontFamily: "var(--font-mono, ui-monospace)",
+                }}
+                title="Score limitado pelo seu nível de cadastro — clique pra ver como subir"
+              >
+                <span aria-hidden style={{ fontSize: 13 }}>⚠</span>
+                Score travado em {resultado.teto_por_cadastro} pelo cadastro · clique pra ver como subir
+              </button>
+            )}
 
           <div
             style={{
