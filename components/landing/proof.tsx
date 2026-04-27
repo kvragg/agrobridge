@@ -154,12 +154,15 @@ const FAIXA_LABEL: Record<Faixa, string> = {
   muito_alta: "Muito alta",
 }
 
+// Hex puro — `var(--*)` em `linear-gradient(..., ${cor})` +
+// `background-clip: text` falha o render (texto transparente).
+// Mesma lição do fix do simulador (commit 5943006).
 const FAIXA_COR: Record<Faixa, string> = {
-  muito_baixa: "var(--danger)",
-  baixa: "var(--danger)",
-  media: "var(--gold)",
-  alta: "var(--green)",
-  muito_alta: "var(--green)",
+  muito_baixa: "#d47158",
+  baixa: "#d47158",
+  media: "#c9a86a",
+  alta: "#4ea884",
+  muito_alta: "#4ea884",
 }
 
 export function Proof() {
@@ -399,7 +402,10 @@ export function Proof() {
                   style={{
                     width: `${resultado.score}%`,
                     height: "100%",
-                    background: `linear-gradient(90deg, ${cor}, ${cor === "var(--green)" ? "var(--gold)" : cor})`,
+                    background:
+                      cor === "#4ea884"
+                        ? `linear-gradient(90deg, ${cor}, #c9a86a)`
+                        : `linear-gradient(90deg, ${cor}, ${cor})`,
                     boxShadow: `0 0 14px ${cor}`,
                     transition: "all .6s ease",
                   }}
