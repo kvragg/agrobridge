@@ -23,11 +23,10 @@ export const CONJUNTURA_ATUAL: ConjunturaEconomica = {
     alienacao_fiduciaria_rural: 2,
     investimento_garantia: 3,
     cessao_creditorios_aaa: 2,
-    // Penaliza fracas
+    // Penaliza fracas (aval foi removido da lista de garantias e
+    // tratado via aval_tipo separado — não cabe modificador aqui)
     penhor_safra_sem_seguro: -3,
     penhor_safra_com_seguro: -2,
-    aval_puro_sem_respaldo: -3,
-    aval_terceiro_fraco: -2,
     hipoteca_1grau: -2,
   },
   avisos: [

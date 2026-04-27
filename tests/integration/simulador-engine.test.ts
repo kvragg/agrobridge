@@ -310,6 +310,108 @@ describe('Sanity check dos data files', () => {
   })
 })
 
+describe('Auditoria 100% funcional — calibrações finais', () => {
+  it('aval não duplica: aval_tipo NÃO bate com lista de garantias', () => {
+    // Os 4 IDs aval_* foram removidos da lista GARANTIAS pra evitar
+    // que aparecessem na UI + somassem em duplicidade com aval_tipo.
+    const idsRemovidos = [
+      'aval_amplo_patrimonio',
+      'aval_ate_100k',
+      'aval_terceiro_fraco',
+      'aval_puro_sem_respaldo',
+    ]
+    for (const id of idsRemovidos) {
+      expect(GARANTIAS.find((g) => g.id === id)).toBeUndefined()
+    }
+  })
+
+  it('comercialização tem teto 2× renda (mais conservador que custeio)', () => {
+    // Pleito 3× renda em comercialização = acima do padrão (teto 2)
+    const r = simular(
+      inputBase({
+        valor_pretendido: 1_500_000,
+        renda_bruta_anual: 500_000,
+        finalidade: 'comercializacao',
+      }),
+      CONJUNTURA_ATUAL,
+    )
+    expect(r.deltas_aplicados.some((d) => d.fator === 'pleito_acima_padrao')).toBe(true)
+  })
+
+  it('industrialização aceita até 5× renda (similar a investimento)', () => {
+    const r = simular(
+      inputBase({
+        valor_pretendido: 4_000_000,
+        renda_bruta_anual: 1_000_000,
+        finalidade: 'industrializacao',
+      }),
+      CONJUNTURA_ATUAL,
+    )
+    expect(r.deltas_aplicados.some((d) => d.fator === 'pleito_acima_padrao')).toBe(false)
+  })
+
+  it('valor_pretendido = 0 não dispara delta de pleito_compativel', () => {
+    const r = simular(
+      inputBase({
+        valor_pretendido: 0,
+        renda_bruta_anual: 1_000_000,
+      }),
+      CONJUNTURA_ATUAL,
+    )
+    expect(r.deltas_aplicados.some((d) => d.fator === 'pleito_compativel')).toBe(false)
+  })
+
+  it('combo de 3 garantias premium escala (8+3 = 11 com guarda-chuva)', () => {
+    const r = simular(
+      inputBase({
+        garantias: [
+          'alienacao_fiduciaria_guarda_chuva',
+          'alienacao_fiduciaria_rural',
+          'investimento_garantia',
+        ],
+      }),
+      CONJUNTURA_ATUAL,
+    )
+    const combo = r.deltas_aplicados.find((d) => d.fator === 'combo_garantias_premium')
+    expect(combo?.delta).toBe(11) // 8 (guarda-chuva) + 3 (3ª)
+  })
+
+  it('combo de 4 garantias premium escala teto (sem guarda-chuva = 5+3+3 = 11)', () => {
+    const r = simular(
+      inputBase({
+        garantias: [
+          'alienacao_fiduciaria_rural',
+          'investimento_garantia',
+          'cessao_creditorios_aaa',
+          'fianca_bancaria',
+        ],
+      }),
+      CONJUNTURA_ATUAL,
+    )
+    const combo = r.deltas_aplicados.find((d) => d.fator === 'combo_garantias_premium')
+    expect(combo?.delta).toBe(11) // 5 base + 2 extras × 3 = 11
+  })
+
+  it('plano de subida prioriza regras duras (CAR ausente antes de seguro/recip)', () => {
+    const r = simular(
+      inputBase({
+        car: 'nao_tem',
+        tem_seguro_agricola: false,
+        reciprocidade_bancaria: 'nenhuma',
+        cadastro_nivel: 'atualizado_incompleto',
+      }),
+      CONJUNTURA_ATUAL,
+    )
+    expect(r.plano_de_subida.length).toBeGreaterThan(0)
+    // CAR (regra dura) deve estar antes de Seguro (otimização normal)
+    const idxCar = r.plano_de_subida.findIndex((a) => /CAR/i.test(a.acao))
+    const idxSeguro = r.plano_de_subida.findIndex((a) => /seguro/i.test(a.acao))
+    if (idxCar >= 0 && idxSeguro >= 0) {
+      expect(idxCar).toBeLessThan(idxSeguro)
+    }
+  })
+})
+
 describe('Cultura inválida não quebra (defensivo)', () => {
   it('engine devolve resultado válido mesmo se cultura desconhecida', () => {
     // simular() faz `getCultura(input.cultura)` que pode retornar undefined.

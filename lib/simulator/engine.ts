@@ -42,6 +42,19 @@ import type {
 
 const SCORE_BASE = 50
 
+// Múltiplos máximos do pleito sobre a renda bruta anual, calibrados
+// pelo que comitês aplicam de cabeça. Quando ratio > teto+2, comitê
+// quase certo pede redução. Entre teto e teto+2, defesa técnica.
+const TETO_RATIO_POR_FINALIDADE: Record<
+  SimulatorInput['finalidade'],
+  number
+> = {
+  custeio: 3,
+  investimento: 5,
+  comercializacao: 2,
+  industrializacao: 5,
+}
+
 // Re-export para conveniência da UI
 export { CULTURAS } from './data/culturas'
 export { GARANTIAS } from './data/garantias'
@@ -171,12 +184,19 @@ export function simular(
   }
 
   // ── 5.7) Pleito vs renda bruta anual ──────────────────────────
-  // Sem renda informada o engine não consegue avaliar plausibilidade.
-  // Quando informada, ratio = pleito/renda calibra a expectativa do
-  // comitê: custeio até 3x renda, investimento até 5x.
-  if (input.renda_bruta_anual && input.renda_bruta_anual > 0) {
+  // Sem renda informada (ou pleito ≤ 0) o engine não avalia ratio.
+  // Múltiplos por finalidade refletem o que comitê aplica de cabeça:
+  //   custeio: até 3× renda anual (giro de safra)
+  //   investimento: até 5× renda anual (payback longo)
+  //   comercializacao: até 2× renda anual (capital de giro curto)
+  //   industrializacao: até 5× renda anual (CapEx similar a invest.)
+  if (
+    input.renda_bruta_anual &&
+    input.renda_bruta_anual > 0 &&
+    input.valor_pretendido > 0
+  ) {
     const ratio = input.valor_pretendido / input.renda_bruta_anual
-    const tetoRatio = input.finalidade === 'investimento' ? 5 : 3
+    const tetoRatio = TETO_RATIO_POR_FINALIDADE[input.finalidade]
     if (ratio > tetoRatio + 2) {
       deltas.push({
         fator: 'pleito_excede_renda',
@@ -433,6 +453,9 @@ export function simular(
   avisos.push(...reg.avisos)
 
   // ── 13) Regra combinatória — garantias múltiplas ──────────────
+  // Calibração: 2 premium = +5 (ou +8 se guarda-chuva). Cada premium
+  // adicional (3°, 4°+) adiciona +3 — escalável até teto pra evitar
+  // soma absurda. Comitê valoriza camadas, mas com retorno decrescente.
   const numPremiumComp = input.garantias.filter((g) =>
     GARANTIAS_PREMIUM_COMPLEMENTARES.includes(g),
   ).length
@@ -440,13 +463,18 @@ export function simular(
     'alienacao_fiduciaria_guarda_chuva',
   )
   if (numPremiumComp >= 2) {
-    const bonus = temGuardaChuva ? 8 : 5
+    const bonusBase = temGuardaChuva ? 8 : 5
+    const bonusExtras = Math.min(numPremiumComp - 2, 3) * 3
+    const bonusTotal = bonusBase + bonusExtras
     deltas.push({
       fator: 'combo_garantias_premium',
-      delta: bonus,
-      motivo: temGuardaChuva
-        ? 'Combinação de garantias com guarda-chuva — comitê adora.'
-        : 'Combinação de garantias premium complementares.',
+      delta: bonusTotal,
+      motivo:
+        numPremiumComp === 2
+          ? temGuardaChuva
+            ? 'Combinação de 2 garantias com guarda-chuva — comitê adora.'
+            : 'Combinação de 2 garantias premium complementares.'
+          : `Combinação de ${numPremiumComp} garantias premium${temGuardaChuva ? ' com guarda-chuva' : ''} — camadas reforçadas.`,
     })
   }
 
@@ -784,11 +812,18 @@ function montarPlanoSubida(
     })
   }
 
-  // Ordena por ganho/prazo (rápido e impactante primeiro)
-  acoes.sort(
-    (a, b) =>
-      b.ganho_estimado / b.prazo_dias - a.ganho_estimado / a.prazo_dias,
-  )
+  // Ordena: regras duras primeiro (bloqueadores que travam linhas
+  // inteiras), depois ganho/prazo. CAR ausente, CPF irregular,
+  // imóvel em inventário, ITR/IR atrasado — não adianta otimizar
+  // garantia se isso não estiver resolvido.
+  const isRegraDura = (acao: AcaoSubida): boolean =>
+    /CAR \(SICAR|CPF\/CNPJ|inventário|ITR|IR \b|atrasado/i.test(acao.acao)
+  acoes.sort((a, b) => {
+    const ad = isRegraDura(a) ? 1 : 0
+    const bd = isRegraDura(b) ? 1 : 0
+    if (ad !== bd) return bd - ad
+    return b.ganho_estimado / b.prazo_dias - a.ganho_estimado / a.prazo_dias
+  })
 
   return acoes.slice(0, 4)
 }

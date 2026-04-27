@@ -127,7 +127,7 @@ const CENARIOS: { rotulo: string; input: SimulatorInput }[] = [
       finalidade: "custeio",
       porte: "pequeno",
       uf: "PR",
-      garantias: ["penhor_safra_com_seguro", "aval_amplo_patrimonio"],
+      garantias: ["penhor_safra_com_seguro"],
       relacao_terra: "proprio",
       aval_tipo: "amplo_amparo_patrimonial",
       cadastro_nivel: "atualizado_incompleto",

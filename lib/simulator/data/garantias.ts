@@ -17,6 +17,10 @@
 //   media   = âmbar
 //   fraca   = vermelho suave
 
+// Aval (puro / até 100k / amplo amparo / terceiro fraco) NÃO entra
+// nesta lista — é tratado separadamente via campo `aval_tipo` em
+// SimulatorInput pra interagir com a regra do arrendatário 100% e
+// evitar dupla-contagem no score.
 export type GarantiaId =
   | 'alienacao_fiduciaria_guarda_chuva'
   | 'alienacao_fiduciaria_rural'
@@ -29,11 +33,7 @@ export type GarantiaId =
   | 'warrant'
   | 'penhor_safra_com_seguro'
   | 'alienacao_maquinas'
-  | 'aval_amplo_patrimonio'
-  | 'aval_ate_100k'
   | 'penhor_safra_sem_seguro'
-  | 'aval_terceiro_fraco'
-  | 'aval_puro_sem_respaldo'
 
 export type GarantiaTier = 'premium' | 'forte' | 'media' | 'fraca'
 
@@ -140,20 +140,6 @@ export const GARANTIAS: Garantia[] = [
     tier: 'media',
     score_mercado: 4,
   },
-  {
-    id: 'aval_ate_100k',
-    nome: 'Aval até R$ 100k com respaldo',
-    delta: 3,
-    tier: 'fraca',
-    score_mercado: 4,
-  },
-  {
-    id: 'aval_amplo_patrimonio',
-    nome: 'Aval com amplo amparo patrimonial',
-    delta: 3,
-    tier: 'fraca',
-    score_mercado: 4,
-  },
 
   // ── 2/10 — muito fraca ───────────────────────────────────────────
   {
@@ -162,24 +148,6 @@ export const GARANTIAS: Garantia[] = [
     delta: -8,
     tier: 'fraca',
     score_mercado: 2,
-  },
-
-  // ── 1/10 ─────────────────────────────────────────────────────────
-  {
-    id: 'aval_terceiro_fraco',
-    nome: 'Aval de terceiro sem patrimônio robusto',
-    delta: -12,
-    tier: 'fraca',
-    score_mercado: 1,
-  },
-
-  // ── 0/10 — pior ──────────────────────────────────────────────────
-  {
-    id: 'aval_puro_sem_respaldo',
-    nome: 'Aval puro sem respaldo',
-    delta: -15,
-    tier: 'fraca',
-    score_mercado: 0,
   },
 ]
 
