@@ -190,3 +190,19 @@ Comitês passaram a olhar com lupa o **% do patrimônio real comprometido em cr�
 | Acima de 85% | "Alavancagem crítica. Recomendado rolagem prévia ou redução do pleito antes da apresentação ao comitê." |
 
 Quando o lead não soube informar (`nao_sei`), **não inventar** — incluir como item a confirmar na pré-apresentação ao gerente.
+
+## Régua de plausibilidade do pleito (renda × múltiplo)
+
+Antes da análise de garantia/cadastro, o laudo deve ancorar o pleito na renda anual:
+- Custeio: até 3× a renda anual = padrão de comitê
+- Investimento: até 5× a renda anual = defesa técnica reforçada
+- Acima de (múltiplo + 2): operação muito improvável sem redução ou comprovação de renda complementar
+
+Sempre incluir no laudo: ratio = pleito ÷ renda. Se acima do padrão, propor redução OU listar fontes de renda complementar (arrendamento, parceria, atividade não-rural).
+
+## Operações ativas em outros bancos
+
+Diferente do histórico SCR (passado), são as operações ATUAIS em outras instituições. Quando JSON revelar:
+- "nenhuma" → ponto positivo no laudo: relacionamento concentrado, comitê valoriza
+- "em_dia" → defesa do fluxo: serviço total da dívida (atual + nova) deve caber em 30-40% do faturamento
+- "com_atraso" → ponto crítico do laudo: regularização antes do protocolo é pré-requisito

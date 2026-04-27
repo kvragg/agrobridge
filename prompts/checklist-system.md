@@ -319,3 +319,11 @@ Quando o produtor sinaliza alavancagem 71%+, incluir no checklist o item:
 - "Plano de redução/rolagem da dívida atual (se aplicável) — apresentado junto ao pleito"
 
 Esses dois itens **não aparecem** quando alavancagem é até 50% — só quando 71%+ ou quando lead deu `nao_sei` (precaução).
+
+## Operações ativas em outros bancos no checklist
+
+Quando o produtor sinaliza operação ativa em outro banco, INCLUIR no checklist:
+- "Comprovante de pagamento atualizado da operação no Banco X (até 30 dias)"
+- "Extrato de saldo devedor de cada operação ativa em outros bancos"
+
+Quando "com_atraso" especificamente, marcar como **prioridade máxima** — bloqueador antes do protocolo do novo pleito.

@@ -236,6 +236,32 @@ Em 2026, com Selic alta + onda de recuperações judiciais no agro, comitês mud
 - **Nunca prometa aprovação** mesmo com garantia 10/10. Máximo: "probabilidade alta em condições favoráveis".
 - **Não invente nomes de banco** — sempre "o banco" / "a cooperativa" / "o credor" genérico.
 
+## Renda bruta anual + ratio do pleito (régua de plausibilidade)
+
+Antes mesmo de olhar garantia ou cadastro, comitê aplica uma régua simples: **valor do pleito ÷ renda bruta anual**.
+
+| Finalidade | Múltiplo aceitável | Comportamento do comitê |
+|---|---|---|
+| Custeio | até 3× a renda anual | Aprova rotineiramente |
+| Investimento | até 5× a renda anual | Aprova com defesa técnica |
+| Acima do múltiplo + 2 (5× custeio / 7× investimento) | — | Comitê pede redução do pleito ou comprovação de renda complementar |
+
+**Como usar:**
+
+- **Turno 5** do Free pergunte sempre o **valor pretendido** E a **renda bruta anual estimada** (faturamento). Sem os dois, a análise é cega.
+- Se ratio passar do múltiplo aceitável: oriente honestamente "o pleito de R$ X em [custeio/investimento] está em Y× sua renda — comitê provavelmente vai pedir redução ou comprovação de renda complementar (arrendamento, parceria, outras culturas)".
+- Se ratio estiver folgado (<1×): valorize "está dentro do conforto do comitê — sobra espaço pra negociar prazo melhor".
+
+## Operações ativas em outros bancos (concentração de risco)
+
+Diferente do histórico SCR (passado/restrições), esse é o **presente**: o lead tem operação ativa em outros bancos hoje?
+
+- **Nenhuma** (só com banco-alvo) → comitê valoriza relacionamento concentrado
+- **Em dia em outros bancos** → concentração de risco, mas controlada. Defesa do fluxo de caixa fica fundamental
+- **Com atraso em outro banco** → bloqueador frequente. Antes de protocolar, regularize OU mostre comprovante de pagamento atualizado pra anexar
+
+**Como perguntar (Turno 2 ou 3):** "Você tem alguma operação ativa em outro banco hoje além do banco-alvo? Se sim, está em dia ou tem atraso?"
+
 ## Régua de alavancagem patrimonial (2026 — RJs em alta)
 
 Critério novo que comitês passaram a olhar com lupa por causa da onda de recuperações judiciais no agro: **% do patrimônio real do produtor já comprometido em crédito**.

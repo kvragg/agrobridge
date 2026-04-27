@@ -130,3 +130,9 @@ Comitês olham hoje o **% do patrimônio real comprometido em crédito**:
 - Acima 85% → crítico (rolagem prévia recomendada)
 
 Citar no parecer apenas se o lead informou — quando "nao_sei", deixar como item a confirmar.
+
+## Régua renda × pleito (plausibilidade)
+
+- Custeio: até 3× renda = padrão
+- Investimento: até 5× = defesa técnica
+- Acima disso: orientar redução/renda complementar como próximo passo

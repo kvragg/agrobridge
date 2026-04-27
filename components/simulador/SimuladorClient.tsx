@@ -56,6 +56,8 @@ function inputInicial(): SimulatorInput {
     aval_tipo: "nenhum",
     cadastro_nivel: "atualizado_incompleto",
     historico_scr: "limpo",
+    divida_outros_bancos: "nenhuma",
+    renda_bruta_anual: 1_200_000,
     endividamento_pct: 35,
     divida_patrimonio_faixa: "nao_sei",
     car: "regular_averbado",
@@ -408,7 +410,7 @@ export function SimuladorClient({
           />
         </Field>
 
-        <Field label="Histórico bancário (SCR)">
+        <Field label="Histórico bancário (SCR — passado/restrições)">
           <Select
             value={input.historico_scr}
             onChange={(v) =>
@@ -429,6 +431,74 @@ export function SimuladorClient({
               },
             ]}
           />
+        </Field>
+
+        <Field label="Operações ATIVAS em outros bancos (presente)">
+          <Select
+            value={input.divida_outros_bancos ?? "nenhuma"}
+            onChange={(v) =>
+              patch({
+                divida_outros_bancos:
+                  v as SimulatorInput["divida_outros_bancos"],
+              })
+            }
+            options={[
+              { value: "nenhuma", label: "Nenhuma — só com banco-alvo" },
+              {
+                value: "em_dia",
+                label: "Tenho operação em outros bancos, em dia",
+              },
+              {
+                value: "com_atraso",
+                label: "Tenho operação com atraso em outro banco",
+              },
+            ]}
+          />
+        </Field>
+
+        <Field
+          label={`Renda bruta anual · R$ ${(input.renda_bruta_anual ?? 0).toLocaleString("pt-BR")}`}
+          extra={
+            <span
+              className="mono"
+              style={{
+                fontSize: 10,
+                color: "var(--gold)",
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+              }}
+            >
+              Régua do pleito
+            </span>
+          }
+        >
+          <input
+            type="range"
+            min={0}
+            max={20_000_000}
+            step={50_000}
+            value={input.renda_bruta_anual ?? 0}
+            onChange={(e) =>
+              patch({ renda_bruta_anual: +e.target.value })
+            }
+            style={{ width: "100%", accentColor: "var(--gold)" }}
+          />
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              fontSize: 11,
+              color: "var(--muted)",
+              marginTop: 4,
+              fontFamily: "var(--font-mono, ui-monospace)",
+            }}
+          >
+            <span>Faturamento da operação · base do múltiplo</span>
+            <span>
+              {input.finalidade === "investimento" ? "5×" : "3×"} =
+              R$ {((input.renda_bruta_anual ?? 0) * (input.finalidade === "investimento" ? 5 : 3)).toLocaleString("pt-BR")}
+            </span>
+          </div>
         </Field>
 
         <Field

@@ -139,6 +139,65 @@ export function simular(
       break
   }
 
+  // ── 5.5) Dívida ativa em outros bancos ────────────────────────
+  // Concentração de risco que o comitê do banco-alvo vai subtrair
+  // do potencial de novo crédito. Diferente de historico_scr — aqui
+  // é o presente, não passado.
+  switch (input.divida_outros_bancos) {
+    case 'nenhuma':
+      deltas.push({
+        fator: 'divida_outros_bancos_nenhuma',
+        delta: 4,
+        motivo: 'Sem operações ativas em outros bancos — relacionamento concentrado, comitê valoriza.',
+      })
+      break
+    case 'em_dia':
+      deltas.push({
+        fator: 'divida_outros_bancos_em_dia',
+        delta: -3,
+        motivo: 'Operações ativas em outros bancos, em dia — concentração de risco a defender no comitê.',
+      })
+      break
+    case 'com_atraso':
+      deltas.push({
+        fator: 'divida_outros_bancos_atraso',
+        delta: -18,
+        motivo: 'Operação ativa com atraso em outro banco — comitê pesa risco substancialmente.',
+      })
+      break
+    case undefined:
+      // Não informado — neutro.
+      break
+  }
+
+  // ── 5.7) Pleito vs renda bruta anual ──────────────────────────
+  // Sem renda informada o engine não consegue avaliar plausibilidade.
+  // Quando informada, ratio = pleito/renda calibra a expectativa do
+  // comitê: custeio até 3x renda, investimento até 5x.
+  if (input.renda_bruta_anual && input.renda_bruta_anual > 0) {
+    const ratio = input.valor_pretendido / input.renda_bruta_anual
+    const tetoRatio = input.finalidade === 'investimento' ? 5 : 3
+    if (ratio > tetoRatio + 2) {
+      deltas.push({
+        fator: 'pleito_excede_renda',
+        delta: -12,
+        motivo: `Pleito de ${ratio.toFixed(1)}× a renda anual — muito acima do limite usual (${tetoRatio}× pra ${input.finalidade}). Comitê provavelmente pede redução.`,
+      })
+    } else if (ratio > tetoRatio) {
+      deltas.push({
+        fator: 'pleito_acima_padrao',
+        delta: -5,
+        motivo: `Pleito de ${ratio.toFixed(1)}× a renda anual — acima do padrão (${tetoRatio}× pra ${input.finalidade}). Defesa técnica reforçada necessária.`,
+      })
+    } else if (ratio < 1) {
+      deltas.push({
+        fator: 'pleito_compativel',
+        delta: 3,
+        motivo: `Pleito de ${ratio.toFixed(1)}× a renda anual — folgado, dentro do conforto do comitê.`,
+      })
+    }
+  }
+
   // ── 6) Endividamento (% da receita anual) ─────────────────────
   // Capacidade de pagamento — quanto da receita já vai pra serviço de
   // dívida. Eixo "consigo pagar?".
@@ -428,6 +487,24 @@ export function simular(
       texto: 'Endividamento acima de 100% — refinanciamento ou redução de pleito é quase obrigatório.',
     })
   }
+  if (input.divida_outros_bancos === 'com_atraso') {
+    avisos.push({
+      tipo: 'critico',
+      texto:
+        'Operação com atraso em outro banco — bloqueador frequente. Regularize antes de protocolar novo pleito (ou mostre o pagamento atualizado em comprovante recente).',
+    })
+  }
+  if (
+    input.renda_bruta_anual &&
+    input.renda_bruta_anual > 0 &&
+    input.valor_pretendido / input.renda_bruta_anual >
+      (input.finalidade === 'investimento' ? 5 : 3) + 2
+  ) {
+    avisos.push({
+      tipo: 'critico',
+      texto: `Pleito muito acima do múltiplo usual da renda — comitê provavelmente vai pedir redução. Considere pleitear menos OU comprovar renda complementar.`,
+    })
+  }
   if (input.divida_patrimonio_faixa === 'acima_85') {
     avisos.push({
       tipo: 'critico',
@@ -646,6 +723,29 @@ function montarPlanoSubida(
     })
   }
 
+  // Atraso em outro banco
+  if (input.divida_outros_bancos === 'com_atraso') {
+    acoes.push({
+      acao: 'Regularizar a operação em atraso em outro banco antes de protocolar (puxar comprovante de pagamento atualizado pra anexar)',
+      ganho_estimado: 18,
+      prazo_dias: 21,
+    })
+  }
+
+  // Pleito acima da régua de renda
+  if (
+    input.renda_bruta_anual &&
+    input.renda_bruta_anual > 0 &&
+    input.valor_pretendido / input.renda_bruta_anual >
+      (input.finalidade === 'investimento' ? 5 : 3)
+  ) {
+    acoes.push({
+      acao: 'Reduzir o pleito pra dentro do múltiplo usual da renda (3× custeio · 5× investimento) OU comprovar renda complementar formal',
+      ganho_estimado: 10,
+      prazo_dias: 7,
+    })
+  }
+
   // Endividamento alto (sobre receita)
   if (input.endividamento_pct >= 100) {
     acoes.push({
@@ -697,13 +797,17 @@ function calcTetoValor(
   input: SimulatorInput,
   cultura: Cultura | undefined,
 ): number | null {
+  // Quando renda anual informada, usa múltiplo realista por finalidade:
+  // custeio até 3× renda, investimento até 5×. É a primeira régua que
+  // comitê aplica antes de olhar garantia/cadastro.
+  if (input.renda_bruta_anual && input.renda_bruta_anual > 0) {
+    const mult = input.finalidade === 'investimento' ? 5 : 3
+    return Math.round(input.renda_bruta_anual * mult)
+  }
   // Pra culturas com teto por hectare definido, estima teto teórico
   // baseado em valor pretendido (não temos área no input — usamos
   // um múltiplo conservador). Pra pecuária/integradas (teto 0/0),
   // retorna null.
   if (!cultura || cultura.teto_custeio_por_ha.max === 0) return null
-
-  // Heurística simples: o valor pretendido ÉO teto desejado pelo lead.
-  // Devolvemos uma faixa razoável: até 1.2× o pretendido se for plausível.
   return Math.round(input.valor_pretendido * 1.2)
 }

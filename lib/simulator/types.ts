@@ -30,6 +30,18 @@ export type HistoricoScr =
   | 'restricao_encerrada'
   | 'primeira_operacao'
 
+/**
+ * Operações de crédito ATIVAS em outros bancos hoje. Diferente de
+ * `historico_scr` (que captura passado/restrições) — aqui é o presente.
+ * Comitê do banco-alvo subtrai isso do potencial de novo crédito.
+ *
+ *   nenhuma       — só relacionamento com o banco-alvo (positivo)
+ *   em_dia        — tem operações ativas em outros bancos, sem atraso
+ *                   (concentração de risco a defender)
+ *   com_atraso    — operação ativa com atraso em outro banco (alerta)
+ */
+export type DividaOutrosBancos = 'nenhuma' | 'em_dia' | 'com_atraso'
+
 export type CarStatus =
   | 'regular_averbado'
   | 'inscrito_pendente'
@@ -66,6 +78,18 @@ export interface SimulatorInput {
   aval_tipo?: AvalTipo
   cadastro_nivel: CadastroNivelId
   historico_scr: HistoricoScr
+  /**
+   * Operações ativas em outros bancos hoje. Comitê subtrai do
+   * potencial de novo crédito. Opcional pra retrocompat — simulações
+   * antigas não têm.
+   */
+  divida_outros_bancos?: DividaOutrosBancos
+  /**
+   * Renda bruta anual em R$ (faturamento da operação rural). Crítico
+   * pra calibrar o pleito — sem renda informada o motor não consegue
+   * aferir se o pleito é plausível. Opcional pra retrocompat.
+   */
+  renda_bruta_anual?: number
   endividamento_pct: number // 0–200, dívida total / receita anual
   /**
    * Dívida total / patrimônio real (alavancagem). Opcional: simulações

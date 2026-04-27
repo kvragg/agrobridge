@@ -323,6 +323,118 @@ describe('Cultura inválida não quebra (defensivo)', () => {
   })
 })
 
+describe('Dívida ativa em outros bancos', () => {
+  it('"nenhuma" bonifica vs "em_dia" (concentração) — sob teto', () => {
+    // Sem garantia + endividamento moderado pra ficar abaixo do teto
+    // do cadastro 'atualizado_incompleto' (80) — vê o efeito real.
+    const cenario: Partial<SimulatorInput> = {
+      garantias: [],
+      reciprocidade_bancaria: 'nenhuma',
+      tem_seguro_agricola: false,
+      endividamento_pct: 80,
+      car: 'inscrito_pendente',
+    }
+    const nenhuma = simular(
+      inputBase({ ...cenario, divida_outros_bancos: 'nenhuma' }),
+      CONJUNTURA_ATUAL,
+    )
+    const emDia = simular(
+      inputBase({ ...cenario, divida_outros_bancos: 'em_dia' }),
+      CONJUNTURA_ATUAL,
+    )
+    expect(nenhuma.score).toBeGreaterThan(emDia.score)
+  })
+
+  it('"com_atraso" gera aviso crítico + ação no plano', () => {
+    const r = simular(
+      inputBase({ divida_outros_bancos: 'com_atraso' }),
+      CONJUNTURA_ATUAL,
+    )
+    expect(r.avisos.some((a) => a.tipo === 'critico' && /atraso.*outro banco/i.test(a.texto))).toBe(true)
+    expect(r.plano_de_subida.some((a) => /regularizar.*outro banco/i.test(a.acao))).toBe(true)
+  })
+
+  it('campo opcional ausente é neutro (retrocompat)', () => {
+    const semCampo = simular(inputBase(), CONJUNTURA_ATUAL)
+    const naoInformado = simular(
+      inputBase({ divida_outros_bancos: undefined }),
+      CONJUNTURA_ATUAL,
+    )
+    expect(semCampo.score).toBe(naoInformado.score)
+  })
+})
+
+describe('Renda bruta anual e ratio do pleito', () => {
+  it('pleito até 3× renda em custeio = compatível (bonifica)', () => {
+    const r = simular(
+      inputBase({
+        valor_pretendido: 800_000,
+        renda_bruta_anual: 1_500_000,
+        finalidade: 'custeio',
+      }),
+      CONJUNTURA_ATUAL,
+    )
+    expect(r.deltas_aplicados.some((d) => d.fator === 'pleito_compativel')).toBe(true)
+  })
+
+  it('pleito 4× renda em custeio penaliza (acima do padrão)', () => {
+    const r = simular(
+      inputBase({
+        valor_pretendido: 4_000_000,
+        renda_bruta_anual: 1_000_000,
+        finalidade: 'custeio',
+      }),
+      CONJUNTURA_ATUAL,
+    )
+    expect(r.deltas_aplicados.some((d) => d.fator === 'pleito_acima_padrao')).toBe(true)
+  })
+
+  it('pleito 6× renda em custeio gera crítico + ação', () => {
+    const r = simular(
+      inputBase({
+        valor_pretendido: 6_000_000,
+        renda_bruta_anual: 1_000_000,
+        finalidade: 'custeio',
+      }),
+      CONJUNTURA_ATUAL,
+    )
+    expect(r.avisos.some((a) => a.tipo === 'critico' && /múltiplo.*renda/i.test(a.texto))).toBe(true)
+    expect(r.plano_de_subida.some((a) => /reduzir o pleito/i.test(a.acao))).toBe(true)
+  })
+
+  it('investimento aceita até 5× renda sem penalidade', () => {
+    const r = simular(
+      inputBase({
+        valor_pretendido: 4_000_000,
+        renda_bruta_anual: 1_000_000,
+        finalidade: 'investimento',
+      }),
+      CONJUNTURA_ATUAL,
+    )
+    expect(r.deltas_aplicados.some((d) => d.fator === 'pleito_acima_padrao')).toBe(false)
+  })
+
+  it('teto_valor_estimado deriva da renda quando informada', () => {
+    const r = simular(
+      inputBase({
+        renda_bruta_anual: 2_000_000,
+        finalidade: 'custeio',
+      }),
+      CONJUNTURA_ATUAL,
+    )
+    expect(r.teto_valor_estimado).toBe(6_000_000) // 3× renda
+  })
+
+  it('campo opcional ausente é neutro', () => {
+    const semRenda = simular(inputBase(), CONJUNTURA_ATUAL)
+    const comRendaUndefined = simular(
+      inputBase({ renda_bruta_anual: undefined }),
+      CONJUNTURA_ATUAL,
+    )
+    expect(semRenda.score).toBe(comRendaUndefined.score)
+  })
+})
+
 describe('Alavancagem patrimonial (cenário 2026 — RJs em alta)', () => {
   it('até 50% bonifica score (folga patrimonial)', () => {
     const baixa = simular(
