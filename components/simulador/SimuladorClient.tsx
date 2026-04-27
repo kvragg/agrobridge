@@ -31,9 +31,11 @@ const UF_LIST = [
 // Régua de cor pelo NÚMERO (não pela faixa qualitativa, que mantém
 // 5 categorias em outros lugares). Pedido do produto:
 //   ≥ 80 verde · 51-79 amarelo · ≤ 50 vermelho.
+// Amarelo literal #facc15 (não o `--gold` dourado da paleta) pra ficar
+// nítido como "atenção" sem se confundir com o dourado de luxo do site.
 function corDoScore(score: number): string {
   if (score >= 80) return "var(--green)"
-  if (score >= 51) return "var(--gold)"
+  if (score >= 51) return "#facc15"
   return "var(--danger)"
 }
 
