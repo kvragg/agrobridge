@@ -103,30 +103,6 @@ const PLANOS: Plano[] = [
   },
 ]
 
-interface AddOn {
-  nome: string
-  preco: string
-  desc: string
-}
-
-const ADDONS: AddOn[] = [
-  {
-    nome: "Revisão jurídica de matrícula",
-    preco: "+R$ 150",
-    desc: "Análise dominial e de ônus pra cada matrícula do seu imóvel",
-  },
-  {
-    nome: "Análise de saldo de rebanho",
-    preco: "+R$ 200",
-    desc: "Leitura técnica do seu saldo Iagro/AgroDefesa pra crédito pecuário",
-  },
-  {
-    nome: "WhatsApp prioritário · 30 dias",
-    preco: "+R$ 99",
-    desc: "Resposta em até 1h em horário comercial direto comigo",
-  },
-]
-
 interface VagasMentoriaApi {
   limite_mensal: number
   vagas_usadas: number
@@ -281,81 +257,6 @@ export default function PlanosClient({
           ))}
         </div>
 
-        {/* Bloco de add-ons opcionais (Prata e Ouro) */}
-        <div style={{ marginTop: 64 }}>
-          <Eyebrow>Adicionais sob consulta · Prata e Ouro</Eyebrow>
-          <h2
-            style={{
-              margin: "12px 0 8px",
-              fontSize: 22,
-              fontWeight: 500,
-              letterSpacing: "-0.02em",
-              color: "#fff",
-            }}
-          >
-            Personalize sua assessoria
-          </h2>
-          <p
-            style={{
-              fontSize: 14,
-              color: "var(--ink-2)",
-              maxWidth: 640,
-              lineHeight: 1.55,
-              margin: "0 0 20px",
-            }}
-          >
-            Opções pra reforçar pontos específicos do seu caso. Solicite junto
-            do plano via email ou WhatsApp — adicionamos no checkout final.
-          </p>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(3, 1fr)",
-              gap: 16,
-            }}
-            className="planos-addons"
-          >
-            {ADDONS.map((a) => (
-              <GlassCard key={a.nome} glow="none" padding={20} hover={false}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12 }}>
-                  <div
-                    className="mono"
-                    style={{
-                      fontSize: 11,
-                      letterSpacing: "0.14em",
-                      textTransform: "uppercase",
-                      color: "var(--gold)",
-                    }}
-                  >
-                    {a.preco}
-                  </div>
-                </div>
-                <div
-                  style={{
-                    marginTop: 8,
-                    fontSize: 15,
-                    fontWeight: 500,
-                    color: "#fff",
-                    letterSpacing: "-0.01em",
-                  }}
-                >
-                  {a.nome}
-                </div>
-                <div
-                  style={{
-                    marginTop: 8,
-                    fontSize: 12.5,
-                    color: "var(--ink-2)",
-                    lineHeight: 1.5,
-                  }}
-                >
-                  {a.desc}
-                </div>
-              </GlassCard>
-            ))}
-          </div>
-        </div>
-
         <div
           style={{
             marginTop: 56,
@@ -412,12 +313,10 @@ export default function PlanosClient({
         @media (max-width: 1080px){
           .planos-grid{ grid-template-columns: 1fr !important; max-width: 560px; margin: 0 auto !important }
           .planos-header{ grid-template-columns: 1fr !important; gap: 32px !important; align-items: flex-start !important }
-          .planos-addons{ grid-template-columns: 1fr 1fr !important }
           .planos-trust{ grid-template-columns: 1fr 1fr !important }
         }
         @media (max-width: 760px){
           .planos-trust{ grid-template-columns: 1fr !important }
-          .planos-addons{ grid-template-columns: 1fr !important }
         }
       `}</style>
     </DashboardShell>
