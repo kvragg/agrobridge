@@ -219,25 +219,37 @@ export function simular(
   }
 
   // ── 6) Endividamento (% da receita anual) ─────────────────────
-  // Capacidade de pagamento — quanto da receita já vai pra serviço de
-  // dívida. Eixo "consigo pagar?".
-  if (input.endividamento_pct >= 100) {
+  // Capacidade de pagamento — quanto do faturamento anual já vai pra
+  // serviço de dívida. Régua calibrada com prática de comitês 2026
+  // (cenário Selic alta + RJs no agro):
+  //   0-49%  saudável    → +6  (faturamento livre, comitê tranquilo)
+  //   50-64% defensável  → 0   (atende com defesa do fluxo)
+  //   65-79% alerta      → -10 (concentração de risco visível)
+  //   80%+   improvável  → -20 (refinanciamento prévio recomendado)
+  const eP = input.endividamento_pct
+  if (eP >= 80) {
     deltas.push({
-      fator: 'endividamento_alto',
-      delta: -18,
-      motivo: `Endividamento de ${input.endividamento_pct}% da receita anual.`,
+      fator: 'endividamento_improvavel',
+      delta: -20,
+      motivo: `Endividamento de ${eP}% da receita anual — zona "improvável", comitê pede refinanciamento prévio antes de novo pleito.`,
     })
-  } else if (input.endividamento_pct >= 60) {
+  } else if (eP >= 65) {
     deltas.push({
-      fator: 'endividamento_moderado',
-      delta: -8,
-      motivo: `Endividamento moderado (${input.endividamento_pct}%).`,
+      fator: 'endividamento_alerta',
+      delta: -10,
+      motivo: `Endividamento de ${eP}% — zona de alerta, comitê visualiza concentração de risco. Defesa do fluxo precisa estar impecável.`,
     })
-  } else if (input.endividamento_pct <= 20) {
+  } else if (eP >= 50) {
     deltas.push({
-      fator: 'endividamento_baixo',
-      delta: 5,
-      motivo: `Endividamento baixo (${input.endividamento_pct}%) — capacidade de pagamento boa.`,
+      fator: 'endividamento_defensavel',
+      delta: 0,
+      motivo: `Endividamento de ${eP}% — zona defensável. Comitê atende com análise normal + defesa do fluxo de caixa.`,
+    })
+  } else if (eP >= 0) {
+    deltas.push({
+      fator: 'endividamento_saudavel',
+      delta: 6,
+      motivo: `Endividamento de ${eP}% — saudável. Capacidade de pagamento confortável, comitê aprova com naturalidade.`,
     })
   }
 
@@ -509,10 +521,15 @@ export function simular(
   const radar = montarRadar(input, cultura)
 
   // ── 19) Avisos contextuais (além dos da regra arrendatário) ───
-  if (input.endividamento_pct >= 100) {
+  if (input.endividamento_pct >= 80) {
     avisos.push({
       tipo: 'critico',
-      texto: 'Endividamento acima de 100% — refinanciamento ou redução de pleito é quase obrigatório.',
+      texto: `Endividamento ${input.endividamento_pct}% da receita — zona improvável. Refinanciamento ou redução do pleito quase obrigatórios antes de protocolar.`,
+    })
+  } else if (input.endividamento_pct >= 65) {
+    avisos.push({
+      tipo: 'alerta',
+      texto: `Endividamento ${input.endividamento_pct}% — zona de alerta. Comitê vai pedir defesa robusta do fluxo de caixa e estresse na garantia.`,
     })
   }
   if (input.divida_outros_bancos === 'com_atraso') {
@@ -634,7 +651,21 @@ function montarRadar(
   //   (b) alavancagem patrimonial → "sobra colateral se azedar?"
   // Média ponderada 60/40 quando alavancagem informada; só (a) quando
   // não-informada ou 'nao_sei'.
-  const eixoCaixa = 100 - input.endividamento_pct * 0.7
+  //
+  // Função piecewise não-linear alinhada com a régua de produto:
+  //   0-49%  → 95..75 (saudável → bonifica)
+  //   50-64% → 75..55 (defensável → neutro)
+  //   65-79% → 55..30 (alerta → puxa pra baixo)
+  //   80%+   → 30..5  (improvável → fundo do poço)
+  // Curva penaliza progressivamente, refletindo aversão crescente do
+  // comitê conforme entra em cada zona.
+  const eixoCaixa = (() => {
+    const p = Math.max(0, input.endividamento_pct)
+    if (p < 50) return 95 - (p / 50) * 20
+    if (p < 65) return 75 - ((p - 50) / 15) * 20
+    if (p < 80) return 55 - ((p - 65) / 15) * 25
+    return Math.max(5, 30 - (p - 80) * 0.5)
+  })()
   const eixoPatrimonio = (() => {
     switch (input.divida_patrimonio_faixa) {
       case 'ate_50':
@@ -774,11 +805,23 @@ function montarPlanoSubida(
     })
   }
 
-  // Endividamento alto (sobre receita)
-  if (input.endividamento_pct >= 100) {
+  // Endividamento sobre receita — ações por faixa da régua nova
+  if (input.endividamento_pct >= 80) {
     acoes.push({
-      acao: 'Reduzir/refinanciar dívida atual antes de pleitear novo crédito',
-      ganho_estimado: 18,
+      acao: 'Reduzir/refinanciar dívida pra abaixo de 65% da receita anual antes de protocolar (zona improvável → alerta)',
+      ganho_estimado: 30,
+      prazo_dias: 90,
+    })
+  } else if (input.endividamento_pct >= 65) {
+    acoes.push({
+      acao: 'Reduzir endividamento pra abaixo de 50% da receita (alerta → defensável/saudável)',
+      ganho_estimado: 16,
+      prazo_dias: 60,
+    })
+  } else if (input.endividamento_pct >= 50) {
+    acoes.push({
+      acao: 'Otimizar endividamento pra abaixo de 50% (defensável → saudável) — bonifica score',
+      ganho_estimado: 6,
       prazo_dias: 60,
     })
   }

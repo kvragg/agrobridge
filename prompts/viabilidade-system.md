@@ -136,3 +136,7 @@ Citar no parecer apenas se o lead informou — quando "nao_sei", deixar como ite
 - Custeio: até 3× renda = padrão
 - Investimento: até 5× = defesa técnica
 - Acima disso: orientar redução/renda complementar como próximo passo
+
+## Régua de endividamento sobre receita
+- < 50% saudável · 50-64% defensável · 65-79% alerta · ≥ 80% improvável.
+- Mencionar no parecer Bronze quando informado.

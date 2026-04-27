@@ -310,6 +310,63 @@ describe('Sanity check dos data files', () => {
   })
 })
 
+describe('Régua de endividamento sobre receita (auditoria — produto 2026)', () => {
+  it('saudável: < 50% bonifica score (+6)', () => {
+    const r = simular(inputBase({ endividamento_pct: 30 }), CONJUNTURA_ATUAL)
+    expect(r.deltas_aplicados.some((d) => d.fator === 'endividamento_saudavel')).toBe(true)
+    const d = r.deltas_aplicados.find((d) => d.fator === 'endividamento_saudavel')
+    expect(d?.delta).toBe(6)
+  })
+
+  it('defensável: 50-64% é neutro (delta 0)', () => {
+    const r = simular(inputBase({ endividamento_pct: 60 }), CONJUNTURA_ATUAL)
+    const d = r.deltas_aplicados.find((d) => d.fator === 'endividamento_defensavel')
+    expect(d).toBeDefined()
+    expect(d?.delta).toBe(0)
+  })
+
+  it('alerta: 65-79% penaliza -10 + dispara aviso de alerta', () => {
+    const r = simular(inputBase({ endividamento_pct: 70 }), CONJUNTURA_ATUAL)
+    const d = r.deltas_aplicados.find((d) => d.fator === 'endividamento_alerta')
+    expect(d?.delta).toBe(-10)
+    expect(r.avisos.some((a) => a.tipo === 'alerta' && /alerta/i.test(a.texto) && /endividamento/i.test(a.texto))).toBe(true)
+  })
+
+  it('improvável: 80%+ penaliza -20 + dispara aviso crítico', () => {
+    const r = simular(inputBase({ endividamento_pct: 90 }), CONJUNTURA_ATUAL)
+    const d = r.deltas_aplicados.find((d) => d.fator === 'endividamento_improvavel')
+    expect(d?.delta).toBe(-20)
+    expect(r.avisos.some((a) => a.tipo === 'critico' && /improv[áa]vel|refinanciamento/i.test(a.texto))).toBe(true)
+  })
+
+  it('plano de subida sugere ação por faixa', () => {
+    const r80 = simular(inputBase({ endividamento_pct: 85 }), CONJUNTURA_ATUAL)
+    expect(r80.plano_de_subida.some((a) => /abaixo de 65/i.test(a.acao))).toBe(true)
+
+    const r70 = simular(
+      inputBase({
+        endividamento_pct: 70,
+        cadastro_nivel: 'desatualizado',
+      }),
+      CONJUNTURA_ATUAL,
+    )
+    expect(r70.plano_de_subida.some((a) => /abaixo de 50/i.test(a.acao))).toBe(true)
+  })
+
+  it('eixo Capacidade do radar reflete a régua: saudável > defensável > alerta > improvável', () => {
+    const cenario: Partial<SimulatorInput> = { divida_patrimonio_faixa: 'nao_sei' }
+    const saudavel = simular(inputBase({ ...cenario, endividamento_pct: 30 }), CONJUNTURA_ATUAL)
+    const defensavel = simular(inputBase({ ...cenario, endividamento_pct: 60 }), CONJUNTURA_ATUAL)
+    const alerta = simular(inputBase({ ...cenario, endividamento_pct: 70 }), CONJUNTURA_ATUAL)
+    const improvavel = simular(inputBase({ ...cenario, endividamento_pct: 90 }), CONJUNTURA_ATUAL)
+
+    const cap = (r: typeof saudavel) => r.radar.find((e) => e.eixo === 'Capacidade')!.valor
+    expect(cap(saudavel)).toBeGreaterThan(cap(defensavel))
+    expect(cap(defensavel)).toBeGreaterThan(cap(alerta))
+    expect(cap(alerta)).toBeGreaterThan(cap(improvavel))
+  })
+})
+
 describe('Auditoria 100% funcional — calibrações finais', () => {
   it('aval não duplica: aval_tipo NÃO bate com lista de garantias', () => {
     // Os 4 IDs aval_* foram removidos da lista GARANTIAS pra evitar

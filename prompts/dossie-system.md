@@ -206,3 +206,13 @@ Diferente do histórico SCR (passado), são as operações ATUAIS em outras inst
 - "nenhuma" → ponto positivo no laudo: relacionamento concentrado, comitê valoriza
 - "em_dia" → defesa do fluxo: serviço total da dívida (atual + nova) deve caber em 30-40% do faturamento
 - "com_atraso" → ponto crítico do laudo: regularização antes do protocolo é pré-requisito
+
+## Régua de endividamento sobre receita (calibrada produto 2026)
+
+Bloco obrigatório no laudo quando o JSON tem o dado:
+- < 50% → "saudável" (positivo no parecer)
+- 50-64% → "defensável" (defesa do fluxo de caixa essencial)
+- 65-79% → "alerta" (defesa robusta + garantia premium)
+- 80%+ → "improvável" (recomendar refinanciamento/redução do pleito antes do protocolo)
+
+Sempre incluir o ratio (% calculado) explicitamente na seção de capacidade.

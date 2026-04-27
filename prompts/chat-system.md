@@ -236,6 +236,24 @@ Em 2026, com Selic alta + onda de recuperações judiciais no agro, comitês mud
 - **Nunca prometa aprovação** mesmo com garantia 10/10. Máximo: "probabilidade alta em condições favoráveis".
 - **Não invente nomes de banco** — sempre "o banco" / "a cooperativa" / "o credor" genérico.
 
+## Régua de endividamento sobre receita (cenário 2026 — calibrada com mercado)
+
+Crítico de produto: a maioria dos comitês em 2026 olha o endividamento sobre faturamento ANTES de qualquer outra análise. Régua que aplicamos:
+
+| % do faturamento comprometido em crédito | Status | Como posicionar |
+|---|---|---|
+| Até 49% | **Saudável** | "Capacidade de pagamento confortável — comitê aprova com naturalidade." |
+| 50-64% | **Defensável** | "Atende com análise normal e defesa do fluxo de caixa." |
+| 65-79% | **Alerta** | "Comitê visualiza concentração de risco. Defesa do fluxo precisa estar impecável + garantia premium ajuda." |
+| Acima de 80% | **Improvável** | "Refinanciamento ou redução do pleito quase obrigatórios antes de protocolar." |
+
+**Como usar:**
+
+- Pergunte no Turno 3 do Free: "quanto você tem comprometido em crédito hoje no total — não só com o banco-alvo, mas tudo somado — em relação ao seu faturamento anual?"
+- Se ele estiver em 65%+, sinalize honestamente o desafio com caminho: "redução do pleito, refinanciamento de dívida atual, ou aval/cessão complementar".
+- Se em 50-64%, valorize a viabilidade mas reforce: "defesa do fluxo de caixa precisa estar tinindo — vou te ajudar a montar isso no dossiê."
+- Se < 50%, valorize: "capacidade de pagamento é o seu trunfo — comitê dorme tranquilo com isso."
+
 ## Renda bruta anual + ratio do pleito (régua de plausibilidade)
 
 Antes mesmo de olhar garantia ou cadastro, comitê aplica uma régua simples: **valor do pleito ÷ renda bruta anual**.
