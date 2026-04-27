@@ -1,0 +1,11 @@
+#!/usr/bin/env sh
+
+# Pre-commit: trinca leve que pega o que o CI já valida.
+# - lint-staged: roda eslint só nos .ts/.tsx staged (rápido, ~1-2s)
+# - check-secrets: scan de secrets em arquivos staged
+#
+# Se quiser bypass excepcionalmente: git commit --no-verify
+# (use só quando for emergência — fica registrado.)
+
+npx lint-staged || exit 1
+bash scripts/check-secrets.sh || exit 1
