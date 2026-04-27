@@ -313,14 +313,16 @@ export function simular(
       })
       break
     case 'nao_tem':
-      // Regra dura — penaliza forte mas não bloqueia
+      // Regra dura — peso máximo. CAR é regulatório ambiental, blocker
+      // absoluto que trava linha inteira no comitê. Mais grave que
+      // pendência cadastral (ITR/IR resolvem em 24h).
       regrasDurasViolades.push(
-        'CAR ausente — bloqueador comum em comitês ambientais.',
+        'CAR ausente — bloqueador absoluto em comitês ambientais.',
       )
       deltas.push({
         fator: 'regra_dura_car_ausente',
-        delta: -40,
-        motivo: 'Sem CAR — regra dura, score puxado pra baixo.',
+        delta: -45,
+        motivo: 'Sem CAR — regra dura regulatória, score puxado fundo.',
       })
       break
   }
@@ -329,8 +331,8 @@ export function simular(
     regrasDurasViolades.push('CAR suspenso — comitê verá embargo.')
     deltas.push({
       fator: 'regra_dura_car_suspenso',
-      delta: -40,
-      motivo: 'CAR suspenso por embargo ambiental.',
+      delta: -45,
+      motivo: 'CAR suspenso por embargo ambiental — bloqueador absoluto.',
     })
   }
 
@@ -400,7 +402,8 @@ export function simular(
       break
   }
 
-  // Arrendamento com anuência do proprietário (se arrendado)
+  // Arrendamento com anuência do proprietário (se arrendado).
+  // Estrutural e negociável — peso médio (-35).
   if (
     (input.relacao_terra === 'maioria_arrendado' ||
       input.relacao_terra === 'totalmente_arrendado') &&
@@ -411,42 +414,46 @@ export function simular(
     )
     deltas.push({
       fator: 'regra_dura_arrend_sem_anuencia',
-      delta: -40,
-      motivo: 'Arrendamento sem anuência — bloqueador comum.',
+      delta: -35,
+      motivo: 'Arrendamento sem anuência — barra garantia, exige negociação prévia.',
     })
   }
 
-  // ── 11) Regras duras adicionais ───────────────────────────────
-  if (!input.cpf_cnpj_regular) {
-    regrasDurasViolades.push('CPF/CNPJ irregular na Receita.')
-    deltas.push({
-      fator: 'regra_dura_cpf_cnpj',
-      delta: -40,
-      motivo: 'CPF/CNPJ irregular — bloqueador absoluto inicial.',
-    })
-  }
+  // ── 11) Regras duras adicionais (calibradas por gravidade) ────
+  // Imóvel em inventário: sem matrícula limpa = sem garantia. Peso alto (-40).
   if (input.imovel_em_inventario) {
     regrasDurasViolades.push('Imóvel em inventário — sem matrícula limpa.')
     deltas.push({
       fator: 'regra_dura_inventario',
       delta: -40,
-      motivo: 'Imóvel em inventário — comitê não consegue garantia.',
+      motivo: 'Imóvel em inventário — comitê não consegue formalizar garantia.',
     })
   }
+  // CPF/CNPJ irregular: administrativo, resolve em 24h. Peso médio (-25).
+  if (!input.cpf_cnpj_regular) {
+    regrasDurasViolades.push('CPF/CNPJ irregular na Receita.')
+    deltas.push({
+      fator: 'regra_dura_cpf_cnpj',
+      delta: -25,
+      motivo: 'CPF/CNPJ irregular — bloqueia entrada do pleito mas resolve em 24h na Receita.',
+    })
+  }
+  // ITR em atraso: tributário, resolve com pagamento. Peso baixo (-20).
   if (!input.itr_em_dia) {
     regrasDurasViolades.push('ITR em atraso (último exercício).')
     deltas.push({
       fator: 'regra_dura_itr',
-      delta: -40,
-      motivo: 'ITR em atraso — barra acesso a algumas linhas.',
+      delta: -20,
+      motivo: 'ITR em atraso — barra algumas linhas mas resolve com pagamento na Receita.',
     })
   }
+  // IR em atraso: declaratório, resolve com retificação. Peso baixo (-20).
   if (!input.ir_em_dia) {
     regrasDurasViolades.push('IR em atraso.')
     deltas.push({
       fator: 'regra_dura_ir',
-      delta: -40,
-      motivo: 'IR em atraso — comitê desconfia.',
+      delta: -20,
+      motivo: 'IR em atraso — comitê desconfia mas resolve com retificação ou pagamento.',
     })
   }
 

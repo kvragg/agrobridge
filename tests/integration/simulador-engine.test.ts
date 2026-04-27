@@ -310,6 +310,75 @@ describe('Sanity check dos data files', () => {
   })
 })
 
+describe('Regras duras calibradas por gravidade real (auditoria #1)', () => {
+  it('CAR ausente é mais grave (-45) que ITR em atraso (-20)', () => {
+    const semCar = simular(inputBase({ car: 'nao_tem' }), CONJUNTURA_ATUAL)
+    const itrAtrasado = simular(inputBase({ itr_em_dia: false }), CONJUNTURA_ATUAL)
+    const dCar = semCar.deltas_aplicados.find((d) => d.fator === 'regra_dura_car_ausente')
+    const dItr = itrAtrasado.deltas_aplicados.find((d) => d.fator === 'regra_dura_itr')
+    expect(dCar?.delta).toBe(-45)
+    expect(dItr?.delta).toBe(-20)
+    // Score com CAR ausente cai mais que com ITR atrasado
+    expect(semCar.score).toBeLessThan(itrAtrasado.score)
+  })
+
+  it('CAR suspenso = -45 (mesmo peso de ausente — embargo ambiental)', () => {
+    const r = simular(inputBase({ car_suspenso: true }), CONJUNTURA_ATUAL)
+    const d = r.deltas_aplicados.find((d) => d.fator === 'regra_dura_car_suspenso')
+    expect(d?.delta).toBe(-45)
+  })
+
+  it('Imóvel em inventário (-40) é mais grave que CPF irregular (-25)', () => {
+    const inv = simular(inputBase({ imovel_em_inventario: true }), CONJUNTURA_ATUAL)
+    const cpf = simular(inputBase({ cpf_cnpj_regular: false }), CONJUNTURA_ATUAL)
+    const dInv = inv.deltas_aplicados.find((d) => d.fator === 'regra_dura_inventario')
+    const dCpf = cpf.deltas_aplicados.find((d) => d.fator === 'regra_dura_cpf_cnpj')
+    expect(dInv?.delta).toBe(-40)
+    expect(dCpf?.delta).toBe(-25)
+    expect(inv.score).toBeLessThan(cpf.score)
+  })
+
+  it('Arrendamento sem anuência = -35 (estrutural, abaixo de blocker absoluto)', () => {
+    const r = simular(
+      inputBase({
+        relacao_terra: 'totalmente_arrendado',
+        arrendamento_com_anuencia: false,
+      }),
+      CONJUNTURA_ATUAL,
+    )
+    const d = r.deltas_aplicados.find((d) => d.fator === 'regra_dura_arrend_sem_anuencia')
+    expect(d?.delta).toBe(-35)
+  })
+
+  it('IR em atraso = -20 (declaratório, mesmo peso do ITR)', () => {
+    const r = simular(inputBase({ ir_em_dia: false }), CONJUNTURA_ATUAL)
+    const d = r.deltas_aplicados.find((d) => d.fator === 'regra_dura_ir')
+    expect(d?.delta).toBe(-20)
+  })
+
+  it('hierarquia geral: CAR ausente > inventário > arrendamento > CPF > ITR/IR', () => {
+    const car = simular(inputBase({ car: 'nao_tem' }), CONJUNTURA_ATUAL).score
+    const inv = simular(inputBase({ imovel_em_inventario: true }), CONJUNTURA_ATUAL).score
+    const arr = simular(
+      inputBase({
+        relacao_terra: 'totalmente_arrendado',
+        arrendamento_com_anuencia: false,
+      }),
+      CONJUNTURA_ATUAL,
+    ).score
+    const cpf = simular(inputBase({ cpf_cnpj_regular: false }), CONJUNTURA_ATUAL).score
+    const itr = simular(inputBase({ itr_em_dia: false }), CONJUNTURA_ATUAL).score
+    // Quanto MAIS grave a regra, MENOR o score (ordem ascendente de score = ordem descendente de gravidade)
+    // CAR(-45) ≤ inv(-40) ≤ arr(-35+regra estrutura) ≤ cpf(-25) ≤ itr(-20)
+    expect(car).toBeLessThanOrEqual(inv)
+    expect(inv).toBeLessThanOrEqual(cpf)
+    expect(cpf).toBeLessThanOrEqual(itr)
+    // arr inclui penalidade adicional de relacao_terra=totalmente_arrendado;
+    // ver no contexto do teste anterior. Aqui só vale o spread global.
+    expect(arr).toBeLessThan(itr)
+  })
+})
+
 describe('Régua de endividamento sobre receita (auditoria — produto 2026)', () => {
   it('saudável: < 50% bonifica score (+6)', () => {
     const r = simular(inputBase({ endividamento_pct: 30 }), CONJUNTURA_ATUAL)
