@@ -639,10 +639,13 @@ export function SimuladorClient({
                 fontWeight: 500,
                 letterSpacing: "-0.045em",
                 lineHeight: 1,
-                color: "transparent",
-                background: `linear-gradient(180deg, #fff 0%, ${cor} 100%)`,
-                WebkitBackgroundClip: "text",
-                backgroundClip: "text",
+                // Cor sólida — abandonado gradient-text (`background-clip: text`)
+                // que renderiza inconsistente entre browsers/versões. Em alguns
+                // casos o gradient aparecia como retângulo sólido sobrepondo o
+                // texto. Cor sólida é estética 95% do efeito original com 0%
+                // de risco de bug.
+                color: cor,
+                textShadow: `0 0 20px ${cor}33`,
                 fontVariantNumeric: "tabular-nums",
               }}
             >

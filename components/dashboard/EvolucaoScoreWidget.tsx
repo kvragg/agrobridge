@@ -100,10 +100,12 @@ export function EvolucaoScoreWidget({
                 fontWeight: 500,
                 letterSpacing: "-0.04em",
                 lineHeight: 1,
-                color: "transparent",
-                background: `linear-gradient(180deg, #fff 0%, ${cor} 100%)`,
-                WebkitBackgroundClip: "text",
-                backgroundClip: "text",
+                // Cor sólida — gradient-text (`background-clip: text`) é
+                // bugado em vários browsers (renderiza retângulo sólido
+                // em vez de aplicar clip pelo texto). Mesma decisão do
+                // SimuladorClient pra coerência.
+                color: cor,
+                textShadow: `0 0 16px ${cor}33`,
                 fontVariantNumeric: "tabular-nums",
               }}
             >

@@ -365,10 +365,11 @@ export function Proof() {
                     fontWeight: 500,
                     letterSpacing: "-0.045em",
                     lineHeight: 1,
-                    color: "transparent",
-                    background: `linear-gradient(180deg, #fff 0%, ${cor} 100%)`,
-                    WebkitBackgroundClip: "text",
-                    backgroundClip: "text",
+                    // Cor sólida — gradient-text descontinuado por
+                    // bugar em alguns browsers. Coerente com simulador
+                    // e widget de evolução.
+                    color: cor,
+                    textShadow: `0 0 22px ${cor}33`,
                     fontVariantNumeric: "tabular-nums",
                   }}
                 >
