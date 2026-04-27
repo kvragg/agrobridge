@@ -45,7 +45,7 @@ const SLIDES: Slide[] = [
           O que passava com naturalidade em 2022/2023 hoje pede defesa
           técnica. O caminho não fechou — ficou mais estreito. Dossiê bem
           montado é o que separa lead aprovado do que entra na fila do
-          "vamos analisar mais".
+          &ldquo;vamos analisar mais&rdquo;.
         </p>
         <p>
           Os próximos 3 cards mostram exatamente <b>onde</b> o comitê está
@@ -192,8 +192,8 @@ const SLIDES: Slide[] = [
             lineHeight: 1.55,
           }}
         >
-          "Meu cadastro está com renda real e patrimônio em valor de
-          mercado, ou ainda usa valor do IR e da matrícula?"
+          &ldquo;Meu cadastro está com renda real e patrimônio em valor de
+          mercado, ou ainda usa valor do IR e da matrícula?&rdquo;
         </div>
         <p style={{ marginTop: 14, fontSize: 12.5, color: "var(--muted)", lineHeight: 1.6 }}>
           Se for a segunda — atualize <b style={{ color: "var(--ink-2)" }}>antes</b>{" "}
@@ -207,15 +207,22 @@ const SLIDES: Slide[] = [
 ]
 
 export function CarrosselMercado() {
+  // Lazy initializer roda só no client após hydrate. SSR começa
+  // !montado pra evitar mismatch entre servidor (sem localStorage)
+  // e cliente (lê preference). Após hydrate, useState dá o valor real.
   const [montado, setMontado] = useState(false)
-  const [aberto, setAberto] = useState(true)
+  const [aberto, setAberto] = useState(() => {
+    if (typeof window === "undefined") return true
+    return window.localStorage.getItem(STORAGE_KEY) !== "1"
+  })
   const [indice, setIndice] = useState(0)
 
   useEffect(() => {
+    // Padrão de detecção pós-hydrate. setState em effect é necessário
+    // aqui porque o server renderiza sem acesso ao localStorage e o
+    // client precisa "marcar" que já hidratou.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMontado(true)
-    if (typeof window === "undefined") return
-    const dismissed = window.localStorage.getItem(STORAGE_KEY) === "1"
-    if (dismissed) setAberto(false)
   }, [])
 
   const reabrir = () => {

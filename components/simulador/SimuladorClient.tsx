@@ -28,12 +28,13 @@ const UF_LIST = [
   "RJ","RN","RS","RO","RR","SC","SP","SE","TO",
 ] as const
 
-const FAIXA_COR: Record<Faixa, string> = {
-  muito_baixa: "var(--danger)",
-  baixa: "var(--danger)",
-  media: "var(--gold)",
-  alta: "var(--green)",
-  muito_alta: "var(--green)",
+// Régua de cor pelo NÚMERO (não pela faixa qualitativa, que mantém
+// 5 categorias em outros lugares). Pedido do produto:
+//   ≥ 80 verde · 51-79 amarelo · ≤ 50 vermelho.
+function corDoScore(score: number): string {
+  if (score >= 80) return "var(--green)"
+  if (score >= 51) return "var(--gold)"
+  return "var(--danger)"
 }
 
 const FAIXA_LABEL: Record<Faixa, string> = {
@@ -101,7 +102,7 @@ export function SimuladorClient({
     [debounced],
   )
 
-  const cor = FAIXA_COR[resultado.faixa]
+  const cor = corDoScore(resultado.score)
   const arrendado =
     input.relacao_terra === "totalmente_arrendado" ||
     input.relacao_terra === "maioria_arrendado"
