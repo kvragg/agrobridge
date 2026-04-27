@@ -18,6 +18,7 @@ import {
   type KPI,
 } from "@/components/dashboard/DashboardBlocks"
 import { JornadaFluxograma } from "@/components/dashboard/JornadaFluxograma"
+import { EvolucaoScoreWidget } from "@/components/dashboard/EvolucaoScoreWidget"
 
 interface ProcessoResumo {
   id: string
@@ -78,22 +79,25 @@ function formatValor(v: number | null | undefined): string | null {
   return `R$ ${v.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`
 }
 
+interface SimulacaoHistorico {
+  score: number
+  cultura: string
+  valor_pretendido: number
+  created_at: string
+}
+
 export function DashboardView({
   plano,
   perfil,
   processos,
   nomeCurto,
-  ultimaSimulacao,
+  historicoSimulacoes,
 }: {
   plano: string
   perfil: PerfilLead | null
   processos: ProcessoResumo[]
   nomeCurto: string
-  ultimaSimulacao?: {
-    score: number
-    cultura: string
-    created_at: string
-  } | null
+  historicoSimulacoes?: SimulacaoHistorico[]
 }) {
   const isFree = plano === "Free"
   const perguntas = perfil?.perguntas_respondidas_gratis ?? 0
@@ -210,32 +214,12 @@ export function DashboardView({
     },
   ]
 
-  // ── 5º KPI — Score AgroBridge da última simulação ──
-  if (ultimaSimulacao) {
-    const faixaCurta =
-      ultimaSimulacao.score >= 85
-        ? "muito alta"
-        : ultimaSimulacao.score >= 70
-        ? "alta"
-        : ultimaSimulacao.score >= 50
-        ? "média"
-        : ultimaSimulacao.score >= 30
-        ? "baixa"
-        : "muito baixa"
-    const dataFmt = new Date(ultimaSimulacao.created_at).toLocaleDateString(
-      "pt-BR",
-      { day: "2-digit", month: "2-digit" },
-    )
-    kpis.push({
-      label: "Score AgroBridge",
-      valor: `${ultimaSimulacao.score}/100`,
-      hint: `${faixaCurta} · ${dataFmt}`,
-      icon: Icon.spark(14),
-      accent: ultimaSimulacao.score >= 70 ? "green" : "gold",
-    })
-  }
+  // v1.1 — Frente B: o "score" antes era 5º KPI; agora é widget próprio
+  // EvolucaoScoreWidget renderizado separado abaixo, com sparkline e
+  // delta. Aqui só mantemos os outros KPIs.
 
   const mostrarKPIs = kpis.some((k) => k.valor)
+  const temHistorico = (historicoSimulacoes?.length ?? 0) > 0
   const jaInteragiu = perguntas > 0 || miniPronta || !!ultimoProcesso
 
   return (
@@ -269,33 +253,12 @@ export function DashboardView({
       {jaInteragiu && <DashboardPipeline fases={fases} />}
 
       {/* KPIs — só se tiver algum valor */}
-      {mostrarKPIs && (
-        <div>
-          <ProdutorKPIs kpis={kpis} />
-          {ultimaSimulacao && (
-            <div
-              style={{
-                marginTop: 10,
-                display: "flex",
-                justifyContent: "flex-end",
-              }}
-            >
-              <a
-                href="/simulador/historico"
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 6,
-                  fontSize: 12,
-                  color: "var(--green)",
-                  textDecoration: "none",
-                }}
-              >
-                Ver evolução do score {Icon.arrow(11)}
-              </a>
-            </div>
-          )}
-        </div>
+      {mostrarKPIs && <ProdutorKPIs kpis={kpis} />}
+
+      {/* v1.1 Frente B — Evolução do score (sparkline + delta).
+          Renderiza só se houver pelo menos 1 simulação salva. */}
+      {temHistorico && (
+        <EvolucaoScoreWidget historico={historicoSimulacoes!} />
       )}
 
       {/* Documentos strip — só no tier pago com checklist */}
