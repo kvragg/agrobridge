@@ -1,4 +1,5 @@
 import 'server-only'
+import { logger, capturarErroProducao } from '@/lib/logger'
 
 // Server-only — nunca importar de client components.
 // Envio de email transacional via API HTTP do Resend (usa fetch direto).
@@ -30,7 +31,11 @@ async function enviarEmail(payload: {
 }): Promise<EmailResult> {
   const { apiKey, from } = getAuth()
   if (!apiKey) {
-    console.warn('[Resend] RESEND_API_KEY ausente — email não enviado:', payload.subject)
+    logger.warn({
+      msg: 'RESEND_API_KEY ausente — email não enviado',
+      modulo: 'email/resend',
+      extra: { subject: payload.subject.slice(0, 80) },
+    })
     return { ok: false, error: 'RESEND_API_KEY ausente no ambiente' }
   }
   let res: Response
@@ -50,13 +55,19 @@ async function enviarEmail(payload: {
       }),
     })
   } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err)
-    console.error('[Resend] fetch falhou', msg)
-    return { ok: false, error: `fetch falhou: ${msg}` }
+    capturarErroProducao(err, {
+      modulo: 'email/resend',
+      extra: { etapa: 'fetch_resend' },
+    })
+    return { ok: false, error: 'fetch_falhou' }
   }
   if (!res.ok) {
     const txt = await res.text().catch(() => '')
-    console.error('[Resend] Falha ao enviar:', res.status, txt)
+    logger.error({
+      msg: 'Resend retornou erro HTTP',
+      modulo: 'email/resend',
+      extra: { status: res.status, body: txt.slice(0, 240) },
+    })
     return {
       ok: false,
       status: res.status,
@@ -318,16 +329,29 @@ export async function enviarComFallbackCorporativo(
   ])
 
   if (!principalRes.ok && usarAlternativo && alternativaRes.ok) {
-    console.warn(
-      '[Resend] entrega no principal falhou mas alternativo OK',
-      { principal: emailPrincipal, motivo: principalRes.error },
-    )
+    // Email principal é PII — passa via `email` (campo proibido do
+    // logger), sai como [redacted]. Mantém rastreabilidade do tipo de
+    // domínio sem expor o endereço real.
+    logger.warn({
+      msg: 'entrega no principal falhou — alternativo OK',
+      modulo: 'email/resend',
+      extra: {
+        email: emailPrincipal,
+        tipo_principal: tipoDominio(emailPrincipal),
+        motivo: principalRes.error?.slice(0, 200),
+      },
+    })
     return alternativaRes
   }
   if (!principalRes.ok && !alternativaRes.ok) {
-    console.error('[Resend] AMBOS os envios falharam', {
-      principal: principalRes.error,
-      alternativo: alternativaRes.ok ? null : alternativaRes.error,
+    logger.error({
+      msg: 'AMBOS os envios de email falharam',
+      modulo: 'email/resend',
+      extra: {
+        email: emailPrincipal,
+        principal_motivo: principalRes.error?.slice(0, 200),
+        alternativo_motivo: alternativaRes.ok ? null : alternativaRes.error?.slice(0, 200),
+      },
     })
     return principalRes
   }
