@@ -5,7 +5,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 // - /api/auth/*            (signup, login, logout, resend — lidam com auth elas mesmas)
 // - /api/pagamento/webhook (autenticado via HMAC do Cakto, não via sessão)
 // - /api/health            (health check público pra UptimeRobot/BetterStack)
-const PUBLIC_API_PREFIXES = ['/api/auth', '/api/pagamento/webhook', '/api/health']
+const PUBLIC_API_PREFIXES = ['/api/auth', '/api/pagamento/webhook', '/api/health', '/api/sentry-test']
 
 // Rotas web (páginas) que exigem sessão autenticada.
 // `/admin` exige sessão + check de admin no layout — middleware aqui só

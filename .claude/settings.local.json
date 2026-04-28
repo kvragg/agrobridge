@@ -57,7 +57,9 @@
       "mcp__supabase__list_branches",
       "mcp__claude_ai_Vercel__get_runtime_logs",
       "mcp__supabase__apply_migration",
-      "Bash(bash scripts/check-secrets.sh)"
+      "Bash(bash scripts/check-secrets.sh)",
+      "Bash(rmdir \"/c/Users/Paulo/iCloudDrive/iCloud~md~obsidian/02 — Estudos\")",
+      "Bash(rmdir \"/c/Users/Paulo/iCloudDrive/iCloud~md~obsidian/Prompts IA\")"
     ]
   }
 }
