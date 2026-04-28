@@ -278,7 +278,7 @@ function SetupModal({
           left: "50%",
           transform: "translate(-50%, -50%)",
           zIndex: 95,
-          width: "min(480px, 92vw)",
+          width: "min(540px, 92vw)",
           maxHeight: "90vh",
           overflowY: "auto",
           padding: 28,
@@ -354,46 +354,115 @@ function SetupModal({
               <li>Digite o código de 6 dígitos que aparece no app</li>
             </ol>
 
+            {/* Wrapper do QR — slot fixo 280×280 centralizado, com CSS
+                local forçando o <svg> filho a respeitar o slot. Supabase
+                retorna SVG cru via dangerouslySetInnerHTML; sem isso, o
+                width/height/viewBox que o Supabase manda pode estourar
+                o modal ou aparecer cortado em alguns browsers. */}
             <div
               style={{
                 display: "flex",
                 justifyContent: "center",
                 margin: "0 0 16px",
-                padding: 16,
-                background: "#fff",
-                borderRadius: 12,
               }}
-              dangerouslySetInnerHTML={{ __html: qrCode }}
-            />
+            >
+              <div
+                className="mfa-qr-slot"
+                style={{
+                  width: 280,
+                  height: 280,
+                  padding: 16,
+                  background: "#fff",
+                  borderRadius: 12,
+                  boxSizing: "border-box",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+                dangerouslySetInnerHTML={{ __html: qrCode }}
+              />
+            </div>
+            <style>{`
+              .mfa-qr-slot svg {
+                width: 100% !important;
+                height: 100% !important;
+                display: block;
+                max-width: 100%;
+                max-height: 100%;
+                shape-rendering: crispEdges;
+              }
+              .mfa-qr-slot img {
+                width: 100% !important;
+                height: 100% !important;
+                display: block;
+                image-rendering: pixelated;
+              }
+            `}</style>
 
+            {/* Fallback manual — fica VISÍVEL por default (não escondido em
+                <details>) porque o QR pode falhar em alguns casos
+                (zoom do browser, render SVG, dark mode app). Esse path
+                sempre funciona: digitar o secret direto no app. */}
             {secret && (
-              <details
+              <div
                 style={{
                   marginBottom: 16,
-                  padding: "8px 12px",
-                  background: "rgba(255,255,255,0.03)",
-                  border: "1px solid var(--line)",
-                  borderRadius: 8,
-                  fontSize: 12,
+                  padding: "12px 14px",
+                  background: "rgba(201,168,106,0.08)",
+                  border: "1px solid rgba(201,168,106,0.30)",
+                  borderRadius: 10,
                 }}
               >
-                <summary
-                  style={{ cursor: "pointer", color: "var(--muted)" }}
+                <p
+                  className="mono"
+                  style={{
+                    margin: "0 0 8px",
+                    fontSize: 10.5,
+                    letterSpacing: "0.14em",
+                    textTransform: "uppercase",
+                    color: "var(--gold)",
+                  }}
                 >
-                  Não consegue escanear? Digite o código manualmente
-                </summary>
+                  QR não funcionou? Digite o código manualmente
+                </p>
                 <code
+                  onClick={(e) => {
+                    const range = document.createRange()
+                    range.selectNode(e.currentTarget)
+                    const sel = window.getSelection()
+                    sel?.removeAllRanges()
+                    sel?.addRange(range)
+                  }}
                   style={{
                     display: "block",
-                    marginTop: 8,
+                    padding: "10px 12px",
+                    background: "rgba(0,0,0,0.35)",
+                    border: "1px solid var(--line-2)",
+                    borderRadius: 8,
                     fontFamily: "var(--font-mono, ui-monospace)",
+                    fontSize: 13,
                     color: "var(--ink)",
                     wordBreak: "break-all",
+                    letterSpacing: "0.05em",
+                    cursor: "text",
+                    userSelect: "all",
                   }}
                 >
                   {secret}
                 </code>
-              </details>
+                <p
+                  style={{
+                    margin: "8px 0 0",
+                    fontSize: 11,
+                    color: "var(--muted)",
+                    lineHeight: 1.5,
+                  }}
+                >
+                  No Google Authenticator: + (adicionar) → &quot;Inserir uma
+                  chave de configuração&quot; → cole o código acima → tipo
+                  &quot;Baseado em tempo&quot;.
+                </p>
+              </div>
             )}
 
             <form onSubmit={verificarCodigo}>
