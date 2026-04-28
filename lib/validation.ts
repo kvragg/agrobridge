@@ -1,18 +1,30 @@
 export type ResultadoValidacao = { ok: true } | { ok: false; erro: string }
 
+// Mantém alinhado com Supabase Auth Dashboard:
+//   Authentication -> Attack Protection -> Email provider:
+//     - Minimum password length: 10
+//     - Password requirements: Lowercase + Uppercase + Digits
+// Sem alinhamento, server rejeita após o user já ter clicado submit
+// (UX ruim). Aqui rejeitamos antes de bater na rede.
+//
+// HIBP (HaveIBeenPwned) é Pro plan only do Supabase — quando virar Pro,
+// também ativa lá pra cobrir senhas vazadas em outros breaches.
 export function validarSenha(senha: string): ResultadoValidacao {
   if (typeof senha !== 'string') return { ok: false, erro: 'Senha inválida.' }
-  if (senha.length < 8) {
-    return { ok: false, erro: 'A senha deve ter ao menos 8 caracteres.' }
+  if (senha.length < 10) {
+    return { ok: false, erro: 'A senha deve ter ao menos 10 caracteres.' }
   }
   if (senha.length > 200) {
     return { ok: false, erro: 'Senha muito longa.' }
   }
-  if (!/[0-9]/.test(senha)) {
-    return { ok: false, erro: 'A senha deve conter ao menos 1 número.' }
+  if (!/[a-z]/.test(senha)) {
+    return { ok: false, erro: 'A senha deve conter ao menos 1 letra minúscula.' }
   }
   if (!/[A-Z]/.test(senha)) {
     return { ok: false, erro: 'A senha deve conter ao menos 1 letra maiúscula.' }
+  }
+  if (!/[0-9]/.test(senha)) {
+    return { ok: false, erro: 'A senha deve conter ao menos 1 número.' }
   }
   return { ok: true }
 }
