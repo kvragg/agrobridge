@@ -13,6 +13,7 @@
 // Idempotência: detector já filtra users que receberam lembrete do
 // mesmo tipo nos últimos 7 dias. Logger captura toda falha.
 
+import * as Sentry from '@sentry/nextjs'
 import { createAdminClient } from '@/lib/supabase/admin'
 import {
   detectarProcessosDormentes,
@@ -25,6 +26,12 @@ import { NextRequest } from 'next/server'
 export const runtime = 'nodejs'
 export const maxDuration = 300 // 5min — cap teórico, normalmente <30s
 
+// Sentry cron monitor — slug deve bater com o monitor criado em
+// sentry.io/agrobridge/javascript-nextjs/crons/. Schedule e timezone
+// são in-code pra Sentry alertar quando o cron NÃO rodou (vercel
+// silenciado ou rota quebrada).
+const SENTRY_MONITOR_SLUG = 'cron-lembretes'
+
 export async function GET(request: NextRequest) {
   // Vercel Cron envia: Authorization: Bearer <CRON_SECRET>
   const authHeader = request.headers.get('authorization') ?? ''
@@ -33,50 +40,61 @@ export async function GET(request: NextRequest) {
     return Response.json({ erro: 'não autorizado' }, { status: 401 })
   }
 
-  const t0 = Date.now()
-  const admin = createAdminClient()
+  return Sentry.withMonitor(
+    SENTRY_MONITOR_SLUG,
+    async () => {
+      const t0 = Date.now()
+      const admin = createAdminClient()
 
-  let candidatosDormentes: Awaited<
-    ReturnType<typeof detectarProcessosDormentes>
-  > = []
-  let candidatosDossie: Awaited<
-    ReturnType<typeof detectarDossiesNaoBaixados>
-  > = []
+      let candidatosDormentes: Awaited<
+        ReturnType<typeof detectarProcessosDormentes>
+      > = []
+      let candidatosDossie: Awaited<
+        ReturnType<typeof detectarDossiesNaoBaixados>
+      > = []
 
-  try {
-    candidatosDormentes = await detectarProcessosDormentes(admin)
-  } catch (err) {
-    capturarErroProducao(err, {
-      modulo: 'cron-lembretes',
-      extra: { etapa: 'detectar_dormentes' },
-    })
-  }
-  try {
-    candidatosDossie = await detectarDossiesNaoBaixados(admin)
-  } catch (err) {
-    capturarErroProducao(err, {
-      modulo: 'cron-lembretes',
-      extra: { etapa: 'detectar_dossie_nao_baixado' },
-    })
-  }
+      try {
+        candidatosDormentes = await detectarProcessosDormentes(admin)
+      } catch (err) {
+        capturarErroProducao(err, {
+          modulo: 'cron-lembretes',
+          extra: { etapa: 'detectar_dormentes' },
+        })
+      }
+      try {
+        candidatosDossie = await detectarDossiesNaoBaixados(admin)
+      } catch (err) {
+        capturarErroProducao(err, {
+          modulo: 'cron-lembretes',
+          extra: { etapa: 'detectar_dossie_nao_baixado' },
+        })
+      }
 
-  const todos = [...candidatosDormentes, ...candidatosDossie]
-  const resultados = await Promise.all(
-    todos.map((c) => enviarLembrete(admin, c)),
-  )
+      const todos = [...candidatosDormentes, ...candidatosDossie]
+      const resultados = await Promise.all(
+        todos.map((c) => enviarLembrete(admin, c)),
+      )
 
-  const enviados = resultados.filter((r) => r.ok).length
-  const falhas = resultados.filter((r) => !r.ok).length
+      const enviados = resultados.filter((r) => r.ok).length
+      const falhas = resultados.filter((r) => !r.ok).length
 
-  return Response.json({
-    ok: true,
-    duracao_ms: Date.now() - t0,
-    detectados: {
-      processo_dormente: candidatosDormentes.length,
-      dossie_pronto_nao_baixado: candidatosDossie.length,
-      total: todos.length,
+      return Response.json({
+        ok: true,
+        duracao_ms: Date.now() - t0,
+        detectados: {
+          processo_dormente: candidatosDormentes.length,
+          dossie_pronto_nao_baixado: candidatosDossie.length,
+          total: todos.length,
+        },
+        enviados,
+        falhas,
+      })
     },
-    enviados,
-    falhas,
-  })
+    {
+      schedule: { type: 'crontab', value: '0 12 * * *' },
+      timezone: 'UTC',
+      failureIssueThreshold: 1,
+      recoveryThreshold: 1,
+    },
+  )
 }
