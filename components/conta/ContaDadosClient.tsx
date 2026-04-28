@@ -12,6 +12,7 @@ import {
   GlassCard,
   Icon,
 } from "@/components/landing/primitives"
+import { MfaSetupBlock } from "@/components/conta/MfaSetupBlock"
 
 function tierToTopbar(
   plano: PlanoComercial,
@@ -73,6 +74,7 @@ export default function ContaDadosClient({
       </div>
 
       <div style={{ display: "grid", gap: 20 }}>
+        <MfaSetupBlock />
         <EmailAlternativoBlock
           emailPrincipal={email}
           emailAlternativoInicial={emailAlternativo ?? null}
