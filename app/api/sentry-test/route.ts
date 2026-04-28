@@ -2,6 +2,7 @@
 // Guard: só dispara erro com ?token correto pra não virar pegadinha pública.
 // Apagar depois do primeiro evento aparecer no dashboard Sentry.
 
+import * as Sentry from '@sentry/nextjs'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export const runtime = 'nodejs'
@@ -12,5 +13,16 @@ export async function GET(request: NextRequest) {
   if (token !== 'agrobridge-sentry-2026-04-27') {
     return NextResponse.json({ erro: 'Não autorizado' }, { status: 404 })
   }
-  throw new Error('Sentry integration test — pode ignorar')
+
+  const dsnConfigured = Boolean(process.env.SENTRY_DSN)
+  const eventId = Sentry.captureException(
+    new Error('Sentry integration test — captura manual'),
+  )
+  await Sentry.flush(2000)
+
+  return NextResponse.json({
+    ok: true,
+    dsn_configured: dsnConfigured,
+    event_id: eventId,
+  })
 }
