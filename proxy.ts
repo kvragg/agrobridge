@@ -78,6 +78,9 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)',
+    // `monitoring` é o tunnel route do Sentry (next.config.ts) — não
+    // passa por auth/Supabase getUser pra economizar overhead em error
+    // reports do browser.
+    '/((?!monitoring|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)',
   ],
 }

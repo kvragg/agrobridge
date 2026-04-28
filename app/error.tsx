@@ -1,5 +1,6 @@
 "use client"
 
+import * as Sentry from "@sentry/nextjs"
 import Link from "next/link"
 import { useEffect } from "react"
 
@@ -11,9 +12,7 @@ export default function GlobalError({
   reset: () => void
 }) {
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      console.error("[app/error.tsx]", error.digest ?? error.message)
-    }
+    Sentry.captureException(error)
   }, [error])
 
   return (

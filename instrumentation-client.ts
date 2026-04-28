@@ -1,53 +1,36 @@
-// Next.js client-side instrumentation — executa no browser antes da
-// hidratação React. Inicializa Sentry se NEXT_PUBLIC_SENTRY_DSN estiver
-// configurado. Sem DSN, o módulo dynamic-import vira no-op (zero
-// overhead).
+// Next.js client-side instrumentation — browser, antes da hidratação React.
+// Init Sentry condicional: sem NEXT_PUBLIC_SENTRY_DSN, vira no-op puro.
 //
 // Docs: node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/instrumentation-client.md
+// Skill: github.com/getsentry/sentry-for-ai/blob/main/skills/sentry-nextjs-sdk/SKILL.md
 //
-// PII: Sentry default já é sendDefaultPii=false. O AgroBridge nunca
-// envia identidade real (nome/email/cpf) — só userId opaco vindo do
-// auth, igual logger server-side.
+// Decisões PII (LGPD): AgroBridge tem formulários com dados sensíveis.
+// `sendDefaultPii: false` + replay só em erro (não amostra sessões
+// normais) + `maskAllText` + `blockAllMedia` no replay.
 
-const dsn = process.env.NEXT_PUBLIC_SENTRY_DSN
+import * as Sentry from '@sentry/nextjs'
 
-if (dsn) {
-  import('@sentry/nextjs')
-    .then((Sentry) => {
-      Sentry.init({
-        dsn,
-        environment:
-          process.env.NEXT_PUBLIC_VERCEL_ENV ?? process.env.NODE_ENV,
-        tracesSampleRate: 0.1,
-        sendDefaultPii: false,
-        // Session replay: 0% das sessões normais, 100% quando há erro.
-        // Grava ~30s de DOM antes do erro pra debug visual.
-        replaysSessionSampleRate: 0,
-        replaysOnErrorSampleRate: 1.0,
-        integrations: [
-          Sentry.replayIntegration({
-            maskAllText: true,
-            blockAllMedia: true,
-          }),
-        ],
-      })
-    })
-    .catch(() => {
-      // Falha de init não pode quebrar a página.
-    })
+if (process.env.NEXT_PUBLIC_SENTRY_DSN) {
+  Sentry.init({
+    dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
+    environment:
+      process.env.NEXT_PUBLIC_VERCEL_ENV ?? process.env.NODE_ENV,
+    tracesSampleRate: process.env.NODE_ENV === 'development' ? 1.0 : 0.1,
+    sendDefaultPii: false,
+    // Session Replay: 0% em sessões normais, 100% quando há erro.
+    // Grava ~30s de DOM antes do erro pra debug visual.
+    replaysSessionSampleRate: 0,
+    replaysOnErrorSampleRate: 1.0,
+    integrations: [
+      Sentry.replayIntegration({
+        maskAllText: true,
+        blockAllMedia: true,
+      }),
+    ],
+  })
 }
 
-// Hook do Next 16 — Sentry usa pra adicionar breadcrumb de navegação.
-// Carregado dinamicamente; se Sentry não estiver pronto, vira no-op.
-export async function onRouterTransitionStart(
-  url: string,
-  navigationType: 'push' | 'replace' | 'traverse'
-): Promise<void> {
-  if (!dsn) return
-  try {
-    const Sentry = await import('@sentry/nextjs')
-    Sentry.captureRouterTransitionStart?.(url, navigationType)
-  } catch {
-    // No-op em qualquer falha.
-  }
-}
+// Hook do Next 16 — Sentry usa pra adicionar breadcrumb de navegação
+// em cada router transition. Com Sentry desligado, a função existe mas
+// vira no-op interno.
+export const onRouterTransitionStart = Sentry.captureRouterTransitionStart
