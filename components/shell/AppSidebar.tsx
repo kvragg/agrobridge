@@ -64,7 +64,13 @@ const MAIN_ITEMS: NavItem[] = [
     href: "/conta/dados",
     label: "Meus dados",
     icon: Icon.user(16),
-    activePrefix: "/conta",
+    activePrefix: "/conta/dados",
+  },
+  {
+    href: "/conta/seguranca",
+    label: "Segurança",
+    icon: Icon.lock(16),
+    activePrefix: "/conta/seguranca",
   },
 ]
 
