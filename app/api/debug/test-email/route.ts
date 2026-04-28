@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAdminUser } from '@/lib/admin-auth'
+import { capturarErroProducao } from '@/lib/logger'
 
 export const runtime = 'nodejs'
 export const maxDuration = 20
@@ -82,11 +83,15 @@ export async function POST(request: NextRequest) {
       { status: res.ok ? 200 : 502 }
     )
   } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err)
+    capturarErroProducao(err, {
+      modulo: 'debug/test-email',
+      userId: admin.id,
+      extra: { etapa: 'fetch_resend' },
+    })
     return NextResponse.json(
       {
         ok: false,
-        error: `fetch falhou: ${msg}`,
+        error: 'fetch_falhou',
         from,
         has_key: true,
       },

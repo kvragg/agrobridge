@@ -262,9 +262,9 @@ export function Topbar({ nome, email, tier = "free", center, onMenuClick }: Topb
                 <MenuItem
                   href="/dashboard"
                   onClose={() => setOpen(false)}
-                  icon={Icon.doc(14)}
+                  icon={Icon.layout(14)}
                 >
-                  Meu dossiê
+                  Início
                 </MenuItem>
                 <MenuItem
                   href="/planos"

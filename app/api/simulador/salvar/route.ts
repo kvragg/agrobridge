@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getPlanoAtual } from '@/lib/plano'
 import { simular } from '@/lib/simulator/engine'
 import { CONJUNTURA_ATUAL } from '@/lib/simulator/data/conjuntura'
-import type { SimulatorInput } from '@/lib/simulator/types'
+import { simulatorInputSchema } from '@/lib/simulator/schema'
 import { rateLimitRemoto } from '@/lib/rate-limit-upstash'
 import { capturarErroProducao } from '@/lib/logger'
 import { NextRequest } from 'next/server'
@@ -38,28 +38,43 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  let body: { input?: SimulatorInput }
+  let body: { input?: unknown }
   try {
-    body = (await request.json()) as { input?: SimulatorInput }
+    body = (await request.json()) as { input?: unknown }
   } catch {
     return Response.json({ erro: 'Payload inválido' }, { status: 400 })
   }
 
-  if (!body.input || typeof body.input.valor_pretendido !== 'number') {
-    return Response.json({ erro: 'Input incompleto' }, { status: 400 })
+  // Validação rigorosa via Zod — barra payloads malformados ou
+  // adversariais antes de tocar no engine. Defense-in-depth: o engine
+  // já tem normalização defensiva, mas qualquer dado lixo chegando aqui
+  // poderia ser persistido no jsonb sem sentido.
+  const parsed = simulatorInputSchema.safeParse(body.input)
+  if (!parsed.success) {
+    return Response.json(
+      {
+        erro: 'Input inválido',
+        detalhes: parsed.error.issues.slice(0, 5).map((i) => ({
+          campo: i.path.join('.'),
+          motivo: i.message,
+        })),
+      },
+      { status: 400 },
+    )
   }
+  const input = parsed.data
 
-  const output = simular(body.input, CONJUNTURA_ATUAL)
+  const output = simular(input, CONJUNTURA_ATUAL)
 
   const { data, error } = await supabase
     .from('simulacoes')
     .insert({
       user_id: user.id,
-      input: body.input,
+      input,
       output,
       score: output.score,
-      cultura: body.input.cultura,
-      valor_pretendido: body.input.valor_pretendido,
+      cultura: input.cultura,
+      valor_pretendido: input.valor_pretendido,
     })
     .select('id, created_at')
     .single()

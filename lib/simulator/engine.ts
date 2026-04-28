@@ -60,10 +60,40 @@ export { CULTURAS } from './data/culturas'
 export { GARANTIAS } from './data/garantias'
 export { CADASTRO_NIVEIS } from './data/cadastro-niveis'
 
+// Coerção defensiva — se valor for NaN/undefined/string/Infinity,
+// retorna fallback. Trip-wire pra payloads malformados que chegam via
+// /api/simulador/salvar (validados no schema, mas defense-in-depth no
+// motor evita NaN propagando pro radar e jsonb do Postgres).
+function numFinito(v: unknown, fallback: number): number {
+  return typeof v === 'number' && Number.isFinite(v) ? v : fallback
+}
+
+function clamp(v: number, lo: number, hi: number): number {
+  if (v < lo) return lo
+  if (v > hi) return hi
+  return v
+}
+
+// Normaliza campos numéricos pra evitar NaN cascading. Mantém o resto
+// do input intacto — strings de enum, booleans e arrays caem na própria
+// validação dos switch/case do motor.
+function normalizarInput(input: SimulatorInput): SimulatorInput {
+  return {
+    ...input,
+    valor_pretendido: Math.max(0, numFinito(input.valor_pretendido, 0)),
+    renda_bruta_anual:
+      input.renda_bruta_anual === undefined
+        ? undefined
+        : Math.max(0, numFinito(input.renda_bruta_anual, 0)),
+    endividamento_pct: clamp(numFinito(input.endividamento_pct, 0), 0, 200),
+  }
+}
+
 export function simular(
-  input: SimulatorInput,
+  inputBruto: SimulatorInput,
   conjuntura: ConjunturaEconomica,
 ): SimulatorResult {
+  const input = normalizarInput(inputBruto)
   const deltas: DeltaAplicado[] = []
   const avisos: AvisoCtx[] = []
   const regrasDurasViolades: string[] = []

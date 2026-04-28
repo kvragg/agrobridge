@@ -9,7 +9,7 @@ const PRODUTO: FootLink[] = [
   { label: "Entrevista com IA", href: "/cadastro" },
   { label: "Checklist", href: "/cadastro" },
   { label: "Dossiê", href: "/cadastro" },
-  { label: "Simulador", href: "#fluxo" },
+  { label: "Simulador", href: "/cadastro?next=/simulador" },
 ]
 
 const EMPRESA: FootLink[] = [
