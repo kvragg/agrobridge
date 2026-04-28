@@ -1,4 +1,5 @@
 import type { NextConfig } from 'next'
+import { withSentryConfig } from '@sentry/nextjs'
 
 const isDev = process.env.NODE_ENV === 'development'
 
@@ -51,4 +52,26 @@ const nextConfig: NextConfig = {
   ],
 }
 
-export default nextConfig
+// Sentry build wrapper — só faz upload de source maps quando
+// SENTRY_AUTH_TOKEN + SENTRY_ORG + SENTRY_PROJECT estiverem setados
+// (build no Vercel). Em dev/CI sem token, vira no-op silencioso e o
+// build segue normal. Em prod sem token, source maps ficam públicas
+// porém ilegíveis no Sentry — não bloqueia.
+export default withSentryConfig(nextConfig, {
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+  silent: !process.env.CI,
+  // Inclui chunks do client-side no upload (default só inclui server).
+  widenClientFileUpload: true,
+  // Tunnel route: browser fala com /monitoring → Vercel proxy → Sentry.
+  // Bypassa adblockers e mantém CSP enxuta (sem precisar liberar
+  // *.sentry.io em connect-src).
+  tunnelRoute: '/monitoring',
+  // Não faz upload se as creds não estiverem disponíveis (dev local
+  // sem auth token). Sem isso, o build do Vercel pra Preview branches
+  // sem o secret quebraria.
+  sourcemaps: {
+    disable: !process.env.SENTRY_AUTH_TOKEN,
+  },
+})
