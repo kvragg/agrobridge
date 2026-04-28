@@ -1,0 +1,41 @@
+name: OWASP ZAP Baseline Scan
+
+# Roda toda quinta 03:00 BRT contra produção (read-only, sem efeito
+# colateral) pra detectar headers HTTP fracos, robots.txt vazado, info
+# disclosure, cookies inseguros, mixed content. NÃO faz active scan
+# (sem injeção em produção).
+#
+# Resultado: issue automática no repo com relatório.
+
+on:
+  schedule:
+    - cron: "0 6 * * 4"
+  workflow_dispatch:
+
+jobs:
+  zap-baseline:
+    name: baseline
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    permissions:
+      issues: write
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: ZAP Baseline (modo passivo, no-attack)
+        uses: zaproxy/action-baseline@v0.13.0
+        with:
+          target: "https://agrobridge.space"
+          # Rules tuning: silenciar achados que não fazem sentido pro
+          # nosso stack (ex: x-frame-options já tá em DENY via header).
+          rules_file_name: ".zap/baseline-rules.tsv"
+          # NÃO falha o workflow — só abre issue.
+          fail_action: false
+          # Sobe relatório como artifact + cria issue.
+          allow_issue_writing: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+          # Cmd extras: profundidade limitada pra não martelar prod.
+          cmd_options: "-a -j -m 5 -T 60"

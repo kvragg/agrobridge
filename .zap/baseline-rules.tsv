@@ -1,0 +1,25 @@
+# ZAP Rules tuning — baseline scan AgroBridge
+# Format: <rule_id>	<status>	<comment>
+#   IGNORE = silenciar (false positive ou já tratado em outra camada)
+#   WARN   = relatar mas não falhar
+#   FAIL   = falhar workflow se aparecer
+#
+# Default = WARN se não listado.
+
+# Já tratamos via header X-Frame-Options: DENY em next.config.ts
+10020	IGNORE	X-Frame-Options já está em DENY via headers globais
+
+# CSP eh complexo no Next.js — temos CSP custom robusta, ZAP pode
+# reclamar de unsafe-inline (intencional pelo Next inline styles)
+10038	WARN	CSP unsafe-inline é limitação Next.js documentada
+
+# Cookies — Supabase Auth gerencia. ZAP pode flaggar httpOnly missing
+# em alguns cookies do Vercel — false positive
+10010	WARN	cookies do Supabase já têm httpOnly + secure
+10011	WARN	idem
+
+# Strict-Transport-Security configurado com preload, max-age 2 anos
+10035	IGNORE	HSTS já configurado em next.config.ts
+
+# Server header / X-Powered-By — desabilitamos via poweredByHeader: false
+10037	WARN	server signature mascarada pelo Vercel

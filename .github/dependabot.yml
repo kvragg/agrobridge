@@ -1,0 +1,62 @@
+version: 2
+updates:
+  # NPM dependencies — agrupado pra reduzir noise
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "America/Sao_Paulo"
+    open-pull-requests-limit: 5
+    versioning-strategy: "increase-if-necessary"
+    labels:
+      - "dependencies"
+      - "automated"
+    groups:
+      # Anthropic + Supabase + frameworks core viram update separado pra
+      # eu poder fazer review individual antes de merge.
+      anthropic:
+        patterns:
+          - "@anthropic-ai/*"
+      supabase:
+        patterns:
+          - "@supabase/*"
+      next-react:
+        patterns:
+          - "next"
+          - "react"
+          - "react-dom"
+          - "@types/react*"
+      sentry:
+        patterns:
+          - "@sentry/*"
+      # Resto agrupado em 1 PR
+      minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
+        exclude-patterns:
+          - "@anthropic-ai/*"
+          - "@supabase/*"
+          - "next"
+          - "react"
+          - "react-dom"
+          - "@types/react*"
+          - "@sentry/*"
+    # Bloquear majors automáticas — major bump exige review humano
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+
+  # GitHub Actions — workflows também recebem update
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+      time: "06:00"
+      timezone: "America/Sao_Paulo"
+    open-pull-requests-limit: 3
+    labels:
+      - "ci"
+      - "automated"
