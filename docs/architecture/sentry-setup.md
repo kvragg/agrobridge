@@ -1,87 +1,79 @@
-# Sentry — passos manuais pra ligar
+# Sentry — estado e operação
 
-A infra do Sentry está toda montada no código. Falta só **3 passos
-operacionais** que precisam ser feitos no painel web (não dá pra
-automatizar). Depois disso, captura ativa em ~2min.
+Sentry plugado em produção desde 2026-04-27. Validado end-to-end:
+captura manual + automática + source maps + alerts.
 
-## 1) Criar projeto no Sentry
+## Configuração ativa
 
-1. Vai em https://sentry.io/signup (free tier — 5k erros/mês, suficiente)
-2. Login com Google → cria org `agrobridge`
-3. **Create Project** → plataforma `Next.js` → nome `agrobridge-web`
-4. Copia o **DSN** que aparece (formato: `https://xxx@yyy.ingest.sentry.io/zzz`)
-5. Em **Settings → Auth Tokens** → cria token com escopo
-   `project:releases` + `project:write` → copia (vamos chamar de
-   `SENTRY_AUTH_TOKEN`)
-6. Anota o **slug da org** (`agrobridge`) e o **slug do projeto**
-   (`agrobridge-web`)
+**Projeto:** `agrobridge` / `javascript-nextjs` (sentry.io)
+**DSN público:** `https://6b4edf9a20243c01294c3a39cddb0c75@o4511271772160000.ingest.us.sentry.io/4511295007358976`
+**Auth token:** sntryu_*** (user-scope, owner do org)
 
-## 2) Adicionar env vars no Vercel
+**Env vars no Vercel (Production):**
+- `SENTRY_DSN` — captura server-side
+- `NEXT_PUBLIC_SENTRY_DSN` — captura browser (mesmo DSN)
+- `SENTRY_AUTH_TOKEN` — upload de source maps no build
+- `SENTRY_ORG=agrobridge`
+- `SENTRY_PROJECT=javascript-nextjs`
 
-Em **Vercel → agrobridge → Settings → Environment Variables**, adiciona:
+**Preview/Development NÃO têm DSN setado** — código guarda atrás de
+`if (process.env.SENTRY_DSN)` então vira no-op puro. Adicionar ao
+Preview só quando começar a abrir PRs com regularidade.
 
-| Nome | Valor | Scope |
-|---|---|---|
-| `SENTRY_DSN` | (DSN do passo 1) | Production + Preview |
-| `NEXT_PUBLIC_SENTRY_DSN` | (mesmo DSN) | Production + Preview |
-| `SENTRY_ORG` | `agrobridge` | Production + Preview |
-| `SENTRY_PROJECT` | `agrobridge-web` | Production + Preview |
-| `SENTRY_AUTH_TOKEN` | (token do passo 1) | Production + Preview |
+## Como o sistema captura erros
 
-**Não** marca "Development" — não queremos poluir o painel com erros
-do `npm run dev` local.
-
-> Por que dois DSNs? Server (`SENTRY_DSN`) é privado, ficou no runtime
-> Node. Client (`NEXT_PUBLIC_SENTRY_DSN`) precisa do prefixo
-> `NEXT_PUBLIC_` pra ser exposto no bundle do browser. Ambos apontam
-> pro mesmo projeto Sentry.
-
-## 3) Triggar deploy
-
-Push qualquer commit (ou clica **Redeploy** na última deploy do
-Vercel). O `withSentryConfig` no build vai:
-
-- Subir source maps pro Sentry (stack trace legível)
-- Empacotar o tunnel route `/monitoring`
-- Init do Sentry (server + client) na primeira request
-
-## 4) Validar (1min)
-
-1. Abre https://agrobridge.com.br/api/health → deve voltar `{"ok":true,...}`
-2. No painel Sentry, vai em **Issues** — deve estar vazio (zero erros = bom)
-3. Pra confirmar que captura realmente funciona, força um erro:
-   - Acessa `/api/dossie` sem auth (vai dar 401, não conta como erro)
-   - Ou cria temporariamente `/api/debug/sentry-test` com `throw new Error('teste sentry')` → faz GET → vê chegar no painel → deleta a rota
-4. Configura **Alerts → New Alert** → "An issue is first seen" →
-   email `suporte@agrobridge.com.br`
-
-## Como o sistema usa Sentry depois de ligado
-
-| Cenário | O que acontece |
+| Cenário | O que captura |
 |---|---|
-| Erro em rota API (`/api/dossie` quebrou) | `capturarErroProducao()` em `lib/logger.ts` chama `Sentry.captureException` automático |
-| Erro em Server Component / RSC | Hook `onRequestError` em `instrumentation.ts` captura |
-| Erro JS no browser (botão não funciona) | `instrumentation-client.ts` captura via window error handler |
-| Replay visual do erro UI | Session replay grava ~30s antes do erro (`replaysOnErrorSampleRate: 1.0`) |
-| Stack trace minificada em prod | Source maps subidos no build → painel mostra código original |
-| Adblocker bloqueando Sentry | Tunnel route `/monitoring` bypassa (browser fala com domínio próprio) |
+| Erro em rota API (`/api/dossie` quebrou) | `lib/logger.ts :: capturarErroProducao()` chama `Sentry.captureException` |
+| Throw em route handler / RSC / server action | `instrumentation.ts :: onRequestError = Sentry.captureRequestError` (automático) |
+| Erro JS no browser | `instrumentation-client.ts` window error handler |
+| Erro no root layout (último guarda-chuva) | `app/global-error.tsx` |
+| Stack trace minificado em prod | Source maps subidos pelo `withSentryConfig` no build (release = commit hash) |
+| Adblocker bloqueando Sentry | Tunnel route `/monitoring` proxy via mesmo domínio |
+| Replay visual ~30s antes do erro | Session replay (`replaysOnErrorSampleRate: 1.0`) com `maskAllText` |
+
+## Decisões PII (LGPD)
+
+Diferente do default do skill oficial Sentry — AgroBridge captura
+CPF/CNPJ, nome, dados de crédito rural. Configuração defensiva:
+- `sendDefaultPii: false` (server e client)
+- `includeLocalVariables: false` (server)
+- Replay com `maskAllText: true` + `blockAllMedia: true`
+- `lib/logger.ts` sanitiza `CAMPOS_PROIBIDOS` antes de chegar no Sentry
+
+## Alerts configurados
+
+1. **High priority issues** (default Sentry): notifica IssueOwners → ActiveMembers via email
+2. **Erro novo em produção** (rule `16975163`): toda new issue em prod
+   manda email pra Paulo (`4475502`), no máx 1x a cada 30min
+
+Pra adicionar/editar alerts: https://sentry.io/settings/agrobridge/projects/javascript-nextjs/alerts/
+
+## Health check externo
+
+`/api/health` (público em `proxy.ts :: PUBLIC_API_PREFIXES`) retorna
+`{ok, env, commit, ts}`. Apontar UptimeRobot/BetterStack pra
+`https://agrobridge.space/api/health` — Sentry vê erro lógico,
+uptime monitor vê prod inteiro caído.
 
 ## Custos
 
-- **Free tier:** 5.000 erros/mês + 50 replays/mês + 10k transactions/mês
-- **AgroBridge esperado em prod:** <100 erros/mês (solo, low traffic)
-- Margem 50x. Sem risco de overage.
+Free tier: 5k erros/mês + 50 replays/mês + 10k transactions/mês.
+AgroBridge esperado: <100 erros/mês (solo, low traffic). Margem 50x.
 
 ## Desligar emergencialmente
 
-Remove `SENTRY_DSN` do Vercel → próximo deploy não tem captura.
-Código todo guarda atrás do `if (!process.env.SENTRY_DSN) return`,
-então é seguro.
+Remove `SENTRY_DSN` do Vercel (Production) → próximo deploy não tem
+captura. Tudo guarda atrás do `if (process.env.SENTRY_DSN)`.
 
-## Arquivos relevantes (referência)
+## Arquivos relevantes
 
-- `instrumentation.ts` — init server (node + edge) + `onRequestError`
-- `instrumentation-client.ts` — init browser + replay + router transitions
-- `next.config.ts` — `withSentryConfig` wrapper (source maps + tunnel)
-- `lib/logger.ts:119` — `capturarErroProducao()` (ponto único de captura manual)
-- `app/api/health/route.ts` — health check pra UptimeRobot/BetterStack
+- `instrumentation.ts` — server init + `onRequestError`
+- `instrumentation-client.ts` — browser init + replay
+- `sentry.server.config.ts` — node runtime
+- `sentry.edge.config.ts` — edge runtime
+- `app/global-error.tsx` — root layout error boundary
+- `app/error.tsx` — segment error boundary (também captura)
+- `next.config.ts` — `withSentryConfig` (source maps + tunnel)
+- `lib/logger.ts` — `capturarErroProducao()` ponto único de captura manual
+- `app/api/health/route.ts` — health check pra uptime monitors
