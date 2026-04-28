@@ -34,13 +34,34 @@ export async function GET() {
     .select('limite_mensal, vagas_usadas, vagas_restantes, mes_referencia')
     .maybeSingle<VagasMentoriaRow>()
 
+  // Graceful degradation (ONDA 6): se a view falhar (Supabase down,
+  // RLS bug, view dropada), retornamos vagas conservadoras (limite
+  // cheio, todas disponíveis) com flag `degraded:true`. UI da página
+  // /planos continua funcional — pior caso o user tenta comprar Ouro
+  // mesmo que esteja esgotado, e o webhook recusa via outra camada
+  // (compras é fonte-de-verdade, não a view).
   if (error) {
     capturarErroProducao(error, {
       modulo: 'planos/vagas-mentoria',
       userId: user.id,
       extra: { etapa: 'query_view' },
     })
-    return Response.json({ erro: 'Falha ao consultar vagas' }, { status: 500 })
+    return Response.json(
+      {
+        limite_mensal: 6,
+        vagas_usadas: 0,
+        vagas_restantes: 6,
+        mes_referencia: new Date().toISOString(),
+        degraded: true,
+      },
+      {
+        status: 200,
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, private, max-age=0',
+          Pragma: 'no-cache',
+        },
+      },
+    )
   }
 
   // A view é um SELECT com agregação — sempre retorna 1 linha mesmo
@@ -62,9 +83,12 @@ export async function GET() {
     },
     {
       headers: {
-        'Cache-Control': 'no-store, no-cache, must-revalidate, private, max-age=0',
-        Pragma: 'no-cache',
+        // Resposta é o mesmo número pra todos os users autenticados, mas
+        // marcamos `private` pra não vazar pelo CDN (auth required).
+        // 30s reduz QPS pro Supabase em 30x em pico de tráfego /planos
+        // sem impacto perceptível (vagas mudam só quando alguém compra).
+        'Cache-Control': 'private, max-age=30',
       },
-    }
+    },
   )
 }

@@ -7,10 +7,14 @@
 //
 // Não vaza nada sensível. Commit SHA e env já são visíveis em headers
 // HTTP do Vercel pra qualquer um que olhe.
+//
+// ONDA 6 — runtime edge (não nodejs): cold start 30-80ms vs 500ms+.
+// UptimeRobot reportava 552ms p50 com nodejs. Edge runtime é compatível
+// porque a função não usa fs, crypto.createHash, ou Sentry server SDK.
 
 import { NextResponse } from 'next/server'
 
-export const runtime = 'nodejs'
+export const runtime = 'edge'
 export const dynamic = 'force-dynamic'
 
 export async function GET() {
