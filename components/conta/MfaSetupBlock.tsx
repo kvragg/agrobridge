@@ -1,6 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
+import QRCode from "qrcode"
 import { createClient } from "@/lib/supabase/client"
 import { Button, Eyebrow, GlassCard, Icon } from "@/components/landing/primitives"
 import { Alert } from "@/components/shell/Alert"
@@ -188,7 +189,10 @@ function SetupModal({
 }) {
   const supabase = createClient()
   const [step, setStep] = useState<SetupStep>("enrolling")
-  const [qrCode, setQrCode] = useState<string | null>(null)
+  // qrDataUrl: data:image/png;base64,... — gerado client-side com lib
+  // `qrcode` a partir do otpauth:// URI. Substituiu o SVG cru do Supabase
+  // que vinha cortado/mal-formado em alguns navegadores.
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null)
   const [secret, setSecret] = useState<string | null>(null)
   const [factorId, setFactorId] = useState<string | null>(null)
   const [codigo, setCodigo] = useState("")
@@ -210,8 +214,27 @@ function SetupModal({
       return
     }
     setFactorId(data.id)
-    setQrCode(data.totp.qr_code)
     setSecret(data.totp.secret)
+
+    // Gera QR Code client-side a partir do otpauth URI. Qualidade M
+    // (15% redundancy) é o sweet spot pro padrão TOTP. Margin 2
+    // garante "quiet zone" suficiente pra qualquer leitor TOTP ler.
+    try {
+      const dataUrl = await QRCode.toDataURL(data.totp.uri, {
+        width: 256,
+        margin: 2,
+        errorCorrectionLevel: "M",
+        color: {
+          dark: "#000000",
+          light: "#ffffff",
+        },
+      })
+      setQrDataUrl(dataUrl)
+    } catch {
+      // Se geração de QR falhar, usuário ainda pode digitar o secret
+      // manualmente — o secret aparece sempre no card dourado abaixo.
+      setQrDataUrl(null)
+    }
     setStep("qr_shown")
   }, [supabase])
 
@@ -335,7 +358,7 @@ function SetupModal({
           <Alert variant="error">{erro}</Alert>
         )}
 
-        {(step === "qr_shown" || step === "verifying") && qrCode && (
+        {(step === "qr_shown" || step === "verifying") && (
           <>
             <ol
               style={{
@@ -354,50 +377,39 @@ function SetupModal({
               <li>Digite o código de 6 dígitos que aparece no app</li>
             </ol>
 
-            {/* Wrapper do QR — slot fixo 280×280 centralizado, com CSS
-                local forçando o <svg> filho a respeitar o slot. Supabase
-                retorna SVG cru via dangerouslySetInnerHTML; sem isso, o
-                width/height/viewBox que o Supabase manda pode estourar
-                o modal ou aparecer cortado em alguns browsers. */}
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "center",
-                margin: "0 0 16px",
-              }}
-            >
+            {/* QR Code gerado client-side a partir do otpauth URI via
+                lib `qrcode`. PNG dataUrl 256×256 com quiet zone — leitura
+                garantida em todos os apps TOTP padrão (Google Auth, Authy,
+                Microsoft Auth, 1Password, Bitwarden, FreeOTP). */}
+            {qrDataUrl && (
               <div
-                className="mfa-qr-slot"
                 style={{
-                  width: 280,
-                  height: 280,
-                  padding: 16,
-                  background: "#fff",
-                  borderRadius: 12,
-                  boxSizing: "border-box",
                   display: "flex",
-                  alignItems: "center",
                   justifyContent: "center",
+                  margin: "0 0 16px",
                 }}
-                dangerouslySetInnerHTML={{ __html: qrCode }}
-              />
-            </div>
-            <style>{`
-              .mfa-qr-slot svg {
-                width: 100% !important;
-                height: 100% !important;
-                display: block;
-                max-width: 100%;
-                max-height: 100%;
-                shape-rendering: crispEdges;
-              }
-              .mfa-qr-slot img {
-                width: 100% !important;
-                height: 100% !important;
-                display: block;
-                image-rendering: pixelated;
-              }
-            `}</style>
+              >
+                {/* next/image não faz sentido pra data URL client-side
+                    já encodada — uso <img> direto. */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={qrDataUrl}
+                  alt="QR Code para configurar 2FA no app autenticador"
+                  width={256}
+                  height={256}
+                  style={{
+                    width: 256,
+                    height: 256,
+                    background: "#fff",
+                    borderRadius: 12,
+                    padding: 8,
+                    boxSizing: "content-box",
+                    display: "block",
+                    imageRendering: "pixelated",
+                  }}
+                />
+              </div>
+            )}
 
             {/* Fallback manual — fica VISÍVEL por default (não escondido em
                 <details>) porque o QR pode falhar em alguns casos
