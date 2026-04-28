@@ -1,0 +1,6 @@
+Contact: mailto:security@agrobridge.space
+Expires: 2027-04-28T00:00:00.000Z
+Preferred-Languages: pt-BR, en
+Canonical: https://agrobridge.space/.well-known/security.txt
+Policy: https://agrobridge.space/seguranca
+Acknowledgments: https://agrobridge.space/seguranca#hall-of-fame
