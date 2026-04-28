@@ -74,4 +74,14 @@ export default withSentryConfig(nextConfig, {
   sourcemaps: {
     disable: !process.env.SENTRY_AUTH_TOKEN,
   },
+  // Linka commits à release no Sentry — Issues mostram "commit que
+  // introduziu" + "suspect commits" no painel. Auto detecta git via
+  // env vars do Vercel (VERCEL_GIT_COMMIT_SHA + previousCommit).
+  release: {
+    create: Boolean(process.env.SENTRY_AUTH_TOKEN),
+    finalize: Boolean(process.env.SENTRY_AUTH_TOKEN),
+    setCommits: process.env.SENTRY_AUTH_TOKEN
+      ? { auto: true, ignoreMissing: true }
+      : undefined,
+  },
 })
