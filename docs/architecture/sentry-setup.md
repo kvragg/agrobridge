@@ -9,16 +9,22 @@ captura manual + automática + source maps + alerts.
 **DSN público:** `https://6b4edf9a20243c01294c3a39cddb0c75@o4511271772160000.ingest.us.sentry.io/4511295007358976`
 **Auth token:** sntryu_*** (user-scope, owner do org)
 
-**Env vars no Vercel (Production):**
+**Env vars no Vercel (Production + Preview):**
 - `SENTRY_DSN` — captura server-side
 - `NEXT_PUBLIC_SENTRY_DSN` — captura browser (mesmo DSN)
 - `SENTRY_AUTH_TOKEN` — upload de source maps no build
 - `SENTRY_ORG=agrobridge`
 - `SENTRY_PROJECT=javascript-nextjs`
 
-**Preview/Development NÃO têm DSN setado** — código guarda atrás de
-`if (process.env.SENTRY_DSN)` então vira no-op puro. Adicionar ao
-Preview só quando começar a abrir PRs com regularidade.
+**Development NÃO tem DSN** — código guarda atrás de
+`if (process.env.SENTRY_DSN)` então vira no-op puro em `npm run dev`.
+Preview captura tudo, com `environment: preview` nos eventos —
+permite filtrar no dashboard Sentry pra distinguir prod de PR.
+
+**Truque do CLI 52.0.0:** pra setar env var em "all preview branches"
+sem TTY, passar string vazia como git-branch arg:
+`vercel env add NAME preview "" --value X --yes`. O CLI nesse modo
+tem bug em `--non-interactive` mas aceita `""` explícito.
 
 ## Como o sistema captura erros
 
