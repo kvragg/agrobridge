@@ -13,6 +13,7 @@ import 'server-only'
 import Anthropic from '@anthropic-ai/sdk'
 import type { PerfilLeadCamposDiretos } from '@/types/perfil-lead'
 import { MODEL as ANTHROPIC_MODEL } from '@/lib/anthropic/model'
+import { capturarErroProducao } from '@/lib/logger'
 
 // Extrator usa Sonnet 4.6 também (uniformização 2026-04-22).
 // Haiku saiu do projeto.
@@ -91,7 +92,10 @@ export async function extrairFatosDaTroca(params: {
     if (!bloco || bloco.type !== 'text') return vazio()
     return parseJsonTolerante(bloco.text)
   } catch (err) {
-    console.error('[extract-facts] falhou (não fatal):', err)
+    capturarErroProducao(err, {
+      modulo: 'ai/extract-facts',
+      extra: { etapa: 'anthropic_extract' },
+    })
     return vazio()
   }
 }
