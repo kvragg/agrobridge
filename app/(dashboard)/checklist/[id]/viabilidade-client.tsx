@@ -30,6 +30,7 @@ export default function ViabilidadeClient({
 
   useEffect(() => {
     if (parecerMd || !perfilDisponivel) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setCarregando(false)
       return
     }

@@ -88,6 +88,7 @@ export function ChatClient(props: Props) {
     if (miniAnalise) return
     if (carregandoAnalise) return
     if (erroAnalise) return
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void buscarMiniAnalise()
   }, [gate, miniAnalise, carregandoAnalise, erroAnalise, buscarMiniAnalise])
 

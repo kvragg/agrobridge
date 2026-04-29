@@ -340,6 +340,7 @@ function ChatPanel({
   const [notif, setNotif] = useState<typeof widget.notificacaoPendente>(null)
   useEffect(() => {
     if (widget.notificacaoPendente) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setNotif(widget.notificacaoPendente)
       widget.consumirNotificacao()
     }

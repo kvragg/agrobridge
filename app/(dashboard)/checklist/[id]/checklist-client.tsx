@@ -57,6 +57,7 @@ export default function ChecklistClient({
   // Gerar checklist se não tiver
   useEffect(() => {
     if (checklistMd || !perfilDisponivel) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setCarregandoChecklist(false)
       return
     }

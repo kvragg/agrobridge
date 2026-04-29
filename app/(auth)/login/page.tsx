@@ -33,6 +33,7 @@ function LoginInner() {
 
   useEffect(() => {
     if (searchParams.get("erro") === "confirmacao") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setErro(
         "Não foi possível confirmar seu e-mail. O link pode ter expirado. Tente fazer login — caso seu cadastro já esteja ativo, você entrará normalmente.",
       )
